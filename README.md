@@ -2,6 +2,8 @@
 
 Read `*.xlsx` files in a browser or Node.js.
 
+[Demo](https://catamphetamine.github.io/read-excel-file/)
+
 ## Install
 
 ```js
