@@ -1,4 +1,4 @@
-# `read-xlsx-file`
+# `read-excel-file`
 
 Read `*.xlsx` files in a browser or Node.js.
 
