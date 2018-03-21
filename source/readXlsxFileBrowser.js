@@ -1,4 +1,5 @@
 import unpackXlsxFile from './unpackXlsxFileBrowser'
+import xml from './xmlBrowser'
 import readXlsx from './readXlsx'
 
 /**
@@ -8,5 +9,5 @@ import readXlsx from './readXlsx'
  * @return {Promise} Resolves to a 2D array of cells: an array of rows, each row being an array of cells.
  */
 export default function readXlsxFile(file, sheet) {
-	return unpackXlsxFile(file, sheet).then(readXlsx)
+	return unpackXlsxFile(file, sheet).then(entries => readXlsx(entries, xml))
 }

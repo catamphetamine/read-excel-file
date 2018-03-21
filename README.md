@@ -10,8 +10,6 @@ npm install read-excel-file --save
 
 ## Browser
 
-Status: currently it's not working in a browser due to a [bug](https://github.com/goto100/xpath/issues/85) in `xpath` library.
-
 ```html
 <input type="file" id="input" />
 ```
@@ -28,6 +26,8 @@ input.addEventListener('change', () => {
   })
 })
 ```
+
+Browser Compatibility: Node.js uses `xpath` and `xmldom` libraries for XML parsing which could also be used in a browser but turns out it doesn't work in a browser due to a [bug](https://github.com/goto100/xpath/issues/85). Hence using the native browser `DOMParser` which [is supported](https://caniuse.com/#search=domparser) in all major browsers (including IE 11).
 
 ## Node.js
 

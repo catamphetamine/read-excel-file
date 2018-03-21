@@ -4,7 +4,7 @@
 		{
 			"follow_symlinks": true,
 			"path": ".",
-			"folder_exclude_patterns": ["read-excel-file/node_modules", "read-excel-file/coverage", "read-excel-file/build", "read-excel-file/lib", "read-excel-file/es6", "project.sublime-workspace"]
+			"folder_exclude_patterns": ["read-excel-file/node_modules", "read-excel-file/coverage", "read-excel-file/modules", "read-excel-file/lib", "read-excel-file/commonjs", "project.sublime-workspace"]
 		}
 	],
 	"settings":

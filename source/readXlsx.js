@@ -1,10 +1,6 @@
-import xpath from 'xpath'
-import XMLDOM from 'xmldom'
-
-const select = xpath.useNamespaces({
-  a: 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
-  sst: 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
-})
+const namespaces = {
+  a: 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
+}
 
 const letters = ["", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 
@@ -13,24 +9,24 @@ const letters = ["", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
  * @param  {object} entries - A list of entries (files) inside XLSX file.
  * @return {string[][]} An array of rows, each row being an array of cells.
  */
-export default function readXlsx(entries) {
+export default function readXlsx(entries, xml) {
   let sheet
   let values
 
   try {
-    sheet = new XMLDOM.DOMParser().parseFromString(entries.sheet)
-    const valuesDoc = new XMLDOM.DOMParser().parseFromString(entries.strings)
-    values = select('//a:si', valuesDoc)
-      .map(string => select('.//a:t[not(ancestor::a:rPh)]', string).map(_ => _.textContent).join(''))
+    sheet = xml.createDocument(entries.sheet)
+    const valuesDoc = xml.createDocument(entries.strings)
+    values = xml.select(valuesDoc, null, '//a:si', namespaces)
+      .map(string => xml.select(valuesDoc, string, './/a:t[not(ancestor::a:rPh)]', namespaces).map(_ => _.textContent).join(''))
   } catch (error) {
     // Guards against malformed XLSX files.
     console.error(error)
     return []
   }
 
-  const cells = select('/a:worksheet/a:sheetData/a:row/a:c', sheet).map(Cell)
+  const cells = xml.select(sheet, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces).map(node => Cell(node, sheet, xml))
 
-  let d = select('//a:dimension/@ref', sheet, 1)
+  let d = xml.select(sheet, null, '//a:dimension/@ref', namespaces)[0]
   if (d) {
     d = d.textContent.split(':').map(CellCoords)
   } else {
@@ -111,9 +107,9 @@ function CellCoords(coords) {
   }
 }
 
-function Cell(cellNode) {
+function Cell(cellNode, sheet, xml) {
   const coords = CellCoords(cellNode.getAttribute('r'))
-  const value = select('a:v', cellNode, 1)
+  const value = xml.select(sheet, cellNode, 'a:v', namespaces)[0]
   return {
     column : coords.column,
     row    : coords.row,
