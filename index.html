@@ -1,0 +1,60 @@
+<html>
+	<head>
+		<title>read-excel-file</title>
+
+		<script src="./read-excel-file.min.js"></script>
+
+		<style>
+			body
+			{
+				margin : 20px;
+				font-family : Arial, Helvetica;
+			}
+
+			#input
+			{
+				margin-top    : 20px;
+				margin-bottom : 10px;
+			}
+
+			#result
+			{
+
+			}
+
+			#main-link
+			{
+				display     : block;
+				font-size   : 24px;
+				color       : #0093C4;
+				font-family : monospace;
+				text-decoration : none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<a id="main-link" href="https://github.com/catamphetamine/read-excel-file">
+			read-excel-file
+		</a>
+
+		<input type="file" id="input" />
+
+		<pre id="result"></pre>
+
+		<script>
+			var input = document.getElementById('input')
+
+			input.addEventListener('change', function() {
+			  readXlsxFile(input.files[0]).then(function(data) {
+			    // `data` is an array of rows
+			    // each row being an array of cells.
+			    document.getElementById('result').innerText = JSON.stringify(data, null, 2)
+			  }, (error) => {
+			  	console.error(error)
+			  	alert("Error while parsing Excel file. See console output for the error stack trace.")
+			  })
+			})
+		</script>
+	</body>
+</html>
