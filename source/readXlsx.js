@@ -40,7 +40,7 @@ export default function readXlsx(entries, xml) {
 
   times(rows, () => {
     const row = []
-    times(cols, () => row.push(''))
+    times(cols, () => row.push(null))
     data.push(row)
   })
 
@@ -113,7 +113,7 @@ function Cell(cellNode, sheet, xml) {
   return {
     column : coords.column,
     row    : coords.row,
-    value  : value && value.textContent && value.textContent.trim() || null,
+    value  : value && value.textContent && value.textContent.trim(),
     type   : cellNode.getAttribute('t')
   }
 }
