@@ -1,6 +1,6 @@
 {
   "name": "read-excel-file",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Read `*.xlsx` files in a browser or Node.js",
   "module": "modules/readXlsxFileBrowser.js",
   "main": "commonjs/readXlsxFileBrowser.js",

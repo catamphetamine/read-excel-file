@@ -7,10 +7,11 @@ import { getXlsxEntryKey } from './readXlsxFileHelpers'
 /**
  * Reads XLSX file in Node.js.
  * @param  {(string|Stream)} input - A Node.js readable stream or a path to a file.
- * @param  {string?} sheet - Excel document sheet to read. Defaults to `1`. Will only read this sheet and skip others.
+ * @param  {object} options
+ * @param  {string?} options.sheet - Excel document sheet to read. Defaults to `1`. Will only read this sheet and skip others.
  * @return {Promise} Resolves to an object holding XLSX file entries.
  */
-export default function unpackXlsxFile(input, sheet = '1') {
+export default function unpackXlsxFile(input, { sheet }) {
   // XLSX file is a zip archive.
   // The `entries` object stores the files
   // and their contents from this XLSX zip archive.

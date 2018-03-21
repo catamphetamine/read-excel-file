@@ -52,10 +52,10 @@ Node.js `*.xlxs` parser uses `xpath` and `xmldom` universal packages for XML par
 
 ## Advanced
 
-By default it reads the first sheet in the document. If you have multiple sheets in your spreadsheet then pass the second argument (which is `'1'` by default):
+By default it reads the first sheet in the document. If you have multiple sheets in your spreadsheet then pass `sheet: number` as part of the `options` argument (`options.sheet` is `1` by default):
 
 ```js
-readXlsxFile(selectedFile, '2').then((data) => {
+readXlsxFile(selectedFile, { sheet: 2 }).then((data) => {
   ...
 })
 ````

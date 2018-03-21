@@ -13,14 +13,13 @@ export default {
 			XPathResult.ANY_TYPE,
 			null
 		)
-
 		// Convert iterator to an array.
 		const results = []
-    let result = nodes.iterateNext()
-    while (result) {
-    	results.push(result)
-    	result = nodes.iterateNext()
-    }
-    return results
+		let result = nodes.iterateNext()
+		while (result) {
+			results.push(result)
+			result = nodes.iterateNext()
+		}
+		return results
 	}
 }
