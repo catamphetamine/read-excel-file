@@ -60,7 +60,7 @@ export default function readXlsx(entries, xml) {
     return []
   }
 
-  return trimTrailingEmptyColumns(data)
+  return trimTrailingEmptyRows(trimTrailingEmptyColumns(data))
 }
 
 function calculateDimensions (cells) {
@@ -116,6 +116,30 @@ function Cell(cellNode, sheet, xml) {
     value  : value && value.textContent && value.textContent.trim() || '',
     type   : cellNode.getAttribute('t')
   }
+}
+
+function trimTrailingEmptyRows(data) {
+  let i = data.length - 1
+  while (i >= 0) {
+    let notEmpty = false
+    for (const column of data[i]) {
+      for (const cell of column) {
+        if (cell) {
+          notEmpty = true
+          break
+        }
+      }
+      if (notEmpty) {
+        break
+      }
+    }
+    if (notEmpty) {
+      break
+    }
+    data.splice(i, 1)
+    i--
+  }
+  return data
 }
 
 function trimTrailingEmptyColumns(data) {
