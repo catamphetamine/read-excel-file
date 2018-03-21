@@ -29,8 +29,6 @@ input.addEventListener('change', () => {
 })
 ```
 
-Browser Compatibility: Node.js uses `xpath` and `xmldom` libraries for XML parsing which could also be used in a browser but turns out it doesn't work in a browser due to a [bug](https://github.com/goto100/xpath/issues/85). Hence using the native browser `DOMParser` which [is supported](https://caniuse.com/#search=domparser) in all major browsers (including IE 11).
-
 ## Node.js
 
 ```js
@@ -47,6 +45,10 @@ readXlsxFile(fs.createReadStream('/path/to/file')).then((data) => {
   ...
 })
 ```
+
+## Browser compatibility
+
+Node.js `*.xlxs` parser uses `xpath` and `xmldom` universal packages for XML parsing. The same packages could be used in a browser too but since [all modern browsers](https://caniuse.com/#search=domparser) (including IE 11) already have native `DOMParser` built-in this native implementation is used (which means smaller footprint and better performance).
 
 ## Advanced
 

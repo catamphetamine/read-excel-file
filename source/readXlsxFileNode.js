@@ -1,5 +1,5 @@
 import unpackXlsxFile from './unpackXlsxFileNode'
-import xml from './xmlNode'
+import xml from './xml'
 import readXlsx from './readXlsx'
 
 /**
