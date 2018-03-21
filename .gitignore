@@ -1,0 +1,20 @@
+/node_modules/
+
+# npm errors
+npm-debug.log
+
+# for OS X users
+.DS_Store
+
+# test coverage folder
+/coverage/
+
+# browser builds
+/bundle/
+
+# builds
+/commonjs/
+/modules/
+
+# Sublime
+*.sublime-workspace

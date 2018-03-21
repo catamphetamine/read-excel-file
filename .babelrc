@@ -1,0 +1,41 @@
+{
+	"env":
+	{
+		"development":
+		{
+			"presets":
+			[
+				"env"
+			],
+
+			"plugins":
+			[
+				"transform-object-rest-spread"
+			]
+		},
+		"commonjs":
+		{
+			"presets":
+			[
+				"env"
+			],
+
+			"plugins":
+			[
+				"transform-object-rest-spread"
+			]
+		},
+		"es6":
+		{
+			"presets":
+			[
+				["env", { modules: false }]
+			],
+
+			"plugins":
+			[
+				"transform-object-rest-spread"
+			]
+		}
+	}
+}

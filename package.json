@@ -1,0 +1,90 @@
+{
+  "name": "read-excel-file",
+  "version": "1.0.0",
+  "description": "Read `*.xlsx` files in a browser or Node.js",
+  "module": "modules/parseXlsxFileBrowser.js",
+  "main": "commonjs/parseXlsxFileBrowser.js",
+  "contributors": [
+    {
+      "name": "Trevor Dixon",
+      "email": "trevordixon@gmail.com"
+    },
+    {
+      "name": "Steve Tarver",
+      "email": "steve.tarver@gmail.com"
+    },
+    {
+      "name": "Jake Scott",
+      "email": "scott.iroh@gmail.com"
+    },
+    {
+      "name": "Fabian Tollenaar",
+      "email": "fabian@starting-point.nl"
+    }
+  ],
+  "scripts": {
+    "test": "mocha --compilers js:babel-core/register --colors --bail --reporter spec --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
+    "test-coverage": "istanbul cover -x \"commonjs/**\" -x \"modules/**\" -x \"*.test.js\" node_modules/mocha/bin/_mocha -- --compilers js:babel-core/register --colors --reporter dot --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
+    "test-travis": "istanbul cover -x \"commonjs/**\" -x \"modules/**\" -x \"*.test.js\" node_modules/mocha/bin/_mocha --report lcovonly -- --compilers js:babel-core/register --colors --reporter spec --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
+    "clean-for-build": "rimraf ./commonjs/**/* ./modules/**/*",
+    "build-commonjs-modules": "better-npm-run build-commonjs-modules",
+    "build-es6-modules": "better-npm-run build-es6-modules",
+    "browser-build": "better-npm-run browser-build",
+    "build": "npm-run-all clean-for-build build-commonjs-modules build-es6-modules",
+    "prepublish": "npm-run-all build test browser-build"
+  },
+  "dependencies": {
+    "jszip": "^3.1.5",
+    "unzipper": "^0.8.11",
+    "xmldom": "^0.1.27",
+    "xpath": "0.0.27"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.4",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "better-npm-run": "^0.1.0",
+    "chai": "^4.1.2",
+    "mocha": "^1.17.1",
+    "npm-run-all": "^4.1.2",
+    "webpack": "^4.1.1",
+    "webpack-cli": "^2.0.12"
+  },
+  "betterScripts": {
+    "browser-build": {
+      "command": "npm run build-commonjs-modules && webpack --mode production --progress --colors",
+      "env": {
+        "WEBPACK_ENV": "build"
+      }
+    },
+    "build-commonjs-modules": {
+      "command": "babel ./source --out-dir ./commonjs --source-maps",
+      "env": {
+        "BABEL_ENV": "commonjs"
+      }
+    },
+    "build-es6-modules": {
+      "command": "babel ./source --out-dir ./modules --source-maps",
+      "env": {
+        "BABEL_ENV": "es6"
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/catamphetamine/read-excel-file"
+  },
+  "keywords": [
+    "excel",
+    "xlsx",
+    "browser"
+  ],
+  "author": "catamphetamine <purecatamphetamine@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/catamphetamine/read-excel-file/issues"
+  },
+  "homepage": "https://github.com/catamphetamine/read-excel-file#readme"
+}
