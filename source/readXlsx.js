@@ -113,7 +113,7 @@ function Cell(cellNode, sheet, xml) {
   return {
     column : coords.column,
     row    : coords.row,
-    value  : value && value.textContent && value.textContent.trim() || '',
+    value  : value && value.textContent && value.textContent.trim() || null,
     type   : cellNode.getAttribute('t')
   }
 }
@@ -121,20 +121,10 @@ function Cell(cellNode, sheet, xml) {
 function trimTrailingEmptyRows(data) {
   let i = data.length - 1
   while (i >= 0) {
-    let notEmpty = false
-    for (const column of data[i]) {
-      for (const cell of column) {
-        if (cell) {
-          notEmpty = true
-          break
-        }
+    for (const cell of data[i]) {
+      if (cell) {
+        return data
       }
-      if (notEmpty) {
-        break
-      }
-    }
-    if (notEmpty) {
-      break
     }
     data.splice(i, 1)
     i--
