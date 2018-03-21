@@ -10,7 +10,7 @@ npm install read-excel-file --save
 
 ## Browser
 
-Status: currently it's not working in a browser due to a [bug](https://github.com/goto100/xpath/issues/85) in [`xpath`] library.
+Status: currently it's not working in a browser due to a [bug](https://github.com/goto100/xpath/issues/85) in `xpath` library.
 
 ```html
 <input type="file" id="input" />
