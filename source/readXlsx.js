@@ -113,7 +113,9 @@ function Cell(cellNode, sheet, xml) {
   return {
     column : coords.column,
     row    : coords.row,
-    value  : value && value.textContent && value.textContent.trim(),
+    // For `xpath` `value` can be `undefined` while for native `DOMParser` it's `null`.
+    // Hence the `|| null` in the end: so that `undefined` is converted to `null`.
+    value  : value && value.textContent && value.textContent.trim() || null,
     type   : cellNode.getAttribute('t')
   }
 }
