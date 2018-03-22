@@ -2,7 +2,7 @@ import fs from 'fs'
 import Stream from 'stream'
 import unzip from 'unzipper'
 
-import { getXlsxEntryKey } from './readXlsxFileHelpers'
+import { getXlsxEntryKey, validateXlsxEntries } from './readXlsxFileHelpers'
 
 /**
  * Reads XLSX file in Node.js.
@@ -26,12 +26,8 @@ export default function unpackXlsxFile(input, { sheet }) {
       .pipe(unzip.Parse())
       .on('error', reject)
       .on('close', () => {
-        Promise.all(entryPromises).then(() => resolve(entries))
+        Promise.all(entryPromises).then(() => resolve(validateXlsxEntries(entries, sheet)))
       })
-      // For some reason `end` event is not emitted.
-      // .on('end', () => {
-      //   Promise.all(entryPromises).then(() => resolve(entries))
-      // })
       .on('entry', (entry) => {
         const key = getXlsxEntryKey(entry.path, sheet)
         if (key) {
