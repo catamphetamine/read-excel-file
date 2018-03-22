@@ -9,7 +9,7 @@ import readXlsx from './readXlsx'
  * @param  {string?} options.sheet - Excel document sheet to read. Defaults to `1`. Will only read this sheet and skip others.
  * @return {Promise} Resolves to a 2D array of cells: an array of rows, each row being an array of cells.
  */
-export default function readXlsxFile(input, options = {}) {
+export default function readXlsxFile(input, options) {
 	// Deprecated 1.0.0 `sheet` argument. Will be removed in some next major release.
 	if (typeof options === 'string' || typeof options === 'number') {
 		options = { sheet: options }
