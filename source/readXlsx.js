@@ -60,7 +60,7 @@ export default function readXlsx(entries, xml) {
     return []
   }
 
-  return trimTrailingEmptyRows(trimTrailingEmptyColumns(data))
+  return dropEmptyRows(dropEmptyColumns(data))
 }
 
 function calculateDimensions (cells) {
@@ -118,38 +118,40 @@ function Cell(cellNode, sheet, xml) {
   }
 }
 
-function trimTrailingEmptyRows(data) {
+function dropEmptyRows(data) {
   let i = data.length - 1
   while (i >= 0) {
+    let empty = true
     for (const cell of data[i]) {
       if (cell) {
-        return data
+        empty = false
+        break
       }
     }
-    data.splice(i, 1)
+    if (empty) {
+      data.splice(i, 1)
+    }
     i--
   }
   return data
 }
 
-function trimTrailingEmptyColumns(data) {
+function dropEmptyColumns(data) {
   let i = data[0].length - 1
   while (i >= 0) {
-    let notEmpty
+    let empty = true
     for (const row of data) {
       if (row[i]) {
-        // Column is not empty.
-        notEmpty = true
+        empty = false
         break
       }
     }
-    if (notEmpty) {
-      break
-    }
-    let j = 0;
-    while (j < data.length) {
-      data[j].splice(i, 1)
-      j++
+    if (empty) {
+      let j = 0;
+      while (j < data.length) {
+        data[j].splice(i, 1)
+        j++
+      }
     }
     i--
   }
