@@ -54,7 +54,7 @@ To convert rows to JSON pass `schema` option to `readXlsxFile()`. It will return
 const schema = {
   'START DATE': {
     prop: 'date',
-    type: Date,
+    type: Date
     // Excel stores dates as integers.
     // E.g. '24/03/2018' === 43183.
     // Such dates are parsed to UTC+0 timezone with time 12:00 .
