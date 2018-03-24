@@ -74,6 +74,9 @@ const schema = {
   'IS FREE': {
     prop: 'course.isFree',
     type: Boolean
+    // Excel stored booleans as numbers:
+    // `1` is `true` and `0` is `false`.
+    // Such numbers are parsed to booleans.
   },
   'COURSE TITLE': {
     prop: 'course.title',
