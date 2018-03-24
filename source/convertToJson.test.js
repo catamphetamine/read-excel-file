@@ -1,8 +1,13 @@
-import convertToJson from './convertToJson'
+import convertToJson, { parseArray, getBlock } from './convertToJson'
 
 const date = convertToUTCTimezone(new Date(2018, 3 - 1, 24, 12))
 
 describe('convertToJson', () => {
+	it('should parse arrays', () => {
+		getBlock('abc"de,f"g,h', ',', 0).should.deep.equal(['abcde,fg', 10])
+		parseArray(' abc"de,f"g  , h ').should.deep.equal(['abcde,fg', 'h'])
+	})
+
 	it('should convert to json', () => {
 		const { rows, errors } = convertToJson([
 			[
@@ -29,11 +34,11 @@ describe('convertToJson', () => {
 				type: Number
 			},
 			BOOLEAN: {
-				prop: 'nested.boolean',
+				prop: 'boolean',
 				type: Boolean
 			},
 			STRING: {
-				prop: 'nested.string',
+				prop: 'string',
 				type: String
 			},
 			PHONE: {
@@ -50,10 +55,8 @@ describe('convertToJson', () => {
 			 date,
 			 number: 123,
 			 phone: '+11234567890',
-			 nested: {
-				 boolean: true,
-				 string: 'abc'
-			 }
+			 boolean: true,
+			 string: 'abc'
 		}])
 	})
 
@@ -79,9 +82,7 @@ describe('convertToJson', () => {
 			value: null
 		}])
 
-		rows.should.deep.equal([{
-			number: null
-		}])
+		rows.should.deep.equal([])
 	})
 
 	it('should validate numbers', () => {
@@ -106,9 +107,7 @@ describe('convertToJson', () => {
 			value: '123abc'
 		}])
 
-		rows.should.deep.equal([{
-			number: null
-		}])
+		rows.should.deep.equal([])
 	})
 
 	it('should validate booleans', () => {
@@ -142,15 +141,14 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'invalid',
-			row: 3,
+			row: 1,
 			column: 'INVALID',
 			value: 'TRUE'
 		}])
 
 		rows.should.deep.equal([{
 			true: true,
-			false: false,
-			invalid: null
+			false: false
 		}])
 	})
 
@@ -180,14 +178,13 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'invalid',
-			row: 2,
+			row: 1,
 			column: 'INVALID',
 			value: '-'
 		}])
 
 		rows.should.deep.equal([{
-			date,
-			invalid: null
+			date
 		}])
 	})
 
@@ -214,9 +211,7 @@ describe('convertToJson', () => {
 			value: '123'
 		}])
 
-		rows.should.deep.equal([{
-			phone: null
-		}])
+		rows.should.deep.equal([])
 	})
 })
 

@@ -15,13 +15,21 @@ describe('readXlsxFileNode', () => {
 				type: Number,
 				required: true
 			},
-			'IS FREE': {
-				prop: 'course.isFree',
-				type: Boolean
-			},
-			'COURSE TITLE': {
-				prop: 'course.title',
-				type: String
+			'COURSE': {
+				prop: 'course',
+				type: {
+					'IS FREE': {
+						prop: 'isFree',
+						type: Boolean
+						// Excel stored booleans as numbers:
+						// `1` is `true` and `0` is `false`.
+						// Such numbers are parsed to booleans.
+					},
+					'COURSE TITLE': {
+						prop: 'title',
+						type: String
+					}
+				}
 			},
 			'CONTACT': {
 				prop: 'contact',
