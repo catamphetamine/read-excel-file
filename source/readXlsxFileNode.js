@@ -1,6 +1,7 @@
 import unpackXlsxFile from './unpackXlsxFileNode'
 import xml from './xml'
 import readXlsx from './readXlsx'
+import convertToJson from './convertToJson'
 
 /**
  * Reads XLSX file into a 2D array of cells in a browser.
@@ -16,5 +17,12 @@ export default function readXlsxFile(input, options) {
 	} else if (!options) {
 		options = { sheet: 1 }
 	}
-	return unpackXlsxFile(input, options).then(entries => readXlsx(entries, xml))
+	return unpackXlsxFile(input, options)
+		.then(entries => readXlsx(entries, xml))
+		.then((rows) => {
+			if (options.schema) {
+				return convertToJson(rows, options.schema, options)
+			}
+			return rows
+		})
 }
