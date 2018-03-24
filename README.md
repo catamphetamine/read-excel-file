@@ -51,6 +51,13 @@ readXlsxFile(fs.createReadStream('/path/to/file')).then((rows) => {
 To convert rows to JSON pass `schema` option to `readXlsxFile()`. It will return `{ rows, errors }` object instead of just `rows`.
 
 ```js
+// An example *.xlsx document:
+// -----------------------------------------------------------------------------
+// | START DATE | NUMBER OF STUDENTS | IS FREE | COURSE TITLE |    CONTACT     |
+// -----------------------------------------------------------------------------
+// | 03/24/2018 |         123        |   true  |  Chemistry   | (123) 456-7890 |
+// -----------------------------------------------------------------------------
+
 const schema = {
   'START DATE': {
     prop: 'date',
@@ -84,12 +91,6 @@ const schema = {
     }
   }
 }
-
-// -----------------------------------------------------------------------------
-// | START DATE | NUMBER OF STUDENTS | IS FREE | COURSE TITLE |    CONTACT     |
-// -----------------------------------------------------------------------------
-// | 03/24/2018 |         123        |   true  |  Chemistry   | (123) 456-7890 |
-// -----------------------------------------------------------------------------
 
 readXlsxFile(file, { schema }).then(({ rows, errors }) => {
   errors.length === 0
