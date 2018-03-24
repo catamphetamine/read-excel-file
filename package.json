@@ -1,7 +1,7 @@
 {
   "name": "read-excel-file",
-  "version": "1.1.0",
-  "description": "Read `*.xlsx` files in a browser or Node.js",
+  "version": "1.1.1",
+  "description": "Read `*.xlsx` files in a browser or Node.js. Parse to JSON with a strict schema.",
   "module": "modules/readXlsxFileBrowser.js",
   "main": "commonjs/readXlsxFileBrowser.js",
   "contributors": [
@@ -79,7 +79,8 @@
   "keywords": [
     "excel",
     "xlsx",
-    "browser"
+    "browser",
+    "json"
   ],
   "author": "catamphetamine <purecatamphetamine@gmail.com>",
   "license": "MIT",

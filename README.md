@@ -1,6 +1,6 @@
 # `read-excel-file`
 
-Read `*.xlsx` files in a browser or Node.js.
+Read `*.xlsx` files in a browser or Node.js. Parse to JSON with a strict schema.
 
 [Demo](https://catamphetamine.github.io/read-excel-file/)
 
