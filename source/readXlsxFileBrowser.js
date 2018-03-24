@@ -3,9 +3,6 @@ import xml from './xmlBrowser'
 import readXlsx from './readXlsx'
 import convertToJson from './convertToJson'
 
-date, format
-parse()
-
 /**
  * Reads XLSX file into a 2D array of cells in a browser.
  * @param  {file} file - A file being uploaded in the browser.
