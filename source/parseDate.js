@@ -1,125 +1,52 @@
-// Parses a text value into a `Date` provided a `format`.
-// The date returned is in the user's time zone and the time is `00:00`.
-export default function parse_date(string, format, noon, utc)
-{
-	if (!string)
-	{
-		return
-	}
+// Parses an Excel Date ("serial") into a
+// corresponding javascript Date in UTC+0 timezone.
+// (with time equal to 12:00)
+//
+// Doesn't account for leap seconds.
+// Therefore is not 100% correct.
+// But will do, I guess, since we're
+// not doing rocket science here.
+//
+// https://www.pcworld.com/article/3063622/software/mastering-excel-date-time-serial-numbers-networkdays-datevalue-and-more.html
+// "If you need to calculate dates in your spreadsheets,
+//  Excel uses its own unique system, which it calls Serial Numbers".
+//
+export default function(excelSerialDate) {
+  // "Excel serial date" is just
+  // the count of days since `01/01/1900`
+  // (seems that it may be even fractional).
+  //
+  // The count of days elapsed
+  // since `01/01/1900` (Excel epoch)
+  // till `01/01/1970` (Unix epoch).
+  // Accounts for leap years
+  // (19 of them, yielding 19 extra days).
+  const daysBeforeUnixEpoch = 70 * 365 + 19
 
-	let year = extract(string, format, 'YYYY')
+  // An hour, approximately, because a minute
+  // may be longer than 60 seconds, see "leap seconds".
+  const hour = 60 * 60 * 1000
 
-	if (year === undefined)
-	{
-		year = extract(string, format, 'YY')
-
-		if (year !== undefined)
-		{
-			// Current year in the user's time zone.
-			const current_year = new Date().getFullYear()
-			const current_year_century = current_year - current_year % 100
-			year += current_year_century
-		}
-	}
-
-	const month = extract(string, format, 'MM')
-	const day   = extract(string, format, 'DD')
-
-	if (year === undefined || month === undefined || day === undefined)
-	{
-		console.error(`Couldn't parse date. Most likely an invalid date entered (manually). Otherwise it could be an unsupported date format: ${format} (only DD, MM, YY and YYYY literals are supported).`)
-		return
-	}
-
-	// The date created is in the user's time zone and the time is `00:00`.
-	let date = new Date
-	(
-		year,
-		month - 1,
-		day,
-		noon ? 12 : undefined
-	)
-
-	if (utc)
-	{
-		// Converts timezone to UTC while preserving the same time
-		date = convert_to_utc_timezone(date)
-	}
-
-	// If `new Date()` returns "Invalid Date"
-	// (sometimes it does)
-	if (isNaN(date.getTime()))
-	{
-		return
-	}
-
-	return date
-}
-
-// Converts timezone to UTC while preserving the same time
-export function convert_to_utc_timezone(date)
-{
-	// Doesn't account for leap seconds but I guess that's ok
-	// given that javascript's own `Date()` does not either.
-	// https://www.timeanddate.com/time/leap-seconds-background.html
-	//
-	// https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset
-	//
-	return new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000)
-}
-
-function extract(string, template, piece)
-{
-	const starts_at = template.indexOf(piece)
-
-	if (starts_at < 0)
-	{
-		return
-	}
-
-	// Check overall sanity
-	if (!corresponds_to_template(string, template))
-	{
-		return
-	}
-
-	const number = parseInt(string.slice(starts_at, starts_at + piece.length))
-
-	if (!isNaN(number))
-	{
-		return number
-	}
-}
-
-function corresponds_to_template(string, template)
-{
-	if (string.length !== template.length)
-	{
-		return false
-	}
-
-	let i = 0
-	while (i < string.length)
-	{
-		const is_a_digit = string[i] >= '0' && string[i] <= '9'
-
-		if (!is_a_digit)
-		{
-			if (string[i] !== template[i])
-			{
-				return false
-			}
-		}
-		else
-		{
-			if (template[i] !== 'D' && template[i] !== 'M' && template[i] !== 'Y')
-			{
-				return false
-			}
-		}
-
-		i++
-	}
-
-	return true
+  // "In the 1900 system, the serial number 1 represents January 1, 1900, 12:00:00 a.m.
+  //  while the number 0 represents the fictitious date January 0, 1900".
+  // These extra 12 hours are a hack to make things
+  // a little bit less weird when rendering parsed dates.
+  // E.g. if a date `Jan 1st, 2017` gets parsed as
+  // `Jan 1st, 2017, 00:00 UTC` then when displayed in the US
+  // it would show up as `Dec 31st, 2016, 19:00 UTC-05` (Austin, Texas).
+  // That would be weird for a website user.
+  // Therefore this extra 12-hour padding is added
+  // to compensate for the most weird cases like this
+  // (doesn't solve all of them, but most of them).
+  // And if you ask what about -12/+12 border then
+  // the answer is people there are already accustomed
+  // to the weird time behaviour when their neighbours
+  // may have completely different date than they do.
+  //
+  // `Math.round()` rounds all time fractions
+  // smaller than a millisecond (e.g. nanoseconds)
+  // but it's unlikely that an Excel serial date
+  // is gonna contain even seconds.
+  //
+  return new Date(Math.round((excelSerialDate - daysBeforeUnixEpoch) * 24 * hour) + 12 * hour)
 }

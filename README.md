@@ -22,8 +22,8 @@ import readXlsxFile from 'read-excel-file'
 const input = document.getElementById('input')
 
 input.addEventListener('change', () => {
-  readXlsxFile(input.files[0]).then((data) => {
-    // `data` is an array of rows
+  readXlsxFile(input.files[0]).then((rows) => {
+    // `rows` is an array of rows
     // each row being an array of cells.
   })
 })
@@ -35,14 +35,73 @@ input.addEventListener('change', () => {
 import readXlsxFile from 'read-excel-file/node'
 
 // File path.
-readXlsxFile('/path/to/file').then((data) => {
-  // `data` is an array of rows
+readXlsxFile('/path/to/file').then((rows) => {
+  // `rows` is an array of rows
   // each row being an array of cells.
 })
 
 // Readable Stream.
-readXlsxFile(fs.createReadStream('/path/to/file')).then((data) => {
+readXlsxFile(fs.createReadStream('/path/to/file')).then((rows) => {
   ...
+})
+```
+
+## JSON
+
+To convert rows to JSON pass `schema` option to `readXlsxFile()`. It will return `{ rows, errors }` object instead of just `rows`.
+
+```js
+const schema = {
+  'START DATE': {
+    prop: 'date',
+    type: Date,
+    // Excel stores dates as integers.
+    // E.g. '24/03/2018' === 43183.
+    // Such dates are parsed to UTC+0 timezone with time 12:00 .
+  },
+  'NUMBER OF STUDENTS': {
+    prop: 'numberOfStudents',
+    type: Number,
+    required: true
+  },
+  'IS FREE': {
+    prop: 'course.isFree',
+    type: Boolean
+  },
+  'COURSE TITLE': {
+    prop: 'course.title',
+    type: String
+  },
+  'CONTACT': {
+    prop: 'contact',
+    required: true,
+    parse(value) {
+      const number = parsePhoneNumber(value)
+      if (!number) {
+        throw new Error('invalid')
+      }
+      return number
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// | START DATE | NUMBER OF STUDENTS | IS FREE | COURSE TITLE |    CONTACT     |
+// -----------------------------------------------------------------------------
+// | 03/24/2018 |         123        |   true  |  Chemistry   | (123) 456-7890 |
+// -----------------------------------------------------------------------------
+
+readXlsxFile(file, { schema }).then(({ rows, errors }) => {
+  errors.length === 0
+  rows === [{
+    date: new Date(2018, 2, 24),
+    numberOfStudents: 123,
+    course: {
+      isFree: true,
+      title: 'Chemistry'
+    },
+    contact: '+11234567890',
+  }]
 })
 ```
 

@@ -56,7 +56,7 @@ function convertValue(value, schemaEntry) {
   }
   switch (schemaEntry.type) {
     case String:
-      return value
+      return [value]
     case Number:
       // The global isFinite() function determines
       // whether the passed value is a finite number.
@@ -66,16 +66,20 @@ function convertValue(value, schemaEntry) {
       }
       return [null, 'invalid']
     case Date:
-      const date = parseDate(value, schemaEntry.template)
+      if (!isFinite(value)) {
+        return [null, 'invalid']
+      }
+      value = parseInt(value)
+      const date = parseDate(value, schemaEntry.template, true, true)
       if (!date) {
         return [null, 'invalid']
       }
       return [date]
     case Boolean:
-      if (value.toLowerCase() === 'true') {
+      if (value === '1') {
         return [true]
       }
-      if (value.toLowerCase() === 'false') {
+      if (value === '0') {
         return [false]
       }
       return [null, 'invalid']
@@ -111,12 +115,12 @@ function set(obj, path, value, options, schemaEntry) {
         obj[property].push({})
         i--
       }
-      return set(obj[property][arrayElementIndex], path, value, options)
+      return set(obj[property][arrayElementIndex], path, value, options, schemaEntry)
     } else {
       if (!obj[property]) {
         obj[property] = {}
       }
-      return set(obj[property], path, value, options)
+      return set(obj[property], path, value, options, schemaEntry)
     }
   }
 
@@ -182,16 +186,21 @@ export default function(data, schema, options) {
   for (const row of rows) {
     const item = {}
     for (let i = 0; i < row.length; i++) {
+      const schemaEntry = schema[keys[i]]
+      if (!schemaEntry) {
+        throw new Error(`No schema entry for column "${keys[i]}".`)
+      }
       const error = set(
         item,
-        schema[keys[i]].prop || keys[i],
+        schemaEntry.prop || keys[i],
         row[i],
         options,
-        schema[keys[i]]
+        schemaEntry
       )
       if (error) {
         errors.push({
           error,
+          row: i + 1,
           column: keys[i],
           value: row[i]
         })
