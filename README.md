@@ -96,7 +96,9 @@ const schema = {
 }
 
 readXlsxFile(file, { schema }).then(({ rows, errors }) => {
+  // `errors` have shape `{ row, column, error, value }`.
   errors.length === 0
+
   rows === [{
     date: new Date(2018, 2, 24),
     numberOfStudents: 123,
