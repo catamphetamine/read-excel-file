@@ -172,7 +172,7 @@ function parseValueOfType(value, type) {
       // whether the passed value is a finite number.
       // If  needed, the parameter is first converted to a number.
       if (isFinite(value)) {
-        return { value: parseInt(value) }
+        return { value: parseFloat(value) }
       }
       return { error: 'invalid' }
     case Date:
@@ -222,7 +222,6 @@ export function parseArray(string) {
   const blocks = []
   let index = 0
   while (index < string.length) {
-    console.log('block', getBlock(string, ',', index))
     const [substring, length] = getBlock(string, ',', index)
     index += length + ','.length
     blocks.push(substring.trim())

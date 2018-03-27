@@ -25,6 +25,10 @@ describe('readXlsxFileNode', () => {
 						// `1` is `true` and `0` is `false`.
 						// Such numbers are parsed to booleans.
 					},
+					'COST': {
+						prop: 'cost',
+						type: Number
+					},
 					'COURSE TITLE': {
 						prop: 'title',
 						type: String
@@ -47,7 +51,8 @@ describe('readXlsxFileNode', () => {
 				date: convertToUTCTimezone(new Date(2018, 2, 24, 12)).getTime(),
 				numberOfStudents: 123,
 				course: {
-					isFree: true,
+					isFree: false,
+					cost: 210.45,
 					title: 'Chemistry'
 				},
 				contact: '+11234567890',
