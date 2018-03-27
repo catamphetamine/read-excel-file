@@ -86,6 +86,7 @@ function read(schema, row, rowIndex, columns, errors) {
         error,
         row: rowIndex + 1,
         column: key,
+        type: schemaEntry.type,
         value
       })
     } else if (!error && value !== null) {
