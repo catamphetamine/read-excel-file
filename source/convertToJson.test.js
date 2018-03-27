@@ -92,12 +92,13 @@ describe('convertToJson', () => {
 				'NAMES'
 			], [
 				'Barack Obama, "String, with, colons", Donald Trump'
+			], [
+				null
 			]
 		], {
 			NAMES: {
 				prop: 'names',
-				type: [String],
-				required: true
+				type: [String]
 			}
 		})
 

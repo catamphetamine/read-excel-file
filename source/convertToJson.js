@@ -49,37 +49,42 @@ function read(schema, row, rowIndex, columns, errors) {
   for (const key of Object.keys(schema)) {
     const schemaEntry = schema[key]
     const isNestedSchema = typeof schemaEntry.type === 'object' && !Array.isArray(schemaEntry.type)
-    const rawValue = row[columns.indexOf(key)]
-    let value = null
+    let rawValue = row[columns.indexOf(key)]
+    if (rawValue === undefined) {
+      rawValue = null
+    }
+    let value
     let error
     if (isNestedSchema) {
       value = read(schemaEntry.type, row, rowIndex, columns, errors)
-      if (value === null && schemaEntry.required) {
-        error = 'required'
-      }
     } else {
-      if (Array.isArray(schemaEntry.type)) {
+      if (rawValue === null) {
+        value = null
+      }
+      else if (Array.isArray(schemaEntry.type)) {
+        let notEmpty = false
         const array = parseArray(rawValue).map((_value) => {
           const result = parseValue(_value, schemaEntry)
           if (result.error) {
             value = _value
             error = result.error
           }
+          if (result.value !== null) {
+            notEmpty = true
+          }
           return result.value
         })
         if (!error) {
-          for (const element of array) {
-            if (element !== null) {
-              value = array
-              break
-            }
-          }
+          value = notEmpty ? array : null
         }
       } else {
         const result = parseValue(rawValue, schemaEntry)
         error = result.error
         value = error ? rawValue : result.value
       }
+    }
+    if (!error && value === null && schemaEntry.required) {
+      error = 'required'
     }
     if (error) {
       error = {
@@ -92,7 +97,7 @@ function read(schema, row, rowIndex, columns, errors) {
         error.type = schemaEntry.type
       }
       errors.push(error)
-    } else if (!error && value !== null) {
+    } else if (value !== null) {
       object[schemaEntry.prop] = value
     }
   }
@@ -110,9 +115,6 @@ function read(schema, row, rowIndex, columns, errors) {
  */
 export function parseValue(value, schemaEntry) {
   if (value === null) {
-    if (schemaEntry.required) {
-      return { error: 'required' }
-    }
     return { value: null }
   }
   let result
