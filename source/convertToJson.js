@@ -61,11 +61,11 @@ function read(schema, row, rowIndex, columns, errors) {
       if (Array.isArray(schemaEntry.type)) {
         const array = parseArray(rawValue).map((_value) => {
           const result = parseValue(_value, schemaEntry)
-          if (result[1]) {
+          if (result.error) {
             value = _value
-            error = result[1]
+            error = result.error
           }
-          return result[0]
+          return result.value
         })
         if (!error) {
           for (const element of array) {
@@ -77,8 +77,8 @@ function read(schema, row, rowIndex, columns, errors) {
         }
       } else {
         const result = parseValue(rawValue, schemaEntry)
-        error = result[1]
-        value = error ? rawValue : result[0]
+        error = result.error
+        value = error ? rawValue : result.value
       }
     }
     if (error) {
@@ -106,57 +106,91 @@ function read(schema, row, rowIndex, columns, errors) {
  * Converts textual value to a javascript typed value.
  * @param  {string} value
  * @param  {object} schemaEntry
- * @return {[value: (string|number|boolean), error: string]}
+ * @return {{ value: any, error: string }}
  */
 export function parseValue(value, schemaEntry) {
   if (value === null) {
     if (schemaEntry.required) {
-      return [null, 'required']
+      return { error: 'required' }
     }
-    return [null]
+    return { value: null }
   }
-  switch (schemaEntry.type) {
+  let result
+  if (schemaEntry.type) {
+    result = parseValueOfType(value, Array.isArray(schemaEntry.type) ? schemaEntry.type[0] : schemaEntry.type)
+  } else if (schemaEntry.parse) {
+    result = parseCustomValue(value, schemaEntry.parse)
+  } else {
+    throw new Error('Invalid schema entry: no .type and no .parse():\n\n' + JSON.stringify(schemaEntry, null, 2))
+  }
+  // If errored then return the error.
+  if (result.error) {
+    return result
+  }
+  if (schemaEntry.validate) {
+    try {
+      schemaEntry.validate(result.value)
+    } catch (error) {
+      return { error: error.message }
+    }
+  }
+  return result
+}
+
+/**
+ * Converts textual value to a custom value using supplied `.parse()`.
+ * @param  {string} value
+ * @param  {function} parse
+ * @return {{ value: any, error: string }}
+ */
+function parseCustomValue(value, parse) {
+  try {
+    let parsed = parse(value)
+    if (parsed === undefined) {
+      return { value: null }
+    }
+    return { value: parsed }
+  } catch (error) {
+    return { error: error.message }
+  }
+}
+
+/**
+ * Converts textual value to a javascript typed value.
+ * @param  {string} value
+ * @param  {} type
+ * @return {{ value: (string|number|Date|boolean), error: string }}
+ */
+function parseValueOfType(value, type) {
+  switch (type) {
     case String:
-      return [value]
+      return { value }
     case Number:
       // The global isFinite() function determines
       // whether the passed value is a finite number.
       // If  needed, the parameter is first converted to a number.
       if (isFinite(value)) {
-        return [parseInt(value)]
+        return { value: parseInt(value) }
       }
-      return [null, 'invalid']
+      return { error: 'invalid' }
     case Date:
       if (!isFinite(value)) {
-        return [null, 'invalid']
+        return { error: 'invalid' }
       }
       value = parseInt(value)
-      const date = parseDate(value, schemaEntry.template, true, true)
+      const date = parseDate(value)
       if (!date) {
-        return [null, 'invalid']
+        return { error: 'invalid' }
       }
-      return [date]
+      return { value: date }
     case Boolean:
       if (value === '1') {
-        return [true]
+        return { value: true }
       }
       if (value === '0') {
-        return [false]
+        return { value: false }
       }
-      return [null, 'invalid']
-    default:
-      if (!schemaEntry.parse) {
-        throw new Error('Invalid schema entry: no .type and no .parse():\n\n' + JSON.stringify(schemaEntry, null, 2))
-      }
-      try {
-        let parsed = schemaEntry.parse(value)
-        if (parsed === undefined) {
-          parsed = null
-        }
-        return [parsed]
-      } catch (error) {
-        return [null, error.message]
-      }
+      return { error: 'invalid' }
   }
 }
 

@@ -86,6 +86,59 @@ describe('convertToJson', () => {
 		rows.should.deep.equal([])
 	})
 
+	it('should parse arrays', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'NAMES'
+			], [
+				'Barack Obama, "String, with, colons", Donald Trump'
+			]
+		], {
+			NAMES: {
+				prop: 'names',
+				type: [String],
+				required: true
+			}
+		})
+
+		errors.should.deep.equal([])
+
+		rows.should.deep.equal([{
+			names: ['Barack Obama', 'String, with, colons', 'Donald Trump']
+		}])
+	})
+
+	it('should call .validate()', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'NAME'
+			], [
+				'George Bush'
+			]
+		], {
+			NAME: {
+				prop: 'name',
+				type: String,
+				required: true,
+				validate: (value) => {
+					if (value === 'George Bush') {
+						throw new Error('custom-error')
+					}
+				}
+			}
+		})
+
+		errors.should.deep.equal([{
+			error: 'custom-error',
+			row: 1,
+			column: 'NAME',
+			type: String,
+			value: 'George Bush'
+		}])
+
+		rows.should.deep.equal([])
+	})
+
 	it('should validate numbers', () => {
 		const { rows, errors } = convertToJson([
 			[
