@@ -127,7 +127,7 @@ export function parseValue(value, schemaEntry) {
   if (result.error) {
     return result
   }
-  if (schemaEntry.validate) {
+  if (result.value !== null && schemaEntry.validate) {
     try {
       schemaEntry.validate(result.value)
     } catch (error) {
