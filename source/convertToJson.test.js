@@ -79,6 +79,7 @@ describe('convertToJson', () => {
 			error: 'required',
 			row: 1,
 			column: 'NUMBER',
+			type: Number,
 			value: null
 		}])
 
@@ -104,6 +105,7 @@ describe('convertToJson', () => {
 			error: 'invalid',
 			row: 1,
 			column: 'NUMBER',
+			type: Number,
 			value: '123abc'
 		}])
 
@@ -143,6 +145,7 @@ describe('convertToJson', () => {
 			error: 'invalid',
 			row: 1,
 			column: 'INVALID',
+			type: Boolean,
 			value: 'TRUE'
 		}])
 
@@ -180,6 +183,7 @@ describe('convertToJson', () => {
 			error: 'invalid',
 			row: 1,
 			column: 'INVALID',
+			type: Date,
 			value: '-'
 		}])
 

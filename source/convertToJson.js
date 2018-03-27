@@ -82,13 +82,16 @@ function read(schema, row, rowIndex, columns, errors) {
       }
     }
     if (error) {
-      errors.push({
+      error = {
         error,
         row: rowIndex + 1,
         column: key,
-        type: schemaEntry.type,
         value
-      })
+      }
+      if (schemaEntry.type) {
+        error.type = schemaEntry.type
+      }
+      errors.push(error)
     } else if (!error && value !== null) {
       object[schemaEntry.prop] = value
     }
