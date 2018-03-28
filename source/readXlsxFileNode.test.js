@@ -44,7 +44,9 @@ describe('readXlsxFileNode', () => {
 			}
 		}
 
-		return readXlsxFileNode(path.resolve(__dirname, '../test/spreadsheets/course.xlsx'), { schema }).then(({ rows, errors }) => {
+		const rowMap = []
+
+		return readXlsxFileNode(path.resolve(__dirname, '../test/spreadsheets/course.xlsx'), { schema, rowMap }).then(({ rows, errors }) => {
 			errors.should.deep.equal([])
 			rows[0].date = rows[0].date.getTime()
 			rows.should.deep.equal([{
@@ -57,6 +59,7 @@ describe('readXlsxFileNode', () => {
 				},
 				contact: '+11234567890',
 			}])
+			rowMap.should.deep.equal([0, 1])
 		})
 	})
 })

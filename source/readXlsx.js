@@ -9,7 +9,9 @@ const letters = ["", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
  * @param  {object} entries - A list of entries (files) inside XLSX file.
  * @return {string[][]} An array of rows, each row being an array of cells.
  */
-export default function readXlsx(entries, xml) {
+export default function readXlsx(entries, xml, options = {}) {
+  const { rowMap } = options
+
   let sheet
   let values
 
@@ -60,7 +62,7 @@ export default function readXlsx(entries, xml) {
     return []
   }
 
-  return dropEmptyRows(dropEmptyColumns(data))
+  return dropEmptyRows(dropEmptyColumns(data), rowMap)
 }
 
 function calculateDimensions (cells) {
@@ -120,9 +122,11 @@ function Cell(cellNode, sheet, xml) {
   }
 }
 
-function dropEmptyRows(data) {
+function dropEmptyRows(data, rowMap) {
+  // Drop empty rows.
   let i = data.length - 1
   while (i >= 0) {
+    // Check if the row is empty.
     let empty = true
     for (const cell of data[i]) {
       if (cell) {
@@ -130,6 +134,21 @@ function dropEmptyRows(data) {
         break
       }
     }
+    // Update row map.
+    if (rowMap) {
+      rowMap[i] = i
+      if (empty) {
+        // Drop the last element from `rowMap`.
+        rowMap.splice(rowMap.length - 1, 1)
+        // Increase `rowMap` indexes for all subsequent rows.
+        let j = i
+        while (j < rowMap.length) {
+          rowMap[j]++
+          j++
+        }
+      }
+    }
+    // Remove the empty row.
     if (empty) {
       data.splice(i, 1)
     }

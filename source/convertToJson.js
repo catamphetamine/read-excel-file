@@ -22,7 +22,12 @@ export default function(data, schema, options) {
     options = DEFAULT_OPTIONS
   }
 
-  if (options.isColumnOriented) {
+  const {
+    isColumnOriented,
+    rowMap
+  } = options;
+
+  if (isColumnOriented) {
     data = transpose(data)
   }
 
@@ -35,6 +40,13 @@ export default function(data, schema, options) {
     const result = read(schema, data[i], i - 1, columns, errors)
     if (result) {
       results.push(result)
+    }
+  }
+
+  // Correct error rows.
+  if (rowMap) {
+    for (const error of errors) {
+      error.row = rowMap[error.row] + 1
     }
   }
 

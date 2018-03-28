@@ -18,7 +18,7 @@ export default function readXlsxFile(file, options = {}) {
 		options.sheet = 1
 	}
 	return unpackXlsxFile(file, options)
-		.then(entries => readXlsx(entries, xml))
+		.then(entries => readXlsx(entries, xml, options))
 		.then((rows) => {
 			if (options.schema) {
 				return convertToJson(rows, options.schema, options)

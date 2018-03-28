@@ -271,6 +271,31 @@ describe('convertToJson', () => {
 
 		rows.should.deep.equal([])
 	})
+
+	it('should map row numbers', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'NUMBER'
+			], [
+				'123abc'
+			]
+		], {
+			NUMBER: {
+				prop: 'number',
+				type: Number
+			}
+		}, {
+			rowMap: [2, 5]
+		})
+
+		errors.should.deep.equal([{
+			error: 'invalid',
+			row: 6,
+			column: 'NUMBER',
+			type: Number,
+			value: '123abc'
+		}])
+	})
 })
 
 
