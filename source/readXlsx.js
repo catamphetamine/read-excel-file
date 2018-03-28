@@ -122,7 +122,15 @@ function Cell(cellNode, sheet, xml) {
   }
 }
 
-function dropEmptyRows(data, rowMap) {
+export function dropEmptyRows(data, rowMap) {
+  // Fill in row map.
+  if (rowMap) {
+    let j = 0
+    while (j < data.length) {
+      rowMap[j] = j
+      j++
+    }
+  }
   // Drop empty rows.
   let i = data.length - 1
   while (i >= 0) {
@@ -134,23 +142,12 @@ function dropEmptyRows(data, rowMap) {
         break
       }
     }
-    // Update row map.
-    if (rowMap) {
-      rowMap[i] = i
-      if (empty) {
-        // Drop the last element from `rowMap`.
-        rowMap.splice(rowMap.length - 1, 1)
-        // Increase `rowMap` indexes for all subsequent rows.
-        let j = i
-        while (j < rowMap.length) {
-          rowMap[j]++
-          j++
-        }
-      }
-    }
     // Remove the empty row.
     if (empty) {
       data.splice(i, 1)
+      if (rowMap) {
+        rowMap.splice(i, 1)
+      }
     }
     i--
   }
