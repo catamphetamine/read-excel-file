@@ -1,5 +1,7 @@
 import convertToJson, { parseArray, getBlock } from './convertToJson'
 import Integer from './types/Integer'
+import URL from './types/URL'
+import Email from './types/Email'
 
 const date = convertToUTCTimezone(new Date(2018, 3 - 1, 24, 12))
 
@@ -134,6 +136,60 @@ describe('convertToJson', () => {
 
 		rows.should.deep.equal([{
 			value: 1
+		}])
+	})
+
+	it('should parse URLs', () =>
+	{
+		const { rows, errors } = convertToJson([
+			[
+				'URL'
+			], [
+				'https://kremlin.ru'
+			], [
+				'kremlin.ru'
+			]
+		], {
+			URL: {
+				prop: 'value',
+				type: URL
+			}
+		})
+
+		errors.length.should.equal(1)
+		errors[0].row.should.equal(2)
+		errors[0].column.should.equal('URL')
+		errors[0].error.should.equal('invalid')
+
+		rows.should.deep.equal([{
+			value: 'https://kremlin.ru'
+		}])
+	})
+
+	it('should parse Emails', () =>
+	{
+		const { rows, errors } = convertToJson([
+			[
+				'EMAIL'
+			], [
+				'vladimir.putin@kremlin.ru'
+			], [
+				'123'
+			]
+		], {
+			EMAIL: {
+				prop: 'value',
+				type: Email
+			}
+		})
+
+		errors.length.should.equal(1)
+		errors[0].row.should.equal(2)
+		errors[0].column.should.equal('EMAIL')
+		errors[0].error.should.equal('invalid')
+
+		rows.should.deep.equal([{
+			value: 'vladimir.putin@kremlin.ru'
 		}])
 	})
 

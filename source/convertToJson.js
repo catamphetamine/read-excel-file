@@ -1,5 +1,7 @@
 import parseDate from './parseDate'
 import Integer, { isInteger } from './types/Integer'
+import URL, { isURL } from './types/URL'
+import Email, { isEmail } from './types/Email'
 
 const DEFAULT_OPTIONS = {
   isColumnOriented: false
@@ -180,6 +182,7 @@ function parseValueOfType(value, type) {
   switch (type) {
     case String:
       return { value }
+
     case Number:
     case Integer:
       // The global isFinite() function determines
@@ -192,6 +195,19 @@ function parseValueOfType(value, type) {
         return { error: 'invalid' }
       }
       return { value: parseFloat(value) }
+
+    case URL:
+      if (!isURL(value)) {
+        return { error: 'invalid' }
+      }
+      return { value }
+
+    case Email:
+      if (!isEmail(value)) {
+        return { error: 'invalid' }
+      }
+      return { value }
+
     case Date:
       if (!isFinite(value)) {
         return { error: 'invalid' }
@@ -202,6 +218,7 @@ function parseValueOfType(value, type) {
         return { error: 'invalid' }
       }
       return { value: date }
+
     case Boolean:
       if (value === '1') {
         return { value: true }
