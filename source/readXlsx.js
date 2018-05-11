@@ -53,6 +53,10 @@ export default function readXlsx(entries, xml, options = {}) {
       value = values[parseInt(value)]
     }
 
+    // Convert empty values to `null`.
+    // `value` could still be `null` or `undefined`.
+    value = value && value.trim() || null
+
     if (data[cell.row - d[0].row]) {
       data[cell.row - d[0].row][cell.column - d[0].column] = value
     }
@@ -116,8 +120,7 @@ function Cell(cellNode, sheet, xml) {
     column : coords.column,
     row    : coords.row,
     // For `xpath` `value` can be `undefined` while for native `DOMParser` it's `null`.
-    // Hence the `|| null` in the end: so that `undefined` is converted to `null`.
-    value  : value && value.textContent && value.textContent.trim() || null,
+    value  : value && value.textContent,
     type   : cellNode.getAttribute('t')
   }
 }

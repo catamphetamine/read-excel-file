@@ -13,7 +13,7 @@ var sheetsDir = __dirname + '/spreadsheets';
 var sheets = {
   'excel_mac_2011-basic.xlsx': [ [ 'One', 'Two' ], [ 'Three', 'Four' ] ],
   'excel_mac_2011-formatting.xlsx': [ [ 'Hey', 'now', 'so' ], [ 'cool', null, null ] ],
-  'excel_multiple_text_nodes.xlsx': [ [ 'id', 'memo' ], [ '1.0', 'abc def ghi ' ], [ '2.0', 'pqr stu' ] ]
+  'excel_multiple_text_nodes.xlsx': [ [ 'id', 'memo' ], [ '1.0', 'abc def ghi' ], [ '2.0', 'pqr stu' ] ]
 };
 
 describe('excel.js', function() {
