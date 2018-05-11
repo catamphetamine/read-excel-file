@@ -130,11 +130,9 @@ A React component for displaying error info could look like this:
 import { parseExcelDate } from 'read-excel-file'
 
 function ParseExcelError({ children: error }) {
-  // Schema entry for the column.
-  const columnSchema = schema[error.column]
   // Human-readable value.
   let value = error.value
-  if (columnSchema.type === Date) {
+  if (error.type === Date) {
     value = parseExcelDate(value).toString()
   }
   // Error summary.
@@ -145,8 +143,8 @@ function ParseExcelError({ children: error }) {
       <code>"{value}"</code>
       {' in column '}
       <code>"{error.column}"</code>
-      {columnSchema.type && ' of type '}
-      {columnSchema.type && <code>"{columnSchema.type.name}"</code>}
+      {error.type && ' of type '}
+      {error.type && <code>"{error.type.name}"</code>}
       {' in row '}
       <code>"{error.row}"</code>
     </div>
