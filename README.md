@@ -116,7 +116,7 @@ readXlsxFile(file, { schema }).then(({ rows, errors }) => {
 })
 ```
 
-There's also some additional exported `type`s:
+There are also some additional exported `type`s:
 
 * `Integer` for parsing integer `Number`s.
 * `URL` for parsing URLs.
