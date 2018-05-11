@@ -124,6 +124,36 @@ There's also some additional exported `type`s:
 
 A schema entry for a column can also have a `validate(value)` function for validating the parsed value. It must `throw` an `Error` if the value is invalid.
 
+A React component for displaying error info could look like this:
+
+```js
+import { parseExcelDate } from 'read-excel-file'
+
+function ParseExcelError({ children: error }) {
+  // Schema entry for the column.
+  const columnSchema = schema[error.column]
+  // Human-readable value.
+  let value = error.value
+  if (columnSchema.type === Date) {
+    value = parseExcelDate(value).toString()
+  }
+  // Error summary.
+  return (
+    <div>
+      <code>"{error.error}"</code>
+      {' for value '}
+      <code>"{value}"</code>
+      {' in column '}
+      <code>"{error.column}"</code>
+      {columnSchema.type && ' of type '}
+      {columnSchema.type && <code>"{columnSchema.type.name}"</code>}
+      {' in row '}
+      <code>"{error.row}"</code>
+    </div>
+  )
+}
+```
+
 ## Browser compatibility
 
 Node.js `*.xlxs` parser uses `xpath` and `xmldom` universal packages for XML parsing. The same packages could be used in a browser too but since [all modern browsers](https://caniuse.com/#search=domparser) (including IE 11) already have native `DOMParser` built-in this native implementation is used (which means smaller footprint and better performance).
