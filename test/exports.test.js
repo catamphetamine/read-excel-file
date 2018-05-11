@@ -1,4 +1,4 @@
-import readXlsxFileBrowser, { Integer } from '../index.js'
+import readXlsxFileBrowser, { Integer, URL, Email, parseExcelDate } from '../index.js'
 import readXlsxFileNode from '../modules/readXlsxFileNode'
 
 describe(`exports`, function()
@@ -8,6 +8,9 @@ describe(`exports`, function()
 		// Browser
 		readXlsxFileBrowser.should.be.a('function')
 		Integer.should.be.a('function')
+		URL.should.be.a('function')
+		Email.should.be.a('function')
+		parseExcelDate.should.be.a('function')
 
 		// Node.js
 		readXlsxFileNode.should.be.a('function')
@@ -22,12 +25,19 @@ describe(`exports`, function()
 		Library.should.be.a('function')
 		Library.default.should.be.a('function')
 		Library.Integer.should.be.a('function')
+		Library.URL.should.be.a('function')
+		Library.Email.should.be.a('function')
+		Library.parseExcelDate.should.be.a('function')
 
 		// Node.js
 
-		const readXlsxFileNode = require('../node')
+		const Node = require('../node')
 
-		readXlsxFileNode.should.be.a('function')
-		readXlsxFileNode.default.should.be.a('function')
+		Node.should.be.a('function')
+		Node.default.should.be.a('function')
+		Node.Integer.should.be.a('function')
+		Node.URL.should.be.a('function')
+		Node.Email.should.be.a('function')
+		Node.parseExcelDate.should.be.a('function')
 	})
 })

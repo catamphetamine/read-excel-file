@@ -4,6 +4,7 @@
   * Refactored exports.
   * Fixed some empty columns returning an empty string instead of `null`.
   * Added `Integer` type for integer `Number`s. Also `URL` and `Email`.
+  * Export `parseExcelDate()` function.
   * If both `parse()` and `type` are defined in a schema then `parse()` takes priority over `type`.
 
 1.2.0 / 25.03.2018

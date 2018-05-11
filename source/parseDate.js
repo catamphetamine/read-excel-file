@@ -11,7 +11,7 @@
 // "If you need to calculate dates in your spreadsheets,
 //  Excel uses its own unique system, which it calls Serial Numbers".
 //
-export default function(excelSerialDate) {
+export default function parseExcelDate(excelSerialDate) {
   // "Excel serial date" is just
   // the count of days since `01/01/1900`
   // (seems that it may be even fractional).
