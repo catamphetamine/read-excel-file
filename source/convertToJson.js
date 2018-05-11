@@ -1,4 +1,5 @@
 import parseDate from './parseDate'
+import Integer, { isInteger } from './types/Integer'
 
 const DEFAULT_OPTIONS = {
   isColumnOriented: false
@@ -180,13 +181,17 @@ function parseValueOfType(value, type) {
     case String:
       return { value }
     case Number:
+    case Integer:
       // The global isFinite() function determines
       // whether the passed value is a finite number.
       // If  needed, the parameter is first converted to a number.
-      if (isFinite(value)) {
-        return { value: parseFloat(value) }
+      if (!isFinite(value)) {
+        return { error: 'invalid' }
       }
-      return { error: 'invalid' }
+      if (type === Integer && !isInteger(value)) {
+        return { error: 'invalid' }
+      }
+      return { value: parseFloat(value) }
     case Date:
       if (!isFinite(value)) {
         return { error: 'invalid' }

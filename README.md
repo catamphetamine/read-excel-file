@@ -116,6 +116,8 @@ readXlsxFile(file, { schema }).then(({ rows, errors }) => {
 })
 ```
 
+There's also an exported `Integer` type for parsing integer `Number`s.
+
 ## Browser compatibility
 
 Node.js `*.xlxs` parser uses `xpath` and `xmldom` universal packages for XML parsing. The same packages could be used in a browser too but since [all modern browsers](https://caniuse.com/#search=domparser) (including IE 11) already have native `DOMParser` built-in this native implementation is used (which means smaller footprint and better performance).

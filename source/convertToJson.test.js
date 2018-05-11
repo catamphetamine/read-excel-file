@@ -1,4 +1,5 @@
 import convertToJson, { parseArray, getBlock } from './convertToJson'
+import Integer from './types/Integer'
 
 const date = convertToUTCTimezone(new Date(2018, 3 - 1, 24, 12))
 
@@ -106,6 +107,33 @@ describe('convertToJson', () => {
 
 		rows.should.deep.equal([{
 			names: ['Barack Obama', 'String, with, colons', 'Donald Trump']
+		}])
+	})
+
+	it('should parse integers', () =>
+	{
+		const { rows, errors } = convertToJson([
+			[
+				'INTEGER'
+			], [
+				'1'
+			], [
+				'1.2'
+			]
+		], {
+			INTEGER: {
+				prop: 'value',
+				type: Integer
+			}
+		})
+
+		errors.length.should.equal(1)
+		errors[0].row.should.equal(2)
+		errors[0].column.should.equal('INTEGER')
+		errors[0].error.should.equal('invalid')
+
+		rows.should.deep.equal([{
+			value: 1
 		}])
 	})
 
