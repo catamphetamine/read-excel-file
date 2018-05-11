@@ -2,8 +2,8 @@
   "name": "read-excel-file",
   "version": "1.2.8",
   "description": "Read `*.xlsx` files in a browser or Node.js. Parse to JSON with a strict schema.",
-  "module": "modules/readXlsxFileBrowser.js",
-  "main": "commonjs/readXlsxFileBrowser.js",
+  "module": "index.js",
+  "main": "index.commonjs.js",
   "contributors": [
     {
       "name": "Trevor Dixon",
