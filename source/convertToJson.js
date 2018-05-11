@@ -131,10 +131,10 @@ export function parseValue(value, schemaEntry) {
     return { value: null }
   }
   let result
-  if (schemaEntry.type) {
-    result = parseValueOfType(value, Array.isArray(schemaEntry.type) ? schemaEntry.type[0] : schemaEntry.type)
-  } else if (schemaEntry.parse) {
+  if (schemaEntry.parse) {
     result = parseCustomValue(value, schemaEntry.parse)
+  } else if (schemaEntry.type) {
+    result = parseValueOfType(value, Array.isArray(schemaEntry.type) ? schemaEntry.type[0] : schemaEntry.type)
   } else {
     throw new Error('Invalid schema entry: no .type and no .parse():\n\n' + JSON.stringify(schemaEntry, null, 2))
   }
