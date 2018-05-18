@@ -184,6 +184,7 @@ function parseValueOfType(value, type) {
       return { value }
 
     case Number:
+    case 'Integer':
     case Integer:
       // The global isFinite() function determines
       // whether the passed value is a finite number.
@@ -196,12 +197,14 @@ function parseValueOfType(value, type) {
       }
       return { value: parseFloat(value) }
 
+    case 'URL':
     case URL:
       if (!isURL(value)) {
         return { error: 'invalid' }
       }
       return { value }
 
+    case 'Email':
     case Email:
       if (!isEmail(value)) {
         return { error: 'invalid' }
@@ -227,6 +230,9 @@ function parseValueOfType(value, type) {
         return { value: false }
       }
       return { error: 'invalid' }
+
+    default:
+      throw new Error(`Unknown schema type: ${type && type.name || type}`)
   }
 }
 

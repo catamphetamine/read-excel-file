@@ -118,9 +118,9 @@ readXlsxFile(file, { schema }).then(({ rows, errors }) => {
 
 There are also some additional exported `type`s:
 
-* `Integer` for parsing integer `Number`s.
-* `URL` for parsing URLs.
-* `Email` for parsing email addresses.
+* `"Integer"` for parsing integer `Number`s.
+* `"URL"` for parsing URLs.
+* `"Email"` for parsing email addresses.
 
 A schema entry for a column can also have a `validate(value)` function for validating the parsed value. It must `throw` an `Error` if the value is invalid.
 
