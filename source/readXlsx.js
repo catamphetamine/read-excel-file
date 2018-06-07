@@ -6,37 +6,33 @@ const letters = ["", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
 
 /**
  * Reads an (unzipped) XLSX file structure into a 2D array of cells.
- * @param  {object} entries - A list of entries (files) inside XLSX file.
+ * @param  {object} contents - A list of XML files inside XLSX file (which is a zipped directory).
  * @return {string[][]} An array of rows, each row being an array of cells.
  */
-export default function readXlsx(entries, xml, options = {}) {
+export default function readXlsx(contents, xml, options = {}) {
   const { rowMap } = options
 
   let sheet
   let values
 
+  if (!contents[`xl/worksheets/sheet${options.sheet}.xml`]) {
+    throw new Error(`Sheet "${options.sheet}" not found in *.xlsx file.`)
+  }
+
   try {
-    sheet = xml.createDocument(entries.sheet)
-    const valuesDoc = xml.createDocument(entries.strings)
-    values = xml.select(valuesDoc, null, '//a:si', namespaces)
-      .map(string => xml.select(valuesDoc, string, './/a:t[not(ancestor::a:rPh)]', namespaces).map(_ => _.textContent).join(''))
-  } catch (error) {
+    sheet = parseSheet(contents[`xl/worksheets/sheet${options.sheet}.xml`], xml)
+    values = parseValues(contents[`xl/sharedStrings.xml`], xml)
+  }
+  catch (error) {
     // Guards against malformed XLSX files.
     console.error(error)
     return []
   }
 
-  const cells = xml.select(sheet, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces).map(node => Cell(node, sheet, xml))
+  const { cells, coordinates } = sheet
 
-  let d = xml.select(sheet, null, '//a:dimension/@ref', namespaces)[0]
-  if (d) {
-    d = d.textContent.split(':').map(CellCoords)
-  } else {
-    d = calculateDimensions(cells)
-  }
-
-  const cols = d[1].column - d[0].column + 1
-  const rows = d[1].row - d[0].row + 1
+  const cols = coordinates[1].column - coordinates[0].column + 1
+  const rows = coordinates[1].row - coordinates[0].row + 1
 
   const data = []
 
@@ -57,8 +53,8 @@ export default function readXlsx(entries, xml, options = {}) {
     // `value` could still be `null` or `undefined`.
     value = value && value.trim() || null
 
-    if (data[cell.row - d[0].row]) {
-      data[cell.row - d[0].row][cell.column - d[0].column] = value
+    if (data[cell.row - coordinates[0].row]) {
+      data[cell.row - coordinates[0].row][cell.column - coordinates[0].column] = value
     }
   }
 
@@ -177,4 +173,25 @@ function dropEmptyColumns(data) {
     i--
   }
   return data
+}
+
+function parseSheet(content, xml) {
+  const sheet = xml.createDocument(content)
+
+  const cells = xml.select(sheet, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces).map(node => Cell(node, sheet, xml))
+
+  let coordinates = xml.select(sheet, null, '//a:dimension/@ref', namespaces)[0]
+  if (coordinates) {
+    coordinates = coordinates.textContent.split(':').map(CellCoords)
+  } else {
+    coordinates = calculateDimensions(cells)
+  }
+
+  return { cells, coordinates }
+}
+
+function parseValues(content, xml) {
+  const strings = xml.createDocument(content)
+  return xml.select(strings, null, '//a:si', namespaces)
+    .map(string => xml.select(strings, string, './/a:t[not(ancestor::a:rPh)]', namespaces).map(_ => _.textContent).join(''))
 }

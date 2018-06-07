@@ -1,7 +1,5 @@
 import { loadAsync } from 'jszip'
 
-import { getXlsxEntryKey, validateXlsxEntries } from './readXlsxFileHelpers'
-
 /**
  * Reads XLSX file in a browser.
  * @param  {file} file - A file being uploaded in the browser.
@@ -26,6 +24,6 @@ export default function unpackXlsxFile(file, { sheet }) {
 				entries[getXlsxEntryKey(file, sheet)] = text
 			})
 		}))
-		.then(() => validateXlsxEntries(entries, sheet))
+		.then(() => resolve(entries))
 	})
 }

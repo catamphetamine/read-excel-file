@@ -10,6 +10,7 @@
 
 			"plugins":
 			[
+				"transform-runtime",
 				"transform-object-rest-spread",
 				["transform-es2015-for-of", { loose: true }]
 			]
