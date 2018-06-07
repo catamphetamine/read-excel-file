@@ -1,7 +1,6 @@
 import unpackXlsxFile from './unpackXlsxFileBrowser'
 import xml from './xmlBrowser'
-import readXlsx from './readXlsx'
-import convertToJson from './convertToJson'
+import readXlsxFileContents from './readXlsxFileContents'
 
 /**
  * Reads XLSX file into a 2D array of cells in a browser.
@@ -11,18 +10,6 @@ import convertToJson from './convertToJson'
  * @return {Promise} Resolves to a 2D array of cells: an array of rows, each row being an array of cells.
  */
 export default function readXlsxFile(file, options = {}) {
-	// Deprecated 1.0.0 `sheet` argument. Will be removed in some next major release.
-	if (typeof options === 'string' || typeof options === 'number') {
-		options = { sheet: options }
-	} else if (!options.sheet) {
-		options.sheet = 1
-	}
-	return unpackXlsxFile(file, options)
-		.then(entries => readXlsx(entries, xml, options))
-		.then((rows) => {
-			if (options.schema) {
-				return convertToJson(rows, options.schema, options)
-			}
-			return rows
-		})
+	return unpackXlsxFile(file)
+		.then((entries) => readXlsxFileContents(entries, xml, options))
 }

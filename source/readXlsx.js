@@ -7,9 +7,16 @@ const letters = ["", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
 /**
  * Reads an (unzipped) XLSX file structure into a 2D array of cells.
  * @param  {object} contents - A list of XML files inside XLSX file (which is a zipped directory).
- * @return {string[][]} An array of rows, each row being an array of cells.
+ * @return {object} An object of shape `{ data, cells, properties }`. `data: string[][]` is an array of rows, each row being an array of cell values. `cells: string[][]` is an array of rows, each row being an array of cells. `properties: object` is the spreadsheet properties (e.g. whether date epoch is 1904 instead of 1900).
  */
 export default function readXlsx(contents, xml, options = {}) {
+  // Deprecated 1.0.0 `sheet` argument. Will be removed in some next major release.
+  if (typeof options === 'string' || typeof options === 'number') {
+    options = { sheet: options }
+  } else if (!options.sheet) {
+    options = { ...options, sheet: 1 }
+  }
+
   const { rowMap } = options
 
   let sheet
@@ -28,40 +35,49 @@ export default function readXlsx(contents, xml, options = {}) {
   catch (error) {
     // Guards against malformed XLSX files.
     console.error(error)
+    if (options.verbose || options.schema) {
+      return {
+        data: [],
+        cells: [],
+        properties: {}
+      }
+    }
     return []
   }
 
-  // A bit of a hacky way to return `properties`
-  // which is compatible with the older API.
-  options.properties = properties
-  // if (options.onProperties) {
-  //   options.onProperties(properties)
-  // }
+  const [ leftTop, rightBottom ] = sheet.dimensions
 
-  const { cells, coordinates } = sheet
+  const cols = (rightBottom.column - leftTop.column) + 1
+  const rows = (rightBottom.row - leftTop.row) + 1
 
-  const cols = coordinates[1].column - coordinates[0].column + 1
-  const rows = coordinates[1].row - coordinates[0].row + 1
-
-  const data = []
+  let cells = []
 
   times(rows, () => {
     const row = []
-    times(cols, () => row.push(null))
-    data.push(row)
+    times(cols, () => row.push({ value: null }))
+    cells.push(row)
   })
 
-  for (const cell of cells) {
-    if (data[cell.row - coordinates[0].row]) {
-      data[cell.row - coordinates[0].row][cell.column - coordinates[0].column] = cell.value
+  for (const cell of sheet.cells) {
+    const row = cell.row - leftTop.row
+    const column = cell.column - leftTop.column
+    if (cells[row]) {
+      cells[row][column] = cell
     }
   }
 
-  if (data.length === 0) {
-    return []
+  cells = dropEmptyRows(dropEmptyColumns(cells, _ => _.value), rowMap, _ => _.value)
+  const data = cells.map(row => row.map(cell => cell.value))
+
+  if (options.verbose || options.schema) {
+    return {
+      data,
+      cells,
+      properties
+    }
   }
 
-  return dropEmptyRows(dropEmptyColumns(data), rowMap)
+  return data
 }
 
 function calculateDimensions (cells) {
@@ -145,7 +161,7 @@ function Cell(cellNode, sheet, xml, values, styles) {
   return cell
 }
 
-export function dropEmptyRows(data, rowMap) {
+export function dropEmptyRows(data, rowMap, accessor = _ => _) {
   // Fill in row map.
   if (rowMap) {
     let j = 0
@@ -160,7 +176,7 @@ export function dropEmptyRows(data, rowMap) {
     // Check if the row is empty.
     let empty = true
     for (const cell of data[i]) {
-      if (cell) {
+      if (accessor(cell)) {
         empty = false
         break
       }
@@ -177,12 +193,12 @@ export function dropEmptyRows(data, rowMap) {
   return data
 }
 
-function dropEmptyColumns(data) {
+function dropEmptyColumns(data, accessor = _ => _) {
   let i = data[0].length - 1
   while (i >= 0) {
     let empty = true
     for (const row of data) {
-      if (row[i]) {
+      if (accessor(row[i])) {
         empty = false
         break
       }
@@ -204,14 +220,14 @@ function parseSheet(content, xml, values, styles) {
 
   const cells = xml.select(sheet, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces).map(node => Cell(node, sheet, xml, values, styles))
 
-  let coordinates = xml.select(sheet, null, '//a:dimension/@ref', namespaces)[0]
-  if (coordinates) {
-    coordinates = coordinates.textContent.split(':').map(CellCoords)
+  let dimensions = xml.select(sheet, null, '//a:dimension/@ref', namespaces)[0]
+  if (dimensions) {
+    dimensions = dimensions.textContent.split(':').map(CellCoords)
   } else {
-    coordinates = calculateDimensions(cells)
+    dimensions = calculateDimensions(cells)
   }
 
-  return { cells, coordinates }
+  return { cells, dimensions }
 }
 
 function parseValues(content, xml) {
@@ -259,6 +275,7 @@ function parseStyles(content, xml) {
             bgColor = bgColor.getAttribute('rgb')
           } else if (bgColor.getAttribute('indexed')) {
             // There are 64 "indexed colors".
+            // https://github.com/ClosedXML/ClosedXML/wiki/Excel-Indexed-Colors
             // "Indexed colors" seem to be deprecated.
             // http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/indexedColors.html
             bgColor = undefined
