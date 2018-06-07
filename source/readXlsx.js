@@ -149,7 +149,7 @@ function Cell(cellNode, sheet, xml, values, styles) {
   if (styles) {
     if (styles.fill) {
       if (cellNode.getAttribute('s')) {
-        const fill = styles.fill[parseInt(cellNode.getAttribute('s')) - 1]
+        const fill = styles.fill[parseInt(cellNode.getAttribute('s'))]
         if (fill && fill.backgroundColor) {
           cell.backgroundColor = fill.backgroundColor
         }
