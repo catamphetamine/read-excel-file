@@ -13,17 +13,13 @@ export default function unpackXlsxFile(file, { sheet }) {
 	return loadAsync(file).then((zip) => {
 		const files = []
 		zip.forEach((relativePath, zipEntry) => {
-			if (getXlsxEntryKey(zipEntry.name, sheet)) {
-				files.push(zipEntry.name)
-			}
+			files.push(zipEntry.name)
 		})
 
 		const entries = {}
 		return Promise.all(files.map((file) => {
-			return zip.file(file).async('string').then((text) => {
-				entries[getXlsxEntryKey(file, sheet)] = text
-			})
+			return zip.file(file).async('string').then(content => entries[file] = content)
 		}))
-		.then(() => resolve(entries))
+		.then(() => entries)
 	})
 }

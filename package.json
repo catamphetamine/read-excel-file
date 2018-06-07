@@ -31,7 +31,7 @@
     "build-commonjs-modules": "better-npm-run build-commonjs-modules",
     "build-es6-modules": "better-npm-run build-es6-modules",
     "browser-build": "better-npm-run browser-build",
-    "build": "npm-run-all clean-for-build build-commonjs-modules build-es6-modules",
+    "build": "npm-run-all clean-for-build build-commonjs-modules build-es6-modules browser-build",
     "prepublish": "npm-run-all build test browser-build"
   },
   "dependencies": {
@@ -57,7 +57,7 @@
   },
   "betterScripts": {
     "browser-build": {
-      "command": "npm run build-commonjs-modules && webpack --mode production --progress --colors",
+      "command": "webpack --mode production --progress --colors",
       "env": {
         "WEBPACK_ENV": "build"
       }
