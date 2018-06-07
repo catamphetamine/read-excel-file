@@ -13,7 +13,6 @@ export default function readXlsx(contents, xml, options = {}) {
   const { rowMap } = options
 
   let sheet
-  let values
   let properties
 
   if (!contents[`xl/worksheets/sheet${options.sheet}.xml`]) {
@@ -21,9 +20,10 @@ export default function readXlsx(contents, xml, options = {}) {
   }
 
   try {
-    sheet = parseSheet(contents[`xl/worksheets/sheet${options.sheet}.xml`], xml)
-    values = parseValues(contents[`xl/sharedStrings.xml`], xml)
+    const values = parseValues(contents[`xl/sharedStrings.xml`], xml)
+    const styles = parseStyles(contents[`xl/styles.xml`], xml)
     properties = parseProperties(contents[`xl/workbook.xml`], xml)
+    sheet = parseSheet(contents[`xl/worksheets/sheet${options.sheet}.xml`], xml, values, styles)
   }
   catch (error) {
     // Guards against malformed XLSX files.
@@ -52,18 +52,8 @@ export default function readXlsx(contents, xml, options = {}) {
   })
 
   for (const cell of cells) {
-    let value = cell.value
-
-    if (cell.type === 's') {
-      value = values[parseInt(value)]
-    }
-
-    // Convert empty values to `null`.
-    // `value` could still be `null` or `undefined`.
-    value = value && value.trim() || null
-
     if (data[cell.row - coordinates[0].row]) {
-      data[cell.row - coordinates[0].row][cell.column - coordinates[0].column] = value
+      data[cell.row - coordinates[0].row][cell.column - coordinates[0].column] = cell.value
     }
   }
 
@@ -118,16 +108,41 @@ function CellCoords(coords) {
   }
 }
 
-function Cell(cellNode, sheet, xml) {
+function Cell(cellNode, sheet, xml, values, styles) {
   const coords = CellCoords(cellNode.getAttribute('r'))
-  const value = xml.select(sheet, cellNode, 'a:v', namespaces)[0]
-  return {
-    column : coords.column,
-    row    : coords.row,
-    // For `xpath` `value` can be `undefined` while for native `DOMParser` it's `null`.
-    value  : value && value.textContent,
-    type   : cellNode.getAttribute('t')
+
+  let value = xml.select(sheet, cellNode, 'a:v', namespaces)[0]
+  // For `xpath` `value` can be `undefined` while for native `DOMParser` it's `null`.
+  value = value && value.textContent
+
+  if (cellNode.getAttribute('t') === 's') {
+    value = values[parseInt(value)]
   }
+
+  // Convert empty values to `null`.
+  // `value` could still be `null` or `undefined`.
+  value = value && value.trim() || null
+
+  const cell = {
+    row    : coords.row,
+    column : coords.column,
+    value
+  }
+
+  // Set cell style.
+  if (styles) {
+    if (styles.fill) {
+      if (cellNode.getAttribute('s')) {
+        const fill = styles.fill[parseInt(cellNode.getAttribute('s')) - 1]
+        if (fill && fill.backgroundColor) {
+          cell.backgroundColor = fill.backgroundColor
+        }
+      }
+    }
+  }
+
+  // Return cell.
+  return cell
 }
 
 export function dropEmptyRows(data, rowMap) {
@@ -184,10 +199,10 @@ function dropEmptyColumns(data) {
   return data
 }
 
-function parseSheet(content, xml) {
+function parseSheet(content, xml, values, styles) {
   const sheet = xml.createDocument(content)
 
-  const cells = xml.select(sheet, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces).map(node => Cell(node, sheet, xml))
+  const cells = xml.select(sheet, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces).map(node => Cell(node, sheet, xml, values, styles))
 
   let coordinates = xml.select(sheet, null, '//a:dimension/@ref', namespaces)[0]
   if (coordinates) {
@@ -221,4 +236,41 @@ function parseProperties(content, xml) {
     properties.epoch1904 = true
   }
   return properties;
+}
+
+function parseStyles(content, xml) {
+  if (!content) {
+    return {}
+  }
+  const styles = {}
+  const documentStyles = xml.createDocument(content)
+  const fills = xml.select(documentStyles, null, '//a:fills', namespaces)[0]
+  if (fills) {
+    const _fills = xml.select(documentStyles, fills, './/a:fill', namespaces)
+    if (_fills.length > 0) {
+      styles.fill = _fills.map((fill) => {
+        let bgColor = xml.select(documentStyles, fill, './/a:bgColor', namespaces)[0]
+        if (bgColor) {
+          // There seems to be a lot of ways
+          // of specifying cell background color:
+          // http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/bgColor.html
+          // Only supports `rgb` attribute here.
+          if (bgColor.getAttribute('rgb')) {
+            bgColor = bgColor.getAttribute('rgb')
+          } else if (bgColor.getAttribute('indexed')) {
+            // There are 64 "indexed colors".
+            // "Indexed colors" seem to be deprecated.
+            // http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/indexedColors.html
+            bgColor = undefined
+          } else {
+            bgColor = undefined
+          }
+        }
+        return {
+          backgroundColor: bgColor
+        }
+      })
+    }
+  }
+  return styles
 }
