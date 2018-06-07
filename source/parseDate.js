@@ -11,7 +11,12 @@
 // "If you need to calculate dates in your spreadsheets,
 //  Excel uses its own unique system, which it calls Serial Numbers".
 //
-export default function parseExcelDate(excelSerialDate) {
+export default function parseExcelDate(excelSerialDate, options) {
+  // https://support.microsoft.com/en-gb/help/214330/differences-between-the-1900-and-the-1904-date-system-in-excel
+  if (options && options.epoch1904) {
+    excelSerialDate += 1462
+  }
+
   // "Excel serial date" is just
   // the count of days since `01/01/1900`
   // (seems that it may be even fractional).

@@ -42,7 +42,7 @@ export default function(data, schema, options) {
   const errors = []
 
   for (let i = 1; i < data.length; i++) {
-    const result = read(schema, data[i], i - 1, columns, errors)
+    const result = read(schema, data[i], i - 1, columns, errors, options)
     if (result) {
       results.push(result)
     }
@@ -61,7 +61,7 @@ export default function(data, schema, options) {
   }
 }
 
-function read(schema, row, rowIndex, columns, errors) {
+function read(schema, row, rowIndex, columns, errors, options) {
   const object = {}
   for (const key of Object.keys(schema)) {
     const schemaEntry = schema[key]
@@ -81,7 +81,7 @@ function read(schema, row, rowIndex, columns, errors) {
       else if (Array.isArray(schemaEntry.type)) {
         let notEmpty = false
         const array = parseArray(rawValue).map((_value) => {
-          const result = parseValue(_value, schemaEntry)
+          const result = parseValue(_value, schemaEntry, options)
           if (result.error) {
             value = _value
             error = result.error
@@ -95,7 +95,7 @@ function read(schema, row, rowIndex, columns, errors) {
           value = notEmpty ? array : null
         }
       } else {
-        const result = parseValue(rawValue, schemaEntry)
+        const result = parseValue(rawValue, schemaEntry, options)
         error = result.error
         value = error ? rawValue : result.value
       }
@@ -130,7 +130,7 @@ function read(schema, row, rowIndex, columns, errors) {
  * @param  {object} schemaEntry
  * @return {{ value: any, error: string }}
  */
-export function parseValue(value, schemaEntry) {
+export function parseValue(value, schemaEntry, options) {
   if (value === null) {
     return { value: null }
   }
@@ -138,7 +138,7 @@ export function parseValue(value, schemaEntry) {
   if (schemaEntry.parse) {
     result = parseCustomValue(value, schemaEntry.parse)
   } else if (schemaEntry.type) {
-    result = parseValueOfType(value, Array.isArray(schemaEntry.type) ? schemaEntry.type[0] : schemaEntry.type)
+    result = parseValueOfType(value, Array.isArray(schemaEntry.type) ? schemaEntry.type[0] : schemaEntry.type, options)
   } else {
     throw new Error('Invalid schema entry: no .type and no .parse():\n\n' + JSON.stringify(schemaEntry, null, 2))
   }
@@ -180,7 +180,7 @@ function parseCustomValue(value, parse) {
  * @param  {} type
  * @return {{ value: (string|number|Date|boolean), error: string }}
  */
-function parseValueOfType(value, type) {
+function parseValueOfType(value, type, options) {
   switch (type) {
     case String:
       return { value }
@@ -218,7 +218,7 @@ function parseValueOfType(value, type) {
         return { error: 'invalid' }
       }
       value = parseInt(value)
-      const date = parseDate(value)
+      const date = parseDate(value, options.properties)
       if (!date) {
         return { error: 'invalid' }
       }

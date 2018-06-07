@@ -14,6 +14,7 @@ export default function readXlsx(contents, xml, options = {}) {
 
   let sheet
   let values
+  let properties
 
   if (!contents[`xl/worksheets/sheet${options.sheet}.xml`]) {
     throw new Error(`Sheet "${options.sheet}" not found in *.xlsx file.`)
@@ -22,12 +23,20 @@ export default function readXlsx(contents, xml, options = {}) {
   try {
     sheet = parseSheet(contents[`xl/worksheets/sheet${options.sheet}.xml`], xml)
     values = parseValues(contents[`xl/sharedStrings.xml`], xml)
+    properties = parseProperties(contents[`xl/workbook.xml`], xml)
   }
   catch (error) {
     // Guards against malformed XLSX files.
     console.error(error)
     return []
   }
+
+  // A bit of a hacky way to return `properties`
+  // which is compatible with the older API.
+  options.properties = properties
+  // if (options.onProperties) {
+  //   options.onProperties(properties)
+  // }
 
   const { cells, coordinates } = sheet
 
@@ -194,4 +203,22 @@ function parseValues(content, xml) {
   const strings = xml.createDocument(content)
   return xml.select(strings, null, '//a:si', namespaces)
     .map(string => xml.select(strings, string, './/a:t[not(ancestor::a:rPh)]', namespaces).map(_ => _.textContent).join(''))
+}
+
+function parseProperties(content, xml) {
+  if (!content) {
+    return {}
+  }
+  const book = xml.createDocument(content)
+  // http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/workbookPr.html
+  const workbookProperties = xml.select(book, null, '//a:workbookPr', namespaces)[0]
+  if (!workbookProperties) {
+    return {}
+  }
+  const properties = {};
+  // https://support.microsoft.com/en-gb/help/214330/differences-between-the-1900-and-the-1904-date-system-in-excel
+  if (workbookProperties.getAttribute('date1904') === '1') {
+    properties.epoch1904 = true
+  }
+  return properties;
 }
