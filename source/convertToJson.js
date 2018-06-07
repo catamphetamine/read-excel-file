@@ -28,7 +28,9 @@ export default function(data, schema, options) {
   const {
     isColumnOriented,
     rowMap
-  } = options;
+  } = options
+
+  validateSchema(schema)
 
   if (isColumnOriented) {
     data = transpose(data)
@@ -272,3 +274,12 @@ export function parseArray(string) {
 // Transpose a 2D array.
 // https://stackoverflow.com/questions/17428587/transposing-a-2d-array-in-javascript
 const transpose = array => array[0].map((_, i) => array.map(row => row[i]))
+
+function validateSchema(schema) {
+  for (const key of Object.keys(schema)) {
+    const entry = schema[key]
+    if (!entry.prop) {
+      throw new Error(`"prop" not defined for schema entry "${key}".`)
+    }
+  }
+}
