@@ -28,17 +28,15 @@ export default function readXlsx(contents, xml, options = {}) {
 
   try {
     const values = parseValues(contents[`xl/sharedStrings.xml`], xml)
-    const styles = parseStyles(contents[`xl/styles.xml`], xml)
     properties = parseProperties(contents[`xl/workbook.xml`], xml)
-    sheet = parseSheet(contents[`xl/worksheets/sheet${options.sheet}.xml`], xml, values, styles)
+    sheet = parseSheet(contents[`xl/worksheets/sheet${options.sheet}.xml`], xml, values)
   }
   catch (error) {
     // Guards against malformed XLSX files.
     console.error(error)
-    if (options.verbose || options.schema) {
+    if (options.schema) {
       return {
         data: [],
-        cells: [],
         properties: {}
       }
     }
@@ -66,13 +64,14 @@ export default function readXlsx(contents, xml, options = {}) {
     }
   }
 
-  cells = dropEmptyRows(dropEmptyColumns(cells, _ => _.value), rowMap, _ => _.value)
-  const data = cells.map(row => row.map(cell => cell.value))
+  // cells = dropEmptyRows(dropEmptyColumns(cells, _ => _.value), rowMap, _ => _.value)
 
-  if (options.verbose || options.schema) {
+  let data = cells.map(row => row.map(cell => cell.value))
+  data = dropEmptyRows(dropEmptyColumns(data), rowMap)
+
+  if (options.schema) {
     return {
       data,
-      cells,
       properties
     }
   }
@@ -124,7 +123,7 @@ function CellCoords(coords) {
   }
 }
 
-function Cell(cellNode, sheet, xml, values, styles) {
+function Cell(cellNode, sheet, xml, values) {
   const coords = CellCoords(cellNode.getAttribute('r'))
 
   let value = xml.select(sheet, cellNode, 'a:v', namespaces)[0]
@@ -139,26 +138,11 @@ function Cell(cellNode, sheet, xml, values, styles) {
   // `value` could still be `null` or `undefined`.
   value = value && value.trim() || null
 
-  const cell = {
+  return {
     row    : coords.row,
     column : coords.column,
     value
   }
-
-  // Set cell style.
-  if (styles) {
-    if (styles.fill) {
-      if (cellNode.getAttribute('s')) {
-        const fill = styles.fill[parseInt(cellNode.getAttribute('s'))]
-        if (fill && fill.backgroundColor) {
-          cell.backgroundColor = fill.backgroundColor
-        }
-      }
-    }
-  }
-
-  // Return cell.
-  return cell
 }
 
 export function dropEmptyRows(data, rowMap, accessor = _ => _) {
@@ -252,42 +236,4 @@ function parseProperties(content, xml) {
     properties.epoch1904 = true
   }
   return properties;
-}
-
-function parseStyles(content, xml) {
-  if (!content) {
-    return {}
-  }
-  const styles = {}
-  const documentStyles = xml.createDocument(content)
-  const fills = xml.select(documentStyles, null, '//a:fills', namespaces)[0]
-  if (fills) {
-    const _fills = xml.select(documentStyles, fills, './/a:fill', namespaces)
-    if (_fills.length > 0) {
-      styles.fill = _fills.map((fill) => {
-        let bgColor = xml.select(documentStyles, fill, './/a:bgColor', namespaces)[0]
-        if (bgColor) {
-          // There seems to be a lot of ways
-          // of specifying cell background color:
-          // http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/bgColor.html
-          // Only supports `rgb` attribute here.
-          if (bgColor.getAttribute('rgb')) {
-            bgColor = bgColor.getAttribute('rgb')
-          } else if (bgColor.getAttribute('indexed')) {
-            // There are 64 "indexed colors".
-            // https://github.com/ClosedXML/ClosedXML/wiki/Excel-Indexed-Colors
-            // "Indexed colors" seem to be deprecated.
-            // http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/indexedColors.html
-            bgColor = undefined
-          } else {
-            bgColor = undefined
-          }
-        }
-        return {
-          backgroundColor: bgColor
-        }
-      })
-    }
-  }
-  return styles
 }
