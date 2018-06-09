@@ -1,11 +1,17 @@
+import parseDate from './parseDate'
+
 const namespaces = {
   a: 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
 }
 
+// Maps "A1"-like coordinates to `{ row, column }` numeric coordinates.
 const letters = ["", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 
 /**
  * Reads an (unzipped) XLSX file structure into a 2D array of cells.
+ * @param  {object} contents - A list of XML files inside XLSX file (which is a zipped directory).
+ * @param  {number?} options.sheet - Workbook sheet id (`1` by default).
+ * @param  {string?} options.dateFormat - Date format, e.g. "MM/DD/YY". Values having this format template set will be parsed as dates.
  * @param  {object} contents - A list of XML files inside XLSX file (which is a zipped directory).
  * @return {object} An object of shape `{ data, cells, properties }`. `data: string[][]` is an array of rows, each row being an array of cell values. `cells: string[][]` is an array of rows, each row being an array of cells. `properties: object` is the spreadsheet properties (e.g. whether date epoch is 1904 instead of 1900).
  */
@@ -17,8 +23,6 @@ export default function readXlsx(contents, xml, options = {}) {
     options = { ...options, sheet: 1 }
   }
 
-  const { rowMap } = options
-
   let sheet
   let properties
 
@@ -28,8 +32,9 @@ export default function readXlsx(contents, xml, options = {}) {
 
   try {
     const values = parseValues(contents[`xl/sharedStrings.xml`], xml)
-    properties = parseProperties(contents[`xl/workbook.xml`], xml)
-    sheet = parseSheet(contents[`xl/worksheets/sheet${options.sheet}.xml`], xml, values)
+    const styles = parseStyles(contents[`xl/styles.xml`], xml)
+    const properties = parseProperties(contents[`xl/workbook.xml`], xml)
+    sheet = parseSheet(contents[`xl/worksheets/sheet${options.sheet}.xml`], xml, values, styles, properties, options)
   }
   catch (error) {
     // Guards against malformed XLSX files.
@@ -64,10 +69,10 @@ export default function readXlsx(contents, xml, options = {}) {
     }
   }
 
-  // cells = dropEmptyRows(dropEmptyColumns(cells, _ => _.value), rowMap, _ => _.value)
-
   let data = cells.map(row => row.map(cell => cell.value))
-  data = dropEmptyRows(dropEmptyColumns(data), rowMap)
+  data = dropEmptyRows(dropEmptyColumns(data), options.rowMap)
+
+  // cells = dropEmptyRows(dropEmptyColumns(cells, _ => _.value), options.rowMap, _ => _.value)
 
   if (options.schema) {
     return {
@@ -123,20 +128,44 @@ function CellCoords(coords) {
   }
 }
 
-function Cell(cellNode, sheet, xml, values) {
+function Cell(cellNode, sheet, xml, values, styles, properties, options) {
   const coords = CellCoords(cellNode.getAttribute('r'))
 
   let value = xml.select(sheet, cellNode, 'a:v', namespaces)[0]
   // For `xpath` `value` can be `undefined` while for native `DOMParser` it's `null`.
   value = value && value.textContent
 
-  if (cellNode.getAttribute('t') === 's') {
-    value = values[parseInt(value)]
+  // http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/ST_CellType.html
+  switch (cellNode.getAttribute('t')) {
+    case 's':
+      value = values[parseInt(value)].trim()
+      break
+
+    case 'b':
+      value = value === '1' ? true : false
+      break
+
+    case 'n':
+    // Default type is "n".
+    // http://www.datypic.com/sc/ooxml/t-ssml_CT_Cell.html
+    default:
+      value = parseFloat(value)
+      // XLSX has no specific format for dates.
+      // Sometimes a date can be heuristically detected.
+      // https://github.com/catamphetamine/read-excel-file/issues/3#issuecomment-395770777
+      const style = styles[parseInt(cellNode.getAttribute('s') || 0)]
+      if ((style.numberFormat.id >= 14 && style.numberFormat.id <= 22) ||
+        (style.numberFormat.id >= 45 && style.numberFormat.id <= 47) ||
+        (options.dateFormat && style.numberFormat.template === options.dateFormat)) {
+        value = parseDate(value, properties)
+      }
+      break
   }
 
   // Convert empty values to `null`.
-  // `value` could still be `null` or `undefined`.
-  value = value && value.trim() || null
+  if (value === undefined) {
+    value = null
+  }
 
   return {
     row    : coords.row,
@@ -160,7 +189,7 @@ export function dropEmptyRows(data, rowMap, accessor = _ => _) {
     // Check if the row is empty.
     let empty = true
     for (const cell of data[i]) {
-      if (accessor(cell)) {
+      if (accessor(cell) !== null) {
         empty = false
         break
       }
@@ -182,7 +211,7 @@ function dropEmptyColumns(data, accessor = _ => _) {
   while (i >= 0) {
     let empty = true
     for (const row of data) {
-      if (accessor(row[i])) {
+      if (accessor(row[i]) !== null) {
         empty = false
         break
       }
@@ -199,10 +228,10 @@ function dropEmptyColumns(data, accessor = _ => _) {
   return data
 }
 
-function parseSheet(content, xml, values, styles) {
+function parseSheet(content, xml, values, styles, properties, options) {
   const sheet = xml.createDocument(content)
 
-  const cells = xml.select(sheet, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces).map(node => Cell(node, sheet, xml, values, styles))
+  const cells = xml.select(sheet, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces).map(node => Cell(node, sheet, xml, values, styles, properties, options))
 
   let dimensions = xml.select(sheet, null, '//a:dimension/@ref', namespaces)[0]
   if (dimensions) {
@@ -218,6 +247,54 @@ function parseValues(content, xml) {
   const strings = xml.createDocument(content)
   return xml.select(strings, null, '//a:si', namespaces)
     .map(string => xml.select(strings, string, './/a:t[not(ancestor::a:rPh)]', namespaces).map(_ => _.textContent).join(''))
+}
+
+// http://officeopenxml.com/SSstyles.php
+function parseStyles(content, xml) {
+  if (!content) {
+    return {}
+  }
+  // https://social.msdn.microsoft.com/Forums/sqlserver/en-US/708978af-b598-45c4-a598-d3518a5a09f0/howwhen-is-cellstylexfs-vs-cellxfs-applied-to-a-cell?forum=os_binaryfile
+  // https://www.office-forums.com/threads/cellxfs-cellstylexfs.2163519/
+  const doc = xml.createDocument(content)
+  const baseStyles = xml.select(doc, null, '//a:styleSheet/a:cellStyleXfs/a:xf', namespaces).map(parseCellStyle);
+  const numFmts = xml.select(doc, null, '//a:styleSheet/a:numFmts/a:numFmt', namespaces)
+    .map(parseNumberFormatStyle)
+    .reduce((formats, format) => {
+      formats[format.id] = format
+      return formats
+    }, [])
+
+  return xml.select(doc, null, '//a:styleSheet/a:cellXfs/a:xf', namespaces).map((xf) => {
+    if (xf.hasAttribute('xfId')) {
+      return {
+        ...baseStyles[xf.xfId],
+        ...parseCellStyle(xf, numFmts)
+      }
+    }
+    return parseCellStyle(xf, numFmts)
+  })
+}
+
+function parseNumberFormatStyle(numFmt) {
+  return {
+    id: numFmt.getAttribute('numFmtId'),
+    template: numFmt.getAttribute('formatCode')
+  }
+}
+
+// http://www.datypic.com/sc/ooxml/e-ssml_xf-2.html
+function parseCellStyle(xf, numFmts) {
+  const style = {}
+  if (xf.hasAttribute('numFmtId')) {
+    const numberFormatId = xf.getAttribute('numFmtId')
+    if (numFmts[numberFormatId]) {
+      style.numberFormat = numFmts[numberFormatId]
+    } else {
+      style.numberFormat = { id: numberFormatId }
+    }
+  }
+  return style
 }
 
 function parseProperties(content, xml) {

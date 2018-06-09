@@ -20,9 +20,9 @@ describe('convertToJson', () => {
 				'STRING',
 				'PHONE'
 			], [
-				'43183', // 03/24/2018',
+				new Date(Date.parse('03/24/2018') - new Date().getTimezoneOffset() * 60 * 1000 + 12 * 60 * 60 * 1000), // '43183', // '03/24/2018',
 				'123',
-				'1',
+				true,
 				'abc',
 				'(123) 456-7890'
 			]
@@ -54,12 +54,14 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([])
 
+		rows[0].date = rows[0].date.toISOString()
+
 		rows.should.deep.equal([{
-			 date,
-			 number: 123,
-			 phone: '+11234567890',
-			 boolean: true,
-			 string: 'abc'
+			date: date.toISOString(),
+			number: 123,
+			phone: '+11234567890',
+			boolean: true,
+			string: 'abc'
 		}])
 	})
 
@@ -257,8 +259,8 @@ describe('convertToJson', () => {
 				'FALSE',
 				'INVALID'
 			], [
-				'1',
-				'0',
+				true,
+				false,
 				'TRUE'
 			]
 		], {
@@ -299,7 +301,10 @@ describe('convertToJson', () => {
 				'DATE',
 				'INVALID'
 			], [
-				'43183', // 03/24/2018',
+				43183, // 03/24/2018',
+				'-'
+			], [
+				date, // 03/24/2018',,
 				'-'
 			]
 		], {
@@ -323,9 +328,17 @@ describe('convertToJson', () => {
 			column: 'INVALID',
 			type: Date,
 			value: '-'
+		}, {
+			error: 'invalid',
+			row: 2,
+			column: 'INVALID',
+			type: Date,
+			value: '-'
 		}])
 
 		rows.should.deep.equal([{
+			date
+		}, {
 			date
 		}])
 	})

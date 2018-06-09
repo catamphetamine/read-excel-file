@@ -197,7 +197,13 @@ function parseValueOfType(value, type, options) {
       if (type === Integer && !isInteger(value)) {
         return { error: 'invalid' }
       }
-      return { value: parseFloat(value) }
+      // Convert strings to numbers.
+      // Just an additional feature.
+      // Won't happen when called from `readXlsx()`.
+      if (typeof value === 'string') {
+        value = parseFloat(value)
+      }
+      return { value }
 
     case 'URL':
     case URL:
@@ -214,22 +220,28 @@ function parseValueOfType(value, type, options) {
       return { value }
 
     case Date:
-      if (!isFinite(value)) {
-        return { error: 'invalid' }
+      // XLSX has no specific format for dates.
+      // Sometimes a date can be heuristically detected.
+      // https://github.com/catamphetamine/read-excel-file/issues/3#issuecomment-395770777
+      if (value instanceof Date) {
+        return { value }
       }
-      value = parseInt(value)
-      const date = parseDate(value, options.properties)
-      if (!date) {
-        return { error: 'invalid' }
+      if (typeof value === 'number') {
+        if (!isFinite(value)) {
+          return { error: 'invalid' }
+        }
+        value = parseInt(value)
+        const date = parseDate(value, options.properties)
+        if (!date) {
+          return { error: 'invalid' }
+        }
+        return { value: date }
       }
-      return { value: date }
+      return { error: 'invalid' }
 
     case Boolean:
-      if (value === '1') {
-        return { value: true }
-      }
-      if (value === '0') {
-        return { value: false }
+      if (typeof value === 'boolean') {
+        return { value }
       }
       return { error: 'invalid' }
 
