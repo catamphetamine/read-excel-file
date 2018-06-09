@@ -52,7 +52,7 @@
 			var input = document.getElementById('input')
 
 			input.addEventListener('change', function() {
-			  readXlsxFile(input.files[0]).then(function(data) {
+			  readXlsxFile(input.files[0], { dateFormat: 'MM/DD/YY' }).then(function(data) {
 			    // `data` is an array of rows
 			    // each row being an array of cells.
 			    document.getElementById('result').innerText = JSON.stringify(data, null, 2)
