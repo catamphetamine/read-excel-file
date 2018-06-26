@@ -19,9 +19,25 @@
 				margin-bottom : 10px;
 			}
 
-			#result
-			{
 
+			#result-table table
+			{
+				width : 100%;
+				border-collapse : collapse;
+				margin-top    : 2.5em;
+				margin-bottom : 2.5em;
+				font-size     : 12px;
+  		}
+
+			#result-table table td
+			{
+				border : 1px solid black;
+				padding : 0.5em;
+
+				text-overflow: ellipsis;
+				overflow: hidden;
+				max-width: 0;
+				white-space: nowrap;
 			}
 
 			#main-link
@@ -46,6 +62,8 @@
 			* Parsing to JSON with a strict schema is supported. <a target="_blank" href="https://github.com/catamphetamine/read-excel-file#json" style="color: #0093C4; text-decoration: none">Read more</a>.
 		</div>
 
+		<div id="result-table"></div>
+
 		<pre id="result"></pre>
 
 		<script>
@@ -56,6 +74,8 @@
 			    // `data` is an array of rows
 			    // each row being an array of cells.
 			    document.getElementById('result').innerText = JSON.stringify(data, null, 2)
+
+			    document.getElementById('result-table').innerHTML = '<table>' + data.map(row => '<tr>' + row.map(cell => `<td>${cell === null ? '' : cell}</td>`).join('') + '</tr>').join('') + '</table>'
 			  }, (error) => {
 			  	console.error(error)
 			  	alert("Error while parsing Excel file. See console output for the error stack trace.")
