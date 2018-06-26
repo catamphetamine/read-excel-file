@@ -1,3 +1,10 @@
+2.0.1 / 26.06.2018
+==================
+
+  * Fixed `NaN`s appearing in the input instead of `null`s (and empty columns not being trimmed).
+
+  * Added "smart date parser" which autodetects and parses most date formats.
+
 2.0.0 / 09.06.2018
 ==================
 

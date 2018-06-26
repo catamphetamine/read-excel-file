@@ -48,7 +48,7 @@ readXlsxFile(fs.createReadStream('/path/to/file')).then((rows) => {
 
 ## Dates
 
-XLSX format has no dedicated "date" type so dates are stored internally as simply numbers along with a "format" (e.g. `"MM/DD/YY"`). When using `readXlsx()` with `schema` parameter all dates get parsed correctly in any case. But if using `readXlsx()` without `schema` parameter (to get "raw" data) then one can pass `dateFormat` parameter (e.g. `"MM/DD/YY"`) for detecting and parsing such dates automatically.
+XLSX format has no dedicated "date" type so dates are stored internally as simply numbers along with a "format" (e.g. `"MM/DD/YY"`). When using `readXlsx()` with `schema` parameter all dates get parsed correctly in any case. But if using `readXlsx()` without `schema` parameter (to get "raw" data) then this library attempts to guess whether a cell value is a date or not by examining the cell "format" (e.g. `"MM/DD/YY"`), so in most cases dates are detected and parsed automatically. For exotic cases one can pass an explicit `dateFormat` parameter (e.g. `"MM/DD/YY"`) to instruct the library to parse numbers with such "format" as dates.
 
 ## JSON
 

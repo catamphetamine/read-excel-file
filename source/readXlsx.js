@@ -139,6 +139,9 @@ function Cell(cellNode, sheet, xml, values, styles, properties, options) {
   switch (cellNode.getAttribute('t')) {
     case 's':
       value = values[parseInt(value)].trim()
+      if (value === '') {
+        value = undefined
+      }
       break
 
     case 'b':
@@ -149,6 +152,9 @@ function Cell(cellNode, sheet, xml, values, styles, properties, options) {
     // Default type is "n".
     // http://www.datypic.com/sc/ooxml/t-ssml_CT_Cell.html
     default:
+      if (value === undefined) {
+        break
+      }
       value = parseFloat(value)
       // XLSX has no specific format for dates.
       // Sometimes a date can be heuristically detected.
@@ -156,7 +162,8 @@ function Cell(cellNode, sheet, xml, values, styles, properties, options) {
       const style = styles[parseInt(cellNode.getAttribute('s') || 0)]
       if ((style.numberFormat.id >= 14 && style.numberFormat.id <= 22) ||
         (style.numberFormat.id >= 45 && style.numberFormat.id <= 47) ||
-        (options.dateFormat && style.numberFormat.template === options.dateFormat)) {
+        (options.dateFormat && style.numberFormat.template === options.dateFormat) ||
+        (options.smartDateParser !== false && style.numberFormat.template && isDateTemplate(style.numberFormat.template))) {
         value = parseDate(value, properties)
       }
       break
@@ -206,7 +213,7 @@ export function dropEmptyRows(data, rowMap, accessor = _ => _) {
   return data
 }
 
-function dropEmptyColumns(data, accessor = _ => _) {
+export function dropEmptyColumns(data, accessor = _ => _) {
   let i = data[0].length - 1
   while (i >= 0) {
     let empty = true
@@ -313,4 +320,14 @@ function parseProperties(content, xml) {
     properties.epoch1904 = true
   }
   return properties;
+}
+
+function isDateTemplate(template) {
+  const tokens = template.split(/\W+/)
+  for (const token of tokens) {
+    if (['MM', 'DD', 'YY', 'YYYY'].indexOf(token) < 0) {
+      return false
+    }
+  }
+  return true
 }
