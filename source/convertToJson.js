@@ -73,7 +73,7 @@ function read(schema, row, rowIndex, columns, errors, options) {
     let value
     let error
     if (isNestedSchema) {
-      value = read(schemaEntry.type, row, rowIndex, columns, errors)
+      value = read(schemaEntry.type, row, rowIndex, columns, errors, options)
     } else {
       if (rawValue === null) {
         value = null
