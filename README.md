@@ -172,8 +172,6 @@ readXlsxFile(selectedFile, { sheet: 2 }).then((data) => {
 
 ## References
 
-This project is based on [`excel`](https://github.com/trevordixon/excel.js) by @trevordixon and [`excel-as-json`](https://github.com/stevetarver/excel-as-json/blob) by @stevetarver.
-
 For XML parsing [`xmldom`](https://github.com/jindw/xmldom) and [`xpath`](https://github.com/goto100/xpath) are used.
 
 ## License
