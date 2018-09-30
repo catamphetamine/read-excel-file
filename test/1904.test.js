@@ -35,11 +35,16 @@ describe('1904', () => {
 		data.rows[4].date.toISOString().should.equal('2018-05-05T12:00:00.000Z')
 	})
 
-	it('should read sheet names', async () => {
+	it('should list sheet names in sheet not found error', async () => {
 		try {
 			await readXlsx(__dirname + '/spreadsheets/1904.xlsx', { sheet: 2 })
 		} catch (error) {
 			error.message.should.equal('Sheet #2 not found in *.xlsx file. Available sheets: "sheet 1" (#1).')
 		}
+	})
+
+	it('should read sheet by name', async () => {
+		const data = await readXlsx(__dirname + '/spreadsheets/1904.xlsx', { sheet: 'sheet 1' })
+		expect(data.length).to.equal(6)
 	})
 })

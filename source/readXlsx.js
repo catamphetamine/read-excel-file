@@ -34,22 +34,16 @@ export default function readXlsx(contents, xml, options = {}) {
     const styles = parseStyles(contents[`xl/styles.xml`], xml)
     const properties = parseProperties(contents[`xl/workbook.xml`], xml)
 
-    if (!contents[`xl/worksheets/sheet${options.sheet}.xml`]) {
-      let sheetNames = {}
-      if (properties.sheets) {
-        sheetNames = Object.keys(properties.sheets)
-          .filter(id => properties.sheets[id])
-          .reduce((names, id) => {
-            names[id] = properties.sheets[id]
-            return names
-          }, {})
-      }
-      const sheetNamesText = Object.keys(sheetNames).map(id => `"${sheetNames[id]}" (#${id})`).join(', ')
-      criticalError = new Error(`Sheet #${options.sheet} not found in *.xlsx file.${sheetNamesText ? ' Available sheets: ' + sheetNamesText + '.' : ''}`)
+    // Parse sheet data.
+
+    const sheetId = typeof options.sheet === 'number' ? options.sheet : getSheetId(properties.sheets, options.sheet)
+
+    if (!sheetId || !contents[`xl/worksheets/sheet${sheetId}.xml`]) {
+      criticalError = createSheetNotFoundError(options.sheet, properties.sheets)
       throw criticalError
     }
 
-    sheet = parseSheet(contents[`xl/worksheets/sheet${options.sheet}.xml`], xml, values, styles, properties, options)
+    sheet = parseSheet(contents[`xl/worksheets/sheet${sheetId}.xml`], xml, values, styles, properties, options)
   }
   catch (error) {
     if (error === criticalError) {
@@ -357,4 +351,35 @@ function isDateTemplate(template) {
     }
   }
   return true
+}
+
+function getSheetId(sheets, name) {
+  if (!sheets) {
+    return
+  }
+  for (const sheetId of Object.keys(sheets)) {
+    if (sheets[sheetId] === name) {
+      return sheetId
+    }
+  }
+  // Deprecated.
+  // Legacy support for `sheet: '1'`, etc.
+  const id = parseInt(name, 10)
+  if (String(id) === name) {
+    return id
+  }
+}
+
+function createSheetNotFoundError(sheet, sheets) {
+  let sheetNames = {}
+  if (sheets) {
+    sheetNames = Object.keys(sheets)
+      .filter(id => sheets[id])
+      .reduce((names, id) => {
+        names[id] = sheets[id]
+        return names
+      }, {})
+  }
+  const sheetNamesText = Object.keys(sheetNames).map(id => `"${sheetNames[id]}" (#${id})`).join(', ')
+  return new Error(`Sheet #${sheet} not found in *.xlsx file.${sheetNamesText ? ' Available sheets: ' + sheetNamesText + '.' : ''}`)
 }
