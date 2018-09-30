@@ -34,4 +34,12 @@ describe('1904', () => {
 		data.rows[3].date.toISOString().should.equal('2018-05-05T12:00:00.000Z')
 		data.rows[4].date.toISOString().should.equal('2018-05-05T12:00:00.000Z')
 	})
+
+	it('should read sheet names', async () => {
+		try {
+			await readXlsx(__dirname + '/spreadsheets/1904.xlsx', { sheet: 2 })
+		} catch (error) {
+			error.message.should.equal('Sheet #2 not found in *.xlsx file. Available sheets: "sheet 1" (#1).')
+		}
+	})
 })

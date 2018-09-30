@@ -26,18 +26,38 @@ export default function readXlsx(contents, xml, options = {}) {
   let sheet
   let properties
 
-  if (!contents[`xl/worksheets/sheet${options.sheet}.xml`]) {
-    throw new Error(`Sheet "${options.sheet}" not found in *.xlsx file.`)
-  }
+  // Error which will not be skipped.
+  let criticalError
 
   try {
     const values = parseValues(contents[`xl/sharedStrings.xml`], xml)
     const styles = parseStyles(contents[`xl/styles.xml`], xml)
     const properties = parseProperties(contents[`xl/workbook.xml`], xml)
+
+    if (!contents[`xl/worksheets/sheet${options.sheet}.xml`]) {
+      let sheetNames = {}
+      if (properties.sheets) {
+        sheetNames = Object.keys(properties.sheets)
+          .filter(id => properties.sheets[id])
+          .reduce((names, id) => {
+            names[id] = properties.sheets[id]
+            return names
+          }, {})
+      }
+      const sheetNamesText = Object.keys(sheetNames).map(id => `"${sheetNames[id]}" (#${id})`).join(', ')
+      criticalError = new Error(`Sheet #${options.sheet} not found in *.xlsx file.${sheetNamesText ? ' Available sheets: ' + sheetNamesText + '.' : ''}`)
+      throw criticalError
+    }
+
     sheet = parseSheet(contents[`xl/worksheets/sheet${options.sheet}.xml`], xml, values, styles, properties, options)
   }
   catch (error) {
+    if (error === criticalError) {
+      throw error
+    }
     // Guards against malformed XLSX files.
+    // Actually perhaps remove this in some next major version.
+    // So marking this `catch` "Deprecated".
     console.error(error)
     if (options.schema) {
       return {
@@ -318,6 +338,13 @@ function parseProperties(content, xml) {
   // https://support.microsoft.com/en-gb/help/214330/differences-between-the-1900-and-the-1904-date-system-in-excel
   if (workbookProperties.getAttribute('date1904') === '1') {
     properties.epoch1904 = true
+  }
+  // Get sheet names (just because they're available).
+  for (const sheet of xml.select(book, null, '//a:sheets/a:sheet', namespaces)) {
+    if (sheet.getAttribute('name')) {
+      properties.sheets = properties.sheets || {}
+      properties.sheets[sheet.getAttribute('sheetId')] = sheet.getAttribute('name')
+    }
   }
   return properties;
 }
