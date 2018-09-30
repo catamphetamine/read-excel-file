@@ -381,5 +381,5 @@ function createSheetNotFoundError(sheet, sheets) {
       }, {})
   }
   const sheetNamesText = Object.keys(sheetNames).map(id => `"${sheetNames[id]}" (#${id})`).join(', ')
-  return new Error(`Sheet #${sheet} not found in *.xlsx file.${sheetNamesText ? ' Available sheets: ' + sheetNamesText + '.' : ''}`)
+  return new Error(`Sheet ${typeof sheet === 'number' ? '#' + sheet : '"' + sheet + '"'} not found in *.xlsx file.${sheetNamesText ? ' Available sheets: ' + sheetNamesText + '.' : ''}`)
 }
