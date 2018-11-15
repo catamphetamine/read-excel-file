@@ -255,8 +255,14 @@ function parseSheet(content, xml, values, styles, properties, options) {
   const cells = xml.select(sheet, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces).map(node => Cell(node, sheet, xml, values, styles, properties, options))
 
   let dimensions = xml.select(sheet, null, '//a:dimension/@ref', namespaces)[0]
+
   if (dimensions) {
     dimensions = dimensions.textContent.split(':').map(CellCoords)
+    // When there's only a single cell on a sheet
+    // there can sometimes be just "A1" for the dimensions string.
+    if (dimensions.length === 1) {
+      dimensions = [dimensions[0], dimensions[0]]
+    }
   } else {
     dimensions = calculateDimensions(cells)
   }

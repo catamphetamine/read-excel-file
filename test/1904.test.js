@@ -49,11 +49,4 @@ describe('1904', () => {
 			error.message.should.equal('Sheet "sheet 2" not found in *.xlsx file. Available sheets: "sheet 1" (#1).')
 		}
 	})
-
-	it('should read sheet by name', async () => {
-		const data = await readXlsx(__dirname + '/spreadsheets/1904.xlsx', { sheet: 'sheet 1' })
-		expect(data.length).to.equal(6)
-		data[0][0].should.equal('Date')
-		data[1][0].toISOString().should.equal('2018-05-05T12:00:00.000Z')
-	})
 })
