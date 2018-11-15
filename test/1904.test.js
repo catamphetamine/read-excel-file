@@ -53,5 +53,7 @@ describe('1904', () => {
 	it('should read sheet by name', async () => {
 		const data = await readXlsx(__dirname + '/spreadsheets/1904.xlsx', { sheet: 'sheet 1' })
 		expect(data.length).to.equal(6)
+		data[0][0].should.equal('Date')
+		data[1][0].toISOString().should.equal('2018-05-05T12:00:00.000Z')
 	})
 })
