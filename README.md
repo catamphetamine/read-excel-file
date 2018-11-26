@@ -165,14 +165,22 @@ Node.js `*.xlxs` parser uses `xpath` and `xmldom` universal packages for XML par
 By default it reads the first sheet in the document. If you have multiple sheets in your spreadsheet then pass `sheet: number` or `sheet: string` as part of the `options` argument (`options.sheet` is `1` by default):
 
 ```js
-readXlsxFile(selectedFile, { sheet: 2 }).then((data) => {
+readXlsxFile(file, { sheet: 2 }).then((data) => {
   ...
 })
 ```
 
 ```js
-readXlsxFile(selectedFile, { sheet: 'Sheet1' }).then((data) => {
+readXlsxFile(file, { sheet: 'Sheet1' }).then((data) => {
   ...
+})
+```
+
+To get the list of sheets one can pass `getSheets: true` option:
+
+```js
+readXlsxFile(file, { getSheets: true }).then((sheets) => {
+  // sheets === { 1: 'Sheet1', 2: 'Sheet2' }
 })
 ```
 

@@ -12,4 +12,12 @@ describe('sheet', () => {
 		expect(data.length).to.equal(1)
 		data[0][0].should.equal('Second sheet')
 	})
+
+	it('should list sheets', async () => {
+		const sheets = await readXlsx(__dirname + '/spreadsheets/multiple-sheets.xlsx', { getSheets: true })
+		expect(sheets).to.deep.equal({
+			1: 'sheet 1',
+			2: 'sheet 2'
+		})
+	})
 })

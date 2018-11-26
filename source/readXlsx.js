@@ -34,6 +34,12 @@ export default function readXlsx(contents, xml, options = {}) {
     const styles = parseStyles(contents[`xl/styles.xml`], xml)
     const properties = parseProperties(contents[`xl/workbook.xml`], xml)
 
+    // A hack for `getSheets()` method.
+    // https://github.com/catamphetamine/read-excel-file/issues/14
+    if (options.getSheets) {
+      return properties.sheets
+    }
+
     // Parse sheet data.
 
     const sheetId = typeof options.sheet === 'number' ? options.sheet : getSheetId(properties.sheets, options.sheet)
@@ -53,6 +59,12 @@ export default function readXlsx(contents, xml, options = {}) {
     // Actually perhaps remove this in some next major version.
     // So marking this `catch` "Deprecated".
     console.error(error)
+    // A hack for `getSheets()` method.
+    // https://github.com/catamphetamine/read-excel-file/issues/14
+    if (options.getSheets) {
+      return {}
+    }
+    // Return sheet data.
     if (options.schema) {
       return {
         data: [],

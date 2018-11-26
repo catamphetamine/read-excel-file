@@ -1,3 +1,5 @@
+<!-- 3.0.0 — Don't return empty data in case of an error; throw the error instead. -->
+
 2.0.1 / 26.06.2018
 ==================
 
