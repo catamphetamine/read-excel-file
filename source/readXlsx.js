@@ -65,7 +65,7 @@ export default function readXlsx(contents, xml, options = {}) {
       return {}
     }
     // Return sheet data.
-    if (options.schema) {
+    if (options.properties) {
       return {
         data: [],
         properties: {}
@@ -100,7 +100,7 @@ export default function readXlsx(contents, xml, options = {}) {
 
   // cells = dropEmptyRows(dropEmptyColumns(cells, _ => _.value), options.rowMap, _ => _.value)
 
-  if (options.schema) {
+  if (options.properties) {
     return {
       data,
       properties
