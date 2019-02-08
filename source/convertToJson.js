@@ -207,12 +207,6 @@ function parseValueOfType(value, type, options) {
 
     case 'URL':
     case URL:
-      // Because Excel files are created by humans
-      // and humans tend to make human errors
-      // they sometimes fill in URLs with spaces, etc.
-      if (!isURL(value)) {
-        value = encodeURI(value)
-      }
       if (!isURL(value)) {
         return { error: 'invalid' }
       }
