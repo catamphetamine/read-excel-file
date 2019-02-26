@@ -32,7 +32,7 @@ input.addEventListener('change', () => {
 ## Node.js
 
 ```js
-import readXlsxFile from 'read-excel-file/node'
+const readXlsxFile = require('read-excel-file/node');
 
 // File path.
 readXlsxFile('/path/to/file').then((rows) => {
