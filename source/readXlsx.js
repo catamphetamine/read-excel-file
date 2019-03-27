@@ -74,6 +74,16 @@ export default function readXlsx(contents, xml, options = {}) {
     return []
   }
 
+  if (sheet.cells.length === 0) {
+    if (options.properties) {
+      return {
+        data: [],
+        properties
+      }
+    }
+    return []
+  }
+
   const [ leftTop, rightBottom ] = sheet.dimensions
 
   const cols = (rightBottom.column - leftTop.column) + 1
@@ -265,6 +275,10 @@ function parseSheet(content, xml, values, styles, properties, options) {
   const sheet = xml.createDocument(content)
 
   const cells = xml.select(sheet, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces).map(node => Cell(node, sheet, xml, values, styles, properties, options))
+
+  if (cells.length === 0) {
+    return { cells }
+  }
 
   let dimensions = xml.select(sheet, null, '//a:dimension/@ref', namespaces)[0]
 
