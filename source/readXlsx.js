@@ -297,6 +297,9 @@ function parseSheet(content, xml, values, styles, properties, options) {
 }
 
 function parseValues(content, xml) {
+  if (!content) {
+    return []
+  }
   const strings = xml.createDocument(content)
   return xml.select(strings, null, '//a:si', namespaces)
     .map(string => xml.select(strings, string, './/a:t[not(ancestor::a:rPh)]', namespaces).map(_ => _.textContent).join(''))
