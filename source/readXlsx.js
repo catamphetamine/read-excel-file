@@ -37,7 +37,10 @@ export default function readXlsx(contents, xml, options = {}) {
     // A hack for `getSheets()` method.
     // https://github.com/catamphetamine/read-excel-file/issues/14
     if (options.getSheets) {
-      return properties.sheets
+      return properties.sheets.reduce((result, sheet) => {
+        result[sheet.id] = sheet.name
+        return result
+      }, {})
     }
 
     // Parse sheet data.
@@ -368,12 +371,18 @@ function parseProperties(content, xml) {
   if (workbookProperties.getAttribute('date1904') === '1') {
     properties.epoch1904 = true
   }
-  // Get sheet names (just because they're available).
+  // Get sheets info (indexes, names, if they're available).
+  properties.sheets = []
+  let i = 0
   for (const sheet of xml.select(book, null, '//a:sheets/a:sheet', namespaces)) {
     if (sheet.getAttribute('name')) {
-      properties.sheets = properties.sheets || {}
-      properties.sheets[sheet.getAttribute('sheetId')] = sheet.getAttribute('name')
+      properties.sheets.push({
+        index: i,
+        id: sheet.getAttribute('sheetId'),
+        name: sheet.getAttribute('name')
+      })
     }
+    i++
   }
   return properties;
 }
@@ -392,9 +401,9 @@ function getSheetId(sheets, name) {
   if (!sheets) {
     return
   }
-  for (const sheetId of Object.keys(sheets)) {
-    if (sheets[sheetId] === name) {
-      return sheetId
+  for (const sheet of sheets) {
+    if (sheet.name === name) {
+      return sheet.id
     }
   }
   // Deprecated.
@@ -406,15 +415,6 @@ function getSheetId(sheets, name) {
 }
 
 function createSheetNotFoundError(sheet, sheets) {
-  let sheetNames = {}
-  if (sheets) {
-    sheetNames = Object.keys(sheets)
-      .filter(id => sheets[id])
-      .reduce((names, id) => {
-        names[id] = sheets[id]
-        return names
-      }, {})
-  }
-  const sheetNamesText = Object.keys(sheetNames).map(id => `"${sheetNames[id]}" (#${id})`).join(', ')
-  return new Error(`Sheet ${typeof sheet === 'number' ? '#' + sheet : '"' + sheet + '"'} not found in *.xlsx file.${sheetNamesText ? ' Available sheets: ' + sheetNamesText + '.' : ''}`)
+  const sheetsList = sheets && sheets.map(sheet => `"${sheet.name}" (#${sheet.id}, index: ${sheet.index})`).join(', ')
+  return new Error(`Sheet ${typeof sheet === 'number' ? '#' + sheet : '"' + sheet + '"'} not found in *.xlsx file.${sheets ? ' Available sheets: ' + sheetsList + '.' : ''}`)
 }

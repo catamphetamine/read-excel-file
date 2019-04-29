@@ -40,13 +40,13 @@ describe('1904', () => {
 		try {
 			await readXlsx(__dirname + '/spreadsheets/1904.xlsx', { sheet: 2 })
 		} catch (error) {
-			error.message.should.equal('Sheet #2 not found in *.xlsx file. Available sheets: "sheet 1" (#1).')
+			error.message.should.equal('Sheet #2 not found in *.xlsx file. Available sheets: "sheet 1" (#1, index: 0).')
 		}
 		// By name.
 		try {
 			await readXlsx(__dirname + '/spreadsheets/1904.xlsx', { sheet: 'sheet 2' })
 		} catch (error) {
-			error.message.should.equal('Sheet "sheet 2" not found in *.xlsx file. Available sheets: "sheet 1" (#1).')
+			error.message.should.equal('Sheet "sheet 2" not found in *.xlsx file. Available sheets: "sheet 1" (#1, index: 0).')
 		}
 	})
 })
