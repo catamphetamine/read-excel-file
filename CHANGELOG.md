@@ -1,4 +1,13 @@
-<!-- 3.0.0 — Don't return empty data in case of an error; throw the error instead. -->
+3.0.0 / 30.06.2018
+==================
+
+  * (breaking change) Calling this library with `getSheets: true` option now returns an array of objects of shape `{ name }` rather than an object of shape `{ [id]: 'name' }`. Same's for calling this library with `properties: true` option.
+
+  * (breaking change) Previous versions returned empty data in case of an error. Now if there're any errors they're thrown as-is and not suppressed.
+
+  * (unlikely breaking change) Previous versions read the `sheet` having ID `1` by default. It was [discovered](https://github.com/catamphetamine/read-excel-file/issues/24) that this could lead to unintuitive behavior in some Excel editors when sheets order is changed by a user: in some editors a sheet with ID `1` could be moved to, for example, the second position, and would still have the ID `1` so for such Excel files by default the library would read the second sheet instead of the first one which would result in confusing behavior. In any case, numerical sheet IDs are inherently internal to the Excel file structure and shouldn't be externalized in any way (in this case, in the code reading such files) so the library now still accepts the numerical `sheet` parameter but rather than being interpreted as a numerical sheet ID it's now interpreted as a numerical sheet index (starting from `1`). If your code passes a numerical `sheet` ID parameter to the library then it will most likely behave the same way with the new version because in most cases a numerical sheet ID is the same as a numerical sheet index. This change is very unlikely to break anyone's code, but just to conform with the SEMVER specification this change is released as a "breaking change" because theoretically there could exist some very rare users affected by the change.
+
+  * (very unlikely breaking change) Removed legacy support for numerical `sheet` IDs passed not as numbers but as strings. For example, `sheet: "2"` instead of `sheet: 2`. A string `sheet` parameter is now always treated as a sheet name.
 
 2.0.1 / 26.06.2018
 ==================

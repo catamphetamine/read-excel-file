@@ -23,60 +23,48 @@ export default function readXlsx(contents, xml, options = {}) {
     options = { ...options, sheet: 1 }
   }
 
-  let sheet
-  let properties
+  const values = parseValues(contents[`xl/sharedStrings.xml`], xml)
+  const styles = parseStyles(contents[`xl/styles.xml`], xml)
+  const properties = parseProperties(contents[`xl/workbook.xml`], xml)
 
-  // Error which will not be skipped.
-  let criticalError
-
-  try {
-    const values = parseValues(contents[`xl/sharedStrings.xml`], xml)
-    const styles = parseStyles(contents[`xl/styles.xml`], xml)
-    const properties = parseProperties(contents[`xl/workbook.xml`], xml)
-
-    // A hack for `getSheets()` method.
-    // https://github.com/catamphetamine/read-excel-file/issues/14
-    if (options.getSheets) {
-      return properties.sheets.reduce((result, sheet) => {
-        result[sheet.id] = sheet.name
-        return result
-      }, {})
-    }
-
-    // Parse sheet data.
-
-    const sheetId = typeof options.sheet === 'number' ? options.sheet : getSheetId(properties.sheets, options.sheet)
-
-    if (!sheetId || !contents[`xl/worksheets/sheet${sheetId}.xml`]) {
-      criticalError = createSheetNotFoundError(options.sheet, properties.sheets)
-      throw criticalError
-    }
-
-    sheet = parseSheet(contents[`xl/worksheets/sheet${sheetId}.xml`], xml, values, styles, properties, options)
+  // A feature for getting the list of sheets in an Excel file.
+  // https://github.com/catamphetamine/read-excel-file/issues/14
+  if (options.getSheets) {
+    return properties.sheets.map(({ name }) => ({
+      name
+    }))
   }
-  catch (error) {
-    if (error === criticalError) {
-      throw error
-    }
-    // Guards against malformed XLSX files.
-    // Actually perhaps remove this in some next major version.
-    // So marking this `catch` "Deprecated".
-    console.error(error)
-    // A hack for `getSheets()` method.
-    // https://github.com/catamphetamine/read-excel-file/issues/14
-    if (options.getSheets) {
-      return {}
-    }
-    // Return sheet data.
-    if (options.properties) {
-      return {
-        data: [],
-        properties: {}
+
+  // Find the sheet ID by index or name.
+  let sheetId
+  if (typeof options.sheet === 'number') {
+    const _sheet = properties.sheets[options.sheet - 1]
+    sheetId = _sheet && _sheet.id
+  } else {
+    for (const sheet of properties.sheets) {
+      if (sheet.name === options.sheet) {
+        sheetId = sheet.id
+        break
       }
     }
-    return []
   }
 
+  // If the sheet wasn't found then throw an error.
+  if (!sheetId || !contents[`xl/worksheets/sheet${sheetId}.xml`]) {
+    throw createSheetNotFoundError(options.sheet, properties.sheets)
+  }
+
+  // Parse sheet data.
+  const sheet = parseSheet(
+    contents[`xl/worksheets/sheet${sheetId}.xml`],
+    xml,
+    values,
+    styles,
+    properties,
+    options
+  )
+
+  // If the sheet is empty.
   if (sheet.cells.length === 0) {
     if (options.properties) {
       return {
@@ -377,7 +365,6 @@ function parseProperties(content, xml) {
   for (const sheet of xml.select(book, null, '//a:sheets/a:sheet', namespaces)) {
     if (sheet.getAttribute('name')) {
       properties.sheets.push({
-        index: i,
         id: sheet.getAttribute('sheetId'),
         name: sheet.getAttribute('name')
       })
@@ -397,24 +384,7 @@ function isDateTemplate(template) {
   return true
 }
 
-function getSheetId(sheets, name) {
-  if (!sheets) {
-    return
-  }
-  for (const sheet of sheets) {
-    if (sheet.name === name) {
-      return sheet.id
-    }
-  }
-  // Deprecated.
-  // Legacy support for `sheet: '1'`, etc.
-  const id = parseInt(name, 10)
-  if (String(id) === name) {
-    return id
-  }
-}
-
 function createSheetNotFoundError(sheet, sheets) {
-  const sheetsList = sheets && sheets.map(sheet => `"${sheet.name}" (#${sheet.id}, index: ${sheet.index})`).join(', ')
+  const sheetsList = sheets && sheets.map((sheet, i) => `"${sheet.name}" (#${i + 1})`).join(', ')
   return new Error(`Sheet ${typeof sheet === 'number' ? '#' + sheet : '"' + sheet + '"'} not found in *.xlsx file.${sheets ? ' Available sheets: ' + sheetsList + '.' : ''}`)
 }
