@@ -75,8 +75,21 @@
 			    // each row being an array of cells.
 			    document.getElementById('result').innerText = JSON.stringify(data, null, 2)
 
-			    document.getElementById('result-table').innerHTML = '<table>' + data.map(row => '<tr>' + row.map(cell => `<td>${cell === null ? '' : cell}</td>`).join('') + '</tr>').join('') + '</table>'
-			  }, (error) => {
+			    document.getElementById('result-table').innerHTML =
+			    	'<table>' +
+			    	'<tbody>' +
+			    	data.map(function (row) {
+			    		return '<tr>' +
+			    			row.map(function (cell) {
+			    				return '<td>' +
+				    				(cell === null ? '' : cell) +
+				    				'</td>'
+			    			}).join('') +
+			    			'</tr>'
+			    	}).join('') +
+			    	'</tbody>' +
+			    	'</table>'
+			  }, function (error) {
 			  	console.error(error)
 			  	alert("Error while parsing Excel file. See console output for the error stack trace.")
 			  })
