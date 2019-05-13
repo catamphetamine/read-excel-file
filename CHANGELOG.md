@@ -1,3 +1,8 @@
+3.0.1 / 13.05.2019
+==================
+
+  * Fixed [IE 11 error](https://github.com/catamphetamine/read-excel-file/issues/26) `"XPathResult is undefined"` by including a polyfill for XPath. This resulted in the browser bundle becoming larger in size by 100 kilobytes.
+
 3.0.0 / 30.06.2018
 ==================
 

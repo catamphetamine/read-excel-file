@@ -1,5 +1,13 @@
 import unpackXlsxFile from './unpackXlsxFileBrowser'
-import xml from './xmlBrowser'
+// Turns out IE11 doesn't support XPath, so not using the native `DOMParser` here.
+// https://github.com/catamphetamine/read-excel-file/issues/26
+// The bundle size with `./xmlBrowser` is 190 kilobytes,
+// the bundle size with `./xmlNode` is 290 kilobytes,
+// so `./xmlBrowser` polyfill is about 100 kilobytes in size.
+// Still, IE11 is a wide-spread browser and it's unlikely that
+// anyone would ignore it for now.
+// import xml from './xmlBrowser'
+import xml from './xmlNode'
 import readXlsxFileContents from './readXlsxFileContents'
 
 /**

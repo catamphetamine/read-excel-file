@@ -50,8 +50,9 @@ export default function readXlsx(contents, xml, options = {}) {
   }
 
   // If the sheet wasn't found then throw an error.
-  if (!sheetId || !contents[`xl/worksheets/sheet${sheetId}.xml`]) {
-    throw createSheetNotFoundError(options.sheet, properties.sheets)
+  const hasNoData = sheetId && !contents[`xl/worksheets/sheet${sheetId}.xml`]
+  if (!sheetId || hasNoData) {
+    throw createSheetNotFoundError(options.sheet, properties.sheets, hasNoData)
   }
 
   // Parse sheet data.
@@ -77,29 +78,28 @@ export default function readXlsx(contents, xml, options = {}) {
 
   const [ leftTop, rightBottom ] = sheet.dimensions
 
-  const cols = (rightBottom.column - leftTop.column) + 1
-  const rows = (rightBottom.row - leftTop.row) + 1
+  const colsCount = (rightBottom.column - leftTop.column) + 1
+  const rowsCount = (rightBottom.row - leftTop.row) + 1
 
-  let cells = []
-
-  times(rows, () => {
-    const row = []
-    times(cols, () => row.push({ value: null }))
-    cells.push(row)
-  })
-
+  // `sheet.cells` seem to not necessarily be sorted by row and column.
+  let data = new Array(rowsCount)
+  let i = 0
+  while (i < rowsCount) {
+    data[i] = new Array(colsCount)
+    let j = 0
+    while (j < colsCount) {
+      data[i][j] = null
+      j++
+    }
+    i++
+  }
   for (const cell of sheet.cells) {
     const row = cell.row - leftTop.row
     const column = cell.column - leftTop.column
-    if (cells[row]) {
-      cells[row][column] = cell
-    }
+    data[row][column] = cell.value
   }
 
-  let data = cells.map(row => row.map(cell => cell.value))
   data = dropEmptyRows(dropEmptyColumns(data), options.rowMap)
-
-  // cells = dropEmptyRows(dropEmptyColumns(cells, _ => _.value), options.rowMap, _ => _.value)
 
   if (options.properties) {
     return {
@@ -126,33 +126,27 @@ function calculateDimensions (cells) {
   ]
 }
 
-function times(n, action) {
-  let i = 0
-  while (i < n) {
-    action()
-    i++
-  }
-}
-
 function colToInt(col) {
-  col = col.trim().split('')
-
-  let n = 0;
-
-  for (let i = 0; i < col.length; i++) {
+  // `for ... of ...` would require Babel polyfill for iterating a string.
+  let n = 0
+  let i = 0
+  while (i < col.length) {
     n *= 26
     n += letters.indexOf(col[i])
+    i++
   }
-
   return n
 }
 
 function CellCoords(coords) {
+  // Examples: "AA2091", "R988", "B1"
   coords = coords.split(/(\d+)/)
-  return {
-    row    : parseInt(coords[1]),
-    column : colToInt(coords[0])
-  }
+  return [
+    // Row.
+    parseInt(coords[1]),
+    // Column.
+    colToInt(coords[0].trim())
+  ]
 }
 
 function Cell(cellNode, sheet, xml, values, styles, properties, options) {
@@ -202,8 +196,8 @@ function Cell(cellNode, sheet, xml, values, styles, properties, options) {
   }
 
   return {
-    row    : coords.row,
-    column : coords.column,
+    row    : coords[0],
+    column : coords[1],
     value
   }
 }
@@ -271,10 +265,16 @@ function parseSheet(content, xml, values, styles, properties, options) {
     return { cells }
   }
 
-  let dimensions = xml.select(sheet, null, '//a:dimension/@ref', namespaces)[0]
+  // "//a:dimension/@ref" causes "RangeError: Maximum call stack size exceeded" error.
+  // That selector was in the legacy code I copy-pasted and no one knows why it was there.
+  // let dimensions = xml.select(sheet, null, '//a:dimension/@ref', namespaces)[0]
+  let dimensions = xml.select(sheet, null, '/a:worksheet/a:dimension/@ref', namespaces)[0]
 
   if (dimensions) {
-    dimensions = dimensions.textContent.split(':').map(CellCoords)
+    dimensions = dimensions.textContent.split(':').map(CellCoords).map(([row, column]) => ({
+      row,
+      column
+    }))
     // When there's only a single cell on a sheet
     // there can sometimes be just "A1" for the dimensions string.
     if (dimensions.length === 1) {
@@ -384,7 +384,9 @@ function isDateTemplate(template) {
   return true
 }
 
-function createSheetNotFoundError(sheet, sheets) {
+function createSheetNotFoundError(sheet, sheets, hasNoData) {
   const sheetsList = sheets && sheets.map((sheet, i) => `"${sheet.name}" (#${i + 1})`).join(', ')
-  return new Error(`Sheet ${typeof sheet === 'number' ? '#' + sheet : '"' + sheet + '"'} not found in *.xlsx file.${sheets ? ' Available sheets: ' + sheetsList + '.' : ''}`)
+  // const sheetDataKeys = Object.keys(contents).filter(key => key.indexOf('xl/worksheets/sheet') === 0).join(', ')
+  // ` Data is available for sheet IDs: ${sheetDataKeys}.`
+  return new Error(`Sheet ${typeof sheet === 'number' ? '#' + sheet : '"' + sheet + '"'} ${hasNoData ? 'data is missing from' : 'not found in'} the *.xlsx file.${!hasNoData && sheets ? ' Available sheets: ' + sheetsList + '.' : ''}`)
 }
