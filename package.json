@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "jszip": "^3.1.5",
-    "unzipper": "^0.8.11",
+    "unzipper": "^0.9.15",
     "xmldom": "^0.1.27",
     "xpath": "0.0.27"
   },
