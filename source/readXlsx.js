@@ -99,6 +99,10 @@ export default function readXlsx(contents, xml, options = {}) {
     data[row][column] = cell.value
   }
 
+  if (options.transformData) {
+    data = options.transformData(data)
+  }
+
   data = dropEmptyRows(dropEmptyColumns(data), options.rowMap)
 
   if (options.properties) {
