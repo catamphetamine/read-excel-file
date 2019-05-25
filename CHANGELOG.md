@@ -1,3 +1,8 @@
+4.0.0 / 25.05.2019
+==================
+
+  * (breaking change) Turned out that `sheetId` is [not the file name](https://github.com/tidyverse/readxl/issues/104) of the sheet. Instead, the filename of the sheet is looked up by `r:id` (or `ns:id`) in the `xl/_rels/workbook.xml.rels` file. That means that reading Excel file sheets by their numeric `sheet` ID is no longer supported in `readXlsxFile()` and if `sheet` option is specified then it means either "sheet index" (starting from `1`) or "sheet name". Also, removed the old deprecated way of passing `sheet` option directly as `readXlsxFile(file, sheet)` instead of `readXlsxFile(file, { sheet })`.
+
 3.0.1 / 13.05.2019
 ==================
 

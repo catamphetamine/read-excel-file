@@ -158,11 +158,11 @@ function ParseExcelError({ children: error }) {
 
 ## Browser compatibility
 
-Node.js `*.xlxs` parser uses `xpath` and `xmldom` universal packages for XML parsing. The same packages could be used in a browser too but since [all modern browsers](https://caniuse.com/#search=domparser) (including IE 11) already have native `DOMParser` built-in this native implementation is used (which means smaller footprint and better performance).
+Node.js `*.xlxs` parser uses `xpath` and `xmldom` packages for XML parsing. The same packages could be used in a browser because [all modern browsers](https://caniuse.com/#search=domparser) (except IE 11) have native `DOMParser` built-in which could is used instead (meaning smaller footprint and better performance) but since Internet Explorer 11 support is still required the browser version doesn't use the native `DOMParser` and instead uses `xpath` and `xmldom` packages for XML parsing just like the Node.js version.
 
 ## Advanced
 
-By default it reads the first sheet in the document. If you have multiple sheets in your spreadsheet then pass `sheet: number` or `sheet: string` as part of the `options` argument (`options.sheet` is `1` by default):
+By default it reads the first sheet in the document. If you have multiple sheets in your spreadsheet then pass either `sheet: number` (sheet index, starting from `1`) or `sheet: string` (sheet name) as part of the `options` argument (`options.sheet` is `1` by default):
 
 ```js
 readXlsxFile(file, { sheet: 2 }).then((data) => {
@@ -180,7 +180,7 @@ To get the list of sheets one can pass `getSheets: true` option:
 
 ```js
 readXlsxFile(file, { getSheets: true }).then((sheets) => {
-  // sheets === { 1: 'Sheet1', 2: 'Sheet2' }
+  // sheets === [{ name: 'Sheet1' }, { name: 'Sheet2' }]
 })
 ```
 

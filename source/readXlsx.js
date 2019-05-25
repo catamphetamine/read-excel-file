@@ -1,7 +1,11 @@
 import parseDate from './parseDate'
 
 const namespaces = {
-  a: 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
+  a: 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+  // This one seems to be for `r:id` attributes on `<sheet>`s.
+  r: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+  // This one seems to be for `<Relationships/>` file.
+  rr: 'http://schemas.openxmlformats.org/package/2006/relationships'
 }
 
 // Maps "A1"-like coordinates to `{ row, column }` numeric coordinates.
@@ -16,16 +20,21 @@ const letters = ["", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
  * @return {object} An object of shape `{ data, cells, properties }`. `data: string[][]` is an array of rows, each row being an array of cell values. `cells: string[][]` is an array of rows, each row being an array of cells. `properties: object` is the spreadsheet properties (e.g. whether date epoch is 1904 instead of 1900).
  */
 export default function readXlsx(contents, xml, options = {}) {
-  // Deprecated 1.0.0 `sheet` argument. Will be removed in some next major release.
-  if (typeof options === 'string' || typeof options === 'number') {
-    options = { sheet: options }
-  } else if (!options.sheet) {
-    options = { ...options, sheet: 1 }
+  if (!options.sheet) {
+    options = {
+      sheet: 1,
+      ...options
+    }
   }
 
-  const values = parseValues(contents[`xl/sharedStrings.xml`], xml)
-  const styles = parseStyles(contents[`xl/styles.xml`], xml)
-  const properties = parseProperties(contents[`xl/workbook.xml`], xml)
+  // Some Excel editors don't want to use standard naming scheme for sheet files.
+  // https://github.com/tidyverse/readxl/issues/104
+  const fileNames = parseFileNames(contents['xl/_rels/workbook.xml.rels'], xml)
+  // Default file path for "shared strings": "xl/sharedStrings.xml".
+  const values = parseValues(contents[`xl/${fileNames.sharedStrings}`], xml)
+  // Default file path for "styles": "xl/styles.xml".
+  const styles = parseStyles(contents[`xl/${fileNames.styles}`], xml)
+  const properties = parseProperties(contents['xl/workbook.xml'], xml)
 
   // A feature for getting the list of sheets in an Excel file.
   // https://github.com/catamphetamine/read-excel-file/issues/14
@@ -35,29 +44,29 @@ export default function readXlsx(contents, xml, options = {}) {
     }))
   }
 
-  // Find the sheet ID by index or name.
-  let sheetId
+  // Find the sheet by name, or take the first one.
+  let sheetRelationId
   if (typeof options.sheet === 'number') {
     const _sheet = properties.sheets[options.sheet - 1]
-    sheetId = _sheet && _sheet.id
+    sheetRelationId = _sheet && _sheet.relationId
   } else {
     for (const sheet of properties.sheets) {
       if (sheet.name === options.sheet) {
-        sheetId = sheet.id
+        sheetRelationId = sheet.relationId
         break
       }
     }
   }
 
   // If the sheet wasn't found then throw an error.
-  const hasNoData = sheetId && !contents[`xl/worksheets/sheet${sheetId}.xml`]
-  if (!sheetId || hasNoData) {
-    throw createSheetNotFoundError(options.sheet, properties.sheets, hasNoData)
+  // Example: "xl/worksheets/sheet1.xml".
+  if (!sheetRelationId || !fileNames.sheets[sheetRelationId]) {
+    throw createSheetNotFoundError(options.sheet, properties.sheets)
   }
 
   // Parse sheet data.
   const sheet = parseSheet(
-    contents[`xl/worksheets/sheet${sheetId}.xml`],
+    contents[`xl/${fileNames.sheets[sheetRelationId]}`],
     xml,
     values,
     styles,
@@ -364,18 +373,69 @@ function parseProperties(content, xml) {
     properties.epoch1904 = true
   }
   // Get sheets info (indexes, names, if they're available).
+  // Example:
+  // <sheets>
+  //   <sheet
+  //     xmlns:ns="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  //     name="Sheet1"
+  //     sheetId="1"
+  //     ns:id="rId3"/>
+  // </sheets>
   properties.sheets = []
   let i = 0
   for (const sheet of xml.select(book, null, '//a:sheets/a:sheet', namespaces)) {
     if (sheet.getAttribute('name')) {
       properties.sheets.push({
         id: sheet.getAttribute('sheetId'),
-        name: sheet.getAttribute('name')
+        name: sheet.getAttribute('name'),
+        relationId: sheet.getAttribute('r:id')
       })
     }
     i++
   }
   return properties;
+}
+
+/**
+ * Returns sheet file paths.
+ * Seems that the correct place to look for the
+ * `sheetId` -> `filename` mapping seems to be in the
+ * `xl/_rels/workbook.xml.rels` file.
+ * https://github.com/tidyverse/readxl/issues/104
+ * @param  {string} content — `xl/_rels/workbook.xml.rels` file contents.
+ * @param  {object} xml
+ * @return {object}
+ */
+function parseFileNames(content, xml) {
+  // Example:
+  // <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  //   ...
+  //   <Relationship
+  //     Id="rId3"
+  //     Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"
+  //     Target="worksheets/sheet1.xml"/>
+  // </Relationships>
+  const document = xml.createDocument(content)
+  const fileNames = {
+    sheets: {},
+    sharedStrings: undefined,
+    styles: undefined
+  }
+  for (const relationship of xml.select(document, null, '/rr:Relationships/rr:Relationship', namespaces)) {
+    const filePath = relationship.getAttribute('Target')
+    switch (relationship.getAttribute('Type')) {
+      case 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles':
+        fileNames.styles = filePath
+        break
+      case 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings':
+        fileNames.sharedStrings = filePath
+        break
+      case 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet':
+        fileNames.sheets[relationship.getAttribute('Id')] = filePath
+        break
+    }
+  }
+  return fileNames
 }
 
 function isDateTemplate(template) {
@@ -388,9 +448,7 @@ function isDateTemplate(template) {
   return true
 }
 
-function createSheetNotFoundError(sheet, sheets, hasNoData) {
+function createSheetNotFoundError(sheet, sheets) {
   const sheetsList = sheets && sheets.map((sheet, i) => `"${sheet.name}" (#${i + 1})`).join(', ')
-  // const sheetDataKeys = Object.keys(contents).filter(key => key.indexOf('xl/worksheets/sheet') === 0).join(', ')
-  // ` Data is available for sheet IDs: ${sheetDataKeys}.`
-  return new Error(`Sheet ${typeof sheet === 'number' ? '#' + sheet : '"' + sheet + '"'} ${hasNoData ? 'data is missing from' : 'not found in'} the *.xlsx file.${!hasNoData && sheets ? ' Available sheets: ' + sheetsList + '.' : ''}`)
+  return new Error(`Sheet ${typeof sheet === 'number' ? '#' + sheet : '"' + sheet + '"'} not found in the *.xlsx file.${sheets ? ' Available sheets: ' + sheetsList + '.' : ''}`)
 }
