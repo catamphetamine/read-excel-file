@@ -435,6 +435,12 @@ function parseFileNames(content, xml) {
         break
     }
   }
+  if (!fileNames.styles) {
+    throw new Error('"styles.xml" file not found in the *.xlsx file')
+  }
+  if (!fileNames.sharedStrings) {
+    throw new Error('"sharedStrings.xml" file not found in the *.xlsx file')
+  }
   return fileNames
 }
 
