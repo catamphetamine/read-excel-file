@@ -156,6 +156,20 @@ function ParseExcelError({ children: error }) {
 }
 ```
 
+When using a `schema` there's also an optional `transformData(data)` parameter which can be used for the cases when the spreadsheet rows/columns aren't in the correct format. For example, the heading row may be missing, or there may be some purely presentational or empty rows. Example:
+
+```js
+readXlsxFile(file, {
+  schema,
+  transformData(data) {
+    // Adds header row to the data.
+    return ['ID', 'NAME', ...].concat(data)
+    // Removes empty rows.
+    return data.filter(rows => row.filter(column => column !== null).length > 0)
+  }
+})
+```
+
 ## Browser compatibility
 
 Node.js `*.xlxs` parser uses `xpath` and `xmldom` packages for XML parsing. The same packages could be used in a browser because [all modern browsers](https://caniuse.com/#search=domparser) (except IE 11) have native `DOMParser` built-in which could is used instead (meaning smaller footprint and better performance) but since Internet Explorer 11 support is still required the browser version doesn't use the native `DOMParser` and instead uses `xpath` and `xmldom` packages for XML parsing just like the Node.js version.
