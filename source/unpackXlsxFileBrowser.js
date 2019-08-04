@@ -11,11 +11,14 @@ export default function unpackXlsxFile(file) {
 	return loadAsync(file).then((zip) => {
 		const files = []
 		zip.forEach((relativePath, zipEntry) => {
-			files.push(zipEntry.name)
+			if (!zipEntry.dir) {
+				files.push(zipEntry.name)
+			}
 		})
 
 		const entries = {}
 		return Promise.all(files.map((file) => {
+			console.log(file)
 			return zip.file(file).async('string').then(content => entries[file] = content)
 		}))
 		.then(() => entries)

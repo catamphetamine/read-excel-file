@@ -358,18 +358,16 @@ function parseCellStyle(xf, numFmts) {
 }
 
 function parseProperties(content, xml) {
+  // I guess `xl/workbook.xml` file should always be present inside the *.xlsx archive.
   if (!content) {
     return {}
   }
   const book = xml.createDocument(content)
   // http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/workbookPr.html
-  const workbookProperties = xml.select(book, null, '//a:workbookPr', namespaces)[0]
-  if (!workbookProperties) {
-    return {}
-  }
   const properties = {};
   // https://support.microsoft.com/en-gb/help/214330/differences-between-the-1900-and-the-1904-date-system-in-excel
-  if (workbookProperties.getAttribute('date1904') === '1') {
+  const workbookProperties = xml.select(book, null, '//a:workbookPr', namespaces)[0]
+  if (workbookProperties && workbookProperties.getAttribute('date1904') === '1') {
     properties.epoch1904 = true
   }
   // Get sheets info (indexes, names, if they're available).
