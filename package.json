@@ -24,7 +24,7 @@
     }
   ],
   "scripts": {
-    "test": "mocha --compilers js:babel-core/register --colors --bail --reporter spec --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
+    "test": "mocha --require babel-core/register --colors --bail --reporter spec --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
     "test-coverage": "istanbul cover -x \"commonjs/**\" -x \"modules/**\" -x \"*.test.js\" node_modules/mocha/bin/_mocha -- --compilers js:babel-core/register --colors --reporter dot --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
     "test-travis": "istanbul cover -x \"commonjs/**\" -x \"modules/**\" -x \"*.test.js\" node_modules/mocha/bin/_mocha --report lcovonly -- --compilers js:babel-core/register --colors --reporter spec --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
     "clean-for-build": "rimraf ./commonjs/**/* ./modules/**/*",
@@ -50,7 +50,7 @@
     "babel-runtime": "^6.26.0",
     "better-npm-run": "^0.1.0",
     "chai": "^4.1.2",
-    "mocha": "^1.17.1",
+    "mocha": "^6.2.0",
     "npm-run-all": "^4.1.2",
     "webpack": "^4.1.1",
     "webpack-cli": "^2.0.12"
