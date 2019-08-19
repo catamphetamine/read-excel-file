@@ -379,6 +379,7 @@ function parseProperties(content, xml) {
   //     sheetId="1"
   //     ns:id="rId3"/>
   // </sheets>
+  // http://www.datypic.com/sc/ooxml/e-ssml_sheet-1.html
   properties.sheets = []
   let i = 0
   for (const sheet of xml.select(book, null, '//a:sheets/a:sheet', namespaces)) {

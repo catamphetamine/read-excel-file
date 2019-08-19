@@ -18,7 +18,6 @@ export default function unpackXlsxFile(file) {
 
 		const entries = {}
 		return Promise.all(files.map((file) => {
-			console.log(file)
 			return zip.file(file).async('string').then(content => entries[file] = content)
 		}))
 		.then(() => entries)
