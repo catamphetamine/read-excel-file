@@ -357,11 +357,8 @@ function parseCellStyle(xf, numFmts) {
   return style
 }
 
+// I guess `xl/workbook.xml` file should always be present inside the *.xlsx archive.
 function parseProperties(content, xml) {
-  // I guess `xl/workbook.xml` file should always be present inside the *.xlsx archive.
-  if (!content) {
-    return {}
-  }
   const book = xml.createDocument(content)
   // http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/workbookPr.html
   const properties = {};
