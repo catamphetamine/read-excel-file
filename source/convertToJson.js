@@ -81,7 +81,7 @@ function read(schema, row, rowIndex, columns, errors, options) {
       else if (Array.isArray(schemaEntry.type)) {
         let notEmpty = false
         const array = parseArray(rawValue).map((_value) => {
-          const result = parseValue(_value, schemaEntry, options)
+          const result = parseValue(_value, rowIndex, schemaEntry, options)
           if (result.error) {
             value = _value
             error = result.error
@@ -95,7 +95,7 @@ function read(schema, row, rowIndex, columns, errors, options) {
           value = notEmpty ? array : null
         }
       } else {
-        const result = parseValue(rawValue, schemaEntry, options)
+        const result = parseValue(rawValue, rowIndex, schemaEntry, options)
         error = result.error
         value = error ? rawValue : result.value
       }
@@ -130,7 +130,7 @@ function read(schema, row, rowIndex, columns, errors, options) {
  * @param  {object} schemaEntry
  * @return {{ value: any, error: string }}
  */
-export function parseValue(value, schemaEntry, options) {
+export function parseValue(value, rowIndex, schemaEntry, options) {
   if (value === null) {
     return { value: null }
   }
@@ -148,7 +148,7 @@ export function parseValue(value, schemaEntry, options) {
   }
   if (result.value !== null && schemaEntry.validate) {
     try {
-      schemaEntry.validate(result.value)
+      schemaEntry.validate(result.value, rowIndex)
     } catch (error) {
       return { error: error.message }
     }
