@@ -167,11 +167,22 @@ function Cell(cellNode, sheet, xml, values, styles, properties, options) {
 
   let value = xml.select(sheet, cellNode, 'a:v', namespaces)[0]
   // For `xpath` `value` can be `undefined` while for native `DOMParser` it's `null`.
+  // So using `value && ...` instead of `if (value !== undefined) { ... }` here.
   value = value && value.textContent
 
   // http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/ST_CellType.html
   switch (cellNode.getAttribute('t')) {
+    // If the cell contains formula string.
+    case 'str':
+      value = value.trim()
+      break
+
+    // If the cell contains a "shared" string.
     case 's':
+      // If a cell has no value then there's no `<c/>` element for it.
+      // If a `<c/>` element exists then it's not empty.
+      // The `<v/>`alue is a key in the "shared strings" dictionary of the
+      // XLSX file, so look it up in the `values` dictionary by the numeric key.
       value = values[parseInt(value)].trim()
       if (value === '') {
         value = undefined
