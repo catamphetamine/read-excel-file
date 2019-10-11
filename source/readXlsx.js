@@ -175,6 +175,9 @@ function Cell(cellNode, sheet, xml, values, styles, properties, options) {
     // If the cell contains formula string.
     case 'str':
       value = value.trim()
+      if (value === '') {
+        value = undefined
+      }
       break
 
     // If the cell contains a "shared" string.
