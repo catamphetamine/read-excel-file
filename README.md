@@ -165,7 +165,7 @@ readXlsxFile(file, {
     // Adds header row to the data.
     return ['ID', 'NAME', ...].concat(data)
     // Removes empty rows.
-    return data.filter(rows => row.filter(column => column !== null).length > 0)
+    return data.filter(row => row.filter(column => column !== null).length > 0)
   }
 })
 ```
