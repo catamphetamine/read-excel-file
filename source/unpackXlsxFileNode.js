@@ -19,7 +19,10 @@ export default function unpackXlsxFile(input) {
     const entryPromises = []
 
     stream
+      // This first "error" listener is for the original stream errors.
+      .on('error', reject)
       .pipe(unzip.Parse())
+      // This second "error" listener is for the unzip stream errors.
       .on('error', reject)
       .on('close', () =>  Promise.all(entryPromises).then(() => resolve(entries)))
       .on('entry', (entry) => {
