@@ -35,7 +35,7 @@
     "prepublish": "npm-run-all build test browser-build"
   },
   "dependencies": {
-    "jszip": "^3.1.5",
+    "jszip": "3.1.5",
     "unzipper": "^0.9.15",
     "xmldom": "^0.1.27",
     "xpath": "0.0.27"
