@@ -10,6 +10,8 @@ Read `*.xlsx` files in a browser or Node.js. Parse to JSON with a strict schema.
 npm install read-excel-file --save
 ```
 
+If you're not using a bundler then use a [standalone version from a CDN](#cdn).
+
 ## Browser
 
 ```html
@@ -202,6 +204,24 @@ To get the list of sheets one can pass `getSheets: true` option:
 readXlsxFile(file, { getSheets: true }).then((sheets) => {
   // sheets === [{ name: 'Sheet1' }, { name: 'Sheet2' }]
 })
+```
+
+## CDN
+
+One can use any npm CDN service, e.g. [unpkg.com](https://unpkg.com) or [jsdelivr.net](https://jsdelivr.net)
+
+```html
+<script src="https://unpkg.com/read-excel-file@4.x/bundle/read-excel-file.min.js"></script>
+
+<script>
+  var input = document.getElementById('input')
+  input.addEventListener('change', function() {
+    readXlsxFile(input.files[0]).then(function() {
+      // `rows` is an array of rows
+      // each row being an array of cells.
+    })
+  })
+</script>
 ```
 
 ## References
