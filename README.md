@@ -77,6 +77,8 @@ const schema = {
     type: Number,
     required: true
   },
+  // 'COURSE' is not a real Excel file column name,
+  // it can be any string — it's just for code readability.
   'COURSE': {
     prop: 'course',
     type: {
