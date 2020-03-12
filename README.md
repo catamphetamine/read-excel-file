@@ -62,11 +62,11 @@ To convert rows to JSON pass `schema` option to `readXlsxFile()`. It will return
 
 ```js
 // An example *.xlsx document:
-// -----------------------------------------------------------------------------
-// | START DATE | NUMBER OF STUDENTS | IS FREE | COURSE TITLE |    CONTACT     |
-// -----------------------------------------------------------------------------
-// | 03/24/2018 |         123        |   true  |  Chemistry   | (123) 456-7890 |
-// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------
+// | START DATE | NUMBER OF STUDENTS | IS FREE | COURSE TITLE |    CONTACT     |  STATUS   |
+// -----------------------------------------------------------------------------------------
+// | 03/24/2018 |         123        |   true  |  Chemistry   | (123) 456-7890 | SCHEDULED |
+// -----------------------------------------------------------------------------------------
 
 const schema = {
   'START DATE': {
@@ -109,6 +109,15 @@ const schema = {
       }
       return number
     }
+  },
+  'STATUS': {
+    prop: 'status',
+    type: String,
+    oneOf: [
+      'SCHEDULED',
+      'STARTED',
+      'FINISHED'
+    ]
   }
 }
 

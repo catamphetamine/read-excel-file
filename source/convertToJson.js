@@ -146,9 +146,14 @@ export function parseValue(value, schemaEntry, options) {
   if (result.error) {
     return result
   }
-  if (result.value !== null && schemaEntry.validate) {
+  if (result.value !== null) {
     try {
-      schemaEntry.validate(result.value)
+      if (schemaEntry.oneOf && schemaEntry.oneOf.indexOf(result.value) < 0) {
+        return { error: 'invalid' }
+      }
+      if (schemaEntry.validate) {
+        schemaEntry.validate(result.value)
+      }
     } catch (error) {
       return { error: error.message }
     }

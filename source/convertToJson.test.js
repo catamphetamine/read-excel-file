@@ -393,6 +393,56 @@ describe('convertToJson', () => {
 			value: '123abc'
 		}])
 	})
+
+	it('should validate "oneOf" (valid)', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'STATUS'
+			],
+			[
+				'STARTED'
+			]
+		], {
+			STATUS: {
+				prop: 'status',
+				type: String,
+				oneOf: [
+					'STARTED',
+					'FINISHED'
+				]
+			}
+		})
+
+		errors.length.should.equal(0)
+	})
+
+	it('should validate "oneOf" (not valid)', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'STATUS'
+			],
+			[
+				'SCHEDULED'
+			]
+		], {
+			STATUS: {
+				prop: 'status',
+				type: String,
+				oneOf: [
+					'STARTED',
+					'FINISHED'
+				]
+			}
+		})
+
+		errors.should.deep.equal([{
+			error: 'invalid',
+			row: 1,
+			column: 'STATUS',
+			type: String,
+			value: 'SCHEDULED'
+		}])
+	})
 })
 
 
