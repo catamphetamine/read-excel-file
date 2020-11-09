@@ -1,3 +1,30 @@
+<!--
+5.0.0 / 30.08.2020
+==================
+
+  * Added [TypeScript](https://github.com/catamphetamine/read-excel-file/issues/71) definitions.
+
+  * Removed deprecated `URL`, `Integer` and `Email` exports (use the string variants instead: `"URL"`, `"Integer"`, `"Email"`).
+
+  * Removed undocumented `convertToJson()` export.
+-->
+
+4.1.0 / 09.11.2020
+==================
+
+* Renamed schema entry `parse()` function: now it's called `type`. This way, `type` could be both a built-in type and a custom type.
+
+* Changed the built-in `"Integer"`, `"URL"` and `"Email"` types: now they're exported functions again instead of strings. Strings still work.
+
+* Added `map` parameter: similar to `schema` but doesn't perform any parsing or validation. Can be used to map an Excel file to an array of objects that could be parsed/validated using [`yup`](https://github.com/jquense/yup).
+
+* `type` of a schema entry is no longer required: if no `type` is specified, then the cell value is returned "as is" (string, or number, or boolean, or `Date`).
+
+4.0.8 / 08.11.2020
+==================
+
+* Updated `JSZip` to the latest version. The [issue](https://gitlab.com/catamphetamine/read-excel-file/-/issues/8). The [original issue](https://github.com/catamphetamine/read-excel-file/issues/54).
+
 4.0.0 / 25.05.2019
 ==================
 

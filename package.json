@@ -1,10 +1,11 @@
 {
   "name": "read-excel-file",
-  "version": "4.0.6",
-  "description": "Read `*.xlsx` files in a browser or Node.js. Parse to JSON with a strict schema.",
+  "version": "4.1.0",
+  "description": "Read small to medium `*.xlsx` files in a browser or Node.js. Parse to JSON with a strict schema.",
   "module": "index.js",
   "sideEffects": false,
   "main": "index.commonjs.js",
+  "types.test": "./index.d.ts.test",
   "contributors": [
     {
       "name": "Trevor Dixon",
@@ -35,7 +36,7 @@
     "prepublish": "npm-run-all build test browser-build"
   },
   "dependencies": {
-    "jszip": "3.1.5",
+    "jszip": "^3.5.0",
     "unzipper": "^0.9.15",
     "xmldom": "^0.1.27",
     "xpath": "0.0.27"
@@ -77,7 +78,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/catamphetamine/read-excel-file"
+    "url": "https://gitlab.com/catamphetamine/read-excel-file"
   },
   "keywords": [
     "excel",
@@ -88,7 +89,7 @@
   "author": "catamphetamine <purecatamphetamine@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/catamphetamine/read-excel-file/issues"
+    "url": "https://gitlab.com/catamphetamine/read-excel-file/issues"
   },
-  "homepage": "https://github.com/catamphetamine/read-excel-file#readme"
+  "homepage": "https://gitlab.com/catamphetamine/read-excel-file#readme"
 }

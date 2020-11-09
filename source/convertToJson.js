@@ -140,7 +140,8 @@ export function parseValue(value, schemaEntry, options) {
   } else if (schemaEntry.type) {
     result = parseValueOfType(value, Array.isArray(schemaEntry.type) ? schemaEntry.type[0] : schemaEntry.type, options)
   } else {
-    throw new Error('Invalid schema entry: no .type and no .parse():\n\n' + JSON.stringify(schemaEntry, null, 2))
+    result = { value: value }
+    // throw new Error('Invalid schema entry: no .type and no .parse():\n\n' + JSON.stringify(schemaEntry, null, 2))
   }
   // If errored then return the error.
   if (result.error) {
@@ -169,11 +170,11 @@ export function parseValue(value, schemaEntry, options) {
  */
 function parseCustomValue(value, parse) {
   try {
-    let parsed = parse(value)
-    if (parsed === undefined) {
+    value = parse(value)
+    if (value === undefined) {
       return { value: null }
     }
-    return { value: parsed }
+    return { value }
   } catch (error) {
     return { error: error.message }
   }
@@ -251,6 +252,9 @@ function parseValueOfType(value, type, options) {
       return { error: 'invalid' }
 
     default:
+      if (typeof type === 'function') {
+        return parseCustomValue(value, type)
+      }
       throw new Error(`Unknown schema type: ${type && type.name || type}`)
   }
 }

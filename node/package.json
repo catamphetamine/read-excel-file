@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "read-excel-file-node",
+  "version": "1.0.0",
+  "main": "index.commonjs.js",
+  "module": "index.js",
+  "types.test": "./index.d.ts.test",
+  "sideEffects": false
+}

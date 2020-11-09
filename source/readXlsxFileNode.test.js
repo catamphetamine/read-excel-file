@@ -3,7 +3,7 @@ import path from 'path'
 import readXlsxFileNode from './readXlsxFileNode'
 
 describe('readXlsxFileNode', () => {
-	it('should read *.xlsx file on Node.js and parse JSON', () => {
+	it('should read *.xlsx file on Node.js and parse it to JSON', () => {
 		const schema = {
 			'START DATE': {
 				prop: 'date',
@@ -46,7 +46,39 @@ describe('readXlsxFileNode', () => {
 
 		const rowMap = []
 
-		return readXlsxFileNode(path.resolve(__dirname, '../test/spreadsheets/course.xlsx'), { schema, rowMap }).then(({ rows, errors }) => {
+		return readXlsxFileNode(path.resolve(__dirname, '../test/spreadsheets/course.xlsx'), { schema, rowMap }).then(({ rows }) => {
+			rows[0].date = rows[0].date.getTime()
+			rows.should.deep.equal([{
+				date: convertToUTCTimezone(new Date(2018, 2, 24, 12)).getTime(),
+				numberOfStudents: 123,
+				course: {
+					isFree: false,
+					cost: 210.45,
+					title: 'Chemistry'
+				},
+				contact: '+11234567890'
+			}])
+			rowMap.should.deep.equal([0, 1])
+		})
+	})
+
+	it('should read *.xlsx file on Node.js and map it to JSON', () => {
+		const map = {
+			'START DATE': 'date',
+			'NUMBER OF STUDENTS': 'numberOfStudents',
+			'COURSE': {
+				'course': {
+					'IS FREE': 'isFree',
+					'COST': 'cost',
+					'COURSE TITLE': 'title'
+				}
+			},
+			'CONTACT': 'contact'
+		}
+
+		const rowMap = []
+
+		return readXlsxFileNode(path.resolve(__dirname, '../test/spreadsheets/course.xlsx'), { map, rowMap }).then(({ rows, errors }) => {
 			errors.should.deep.equal([])
 			rows[0].date = rows[0].date.getTime()
 			rows.should.deep.equal([{
@@ -57,7 +89,7 @@ describe('readXlsxFileNode', () => {
 					cost: 210.45,
 					title: 'Chemistry'
 				},
-				contact: '+11234567890',
+				contact: '(123) 456-7890'
 			}])
 			rowMap.should.deep.equal([0, 1])
 		})

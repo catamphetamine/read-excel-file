@@ -448,9 +448,12 @@ function parseFileNames(content, xml) {
   if (!fileNames.styles) {
     throw new Error('"styles.xml" file not found in the *.xlsx file')
   }
-  if (!fileNames.sharedStrings) {
-    throw new Error('"sharedStrings.xml" file not found in the *.xlsx file')
-  }
+  // Seems like "sharedStrings.xml" is not required to exist.
+  // For example, when the spreadsheet doesn't contain any strings.
+  // https://github.com/catamphetamine/read-excel-file/issues/85
+  // if (!fileNames.sharedStrings) {
+  //   throw new Error('"sharedStrings.xml" file not found in the *.xlsx file')
+  // }
   return fileNames
 }
 

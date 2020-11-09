@@ -1,0 +1,15 @@
+image: node:10
+
+pages:
+  script:
+  - npm install
+  - npm run build
+  - mv ./bundle ./public
+  - cp --recursive ./website/* ./public/
+
+  artifacts:
+    paths:
+    - public
+
+  only:
+  - master

@@ -18,12 +18,14 @@ describe('convertToJson', () => {
 				'NUMBER',
 				'BOOLEAN',
 				'STRING',
-				'PHONE'
+				'PHONE',
+				'PHONE_TYPE'
 			], [
 				new Date(Date.parse('03/24/2018') - new Date().getTimezoneOffset() * 60 * 1000 + 12 * 60 * 60 * 1000), // '43183', // '03/24/2018',
 				'123',
 				true,
 				'abc',
+				'(123) 456-7890',
 				'(123) 456-7890'
 			]
 		], {
@@ -50,16 +52,65 @@ describe('convertToJson', () => {
 					return '+11234567890'
 				}
 			},
+			PHONE_TYPE: {
+				prop: 'phoneType',
+				type(value) {
+					return '+11234567890'
+				}
+			}
 		})
 
 		errors.should.deep.equal([])
 
+		// Convert `Date` to `String` for equality check.
 		rows[0].date = rows[0].date.toISOString()
 
 		rows.should.deep.equal([{
 			date: date.toISOString(),
 			number: 123,
 			phone: '+11234567890',
+			phoneType: '+11234567890',
+			boolean: true,
+			string: 'abc'
+		}])
+	})
+
+	it('should support schema entries with no `type`s', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'DATE',
+				'NUMBER',
+				'BOOLEAN',
+				'STRING'
+			], [
+				new Date(Date.parse('03/24/2018') - new Date().getTimezoneOffset() * 60 * 1000 + 12 * 60 * 60 * 1000), // '43183', // '03/24/2018',
+				123,
+				true,
+				'abc'
+			]
+		], {
+			DATE: {
+				prop: 'date'
+			},
+			NUMBER: {
+				prop: 'number'
+			},
+			BOOLEAN: {
+				prop: 'boolean'
+			},
+			STRING: {
+				prop: 'string'
+			}
+		})
+
+		errors.should.deep.equal([])
+
+		// Convert `Date` to `String` for equality check.
+		rows[0].date = rows[0].date.toISOString()
+
+		rows.should.deep.equal([{
+			date: date.toISOString(),
+			number: 123,
 			boolean: true,
 			string: 'abc'
 		}])
@@ -346,13 +397,21 @@ describe('convertToJson', () => {
 	it('should throw parse() errors', () => {
 		const { rows, errors } = convertToJson([
 			[
-				'PHONE'
+				'PHONE',
+				'PHONE_TYPE'
 			], [
+				'123',
 				'123'
 			]
 		], {
 			PHONE: {
 				prop: 'phone',
+				parse: () => {
+					throw new Error('invalid')
+				}
+			},
+			PHONE_TYPE: {
+				prop: 'phoneType',
 				parse: () => {
 					throw new Error('invalid')
 				}
@@ -363,6 +422,11 @@ describe('convertToJson', () => {
 			error: 'invalid',
 			row: 1,
 			column: 'PHONE',
+			value: '123'
+		}, {
+			error: 'invalid',
+			row: 1,
+			column: 'PHONE_TYPE',
 			value: '123'
 		}])
 

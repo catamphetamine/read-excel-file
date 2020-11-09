@@ -1,0 +1,105 @@
+<html>
+	<head>
+		<title>read-excel-file</title>
+
+		<meta charset="utf-8">
+
+		<script src="./read-excel-file.min.js"></script>
+
+		<style>
+			body
+			{
+				margin : 20px;
+				font-family : Arial, Helvetica;
+			}
+
+			#input
+			{
+				margin-top    : 20px;
+				margin-bottom : 10px;
+			}
+
+
+			#result-table table
+			{
+				width : 100%;
+				border-collapse : collapse;
+				margin-top    : 2.5em;
+				margin-bottom : 2.5em;
+				font-size     : 12px;
+  		}
+
+			#result-table table td
+			{
+				border : 1px solid black;
+				padding : 0.5em;
+
+				text-overflow : ellipsis;
+				overflow      : hidden;
+				max-width     : 10em;
+				white-space   : nowrap;
+			}
+
+			#main-link
+			{
+				display     : block;
+				font-size   : 24px;
+				color       : #0093C4;
+				font-family : monospace;
+				text-decoration : none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<a id="main-link" href="https://gitlab.com/catamphetamine/read-excel-file">
+			read-excel-file
+		</a>
+
+		<input type="file" id="input" />
+
+		<div style="font-size: 12px">
+			* Parsing to JSON with a strict schema is supported. <a target="_blank" href="https://gitlab.com/catamphetamine/read-excel-file#json" style="color: #0093C4; text-decoration: none">Read more</a>.
+		</div>
+
+		<div id="result-table"></div>
+
+		<pre id="result"></pre>
+
+		<script>
+			var input = document.getElementById('input')
+
+			input.addEventListener('change', function() {
+			  readXlsxFile(input.files[0], { dateFormat: 'MM/DD/YY' }).then(function(data) {
+			    // `data` is an array of rows
+			    // each row being an array of cells.
+			    document.getElementById('result').innerText = JSON.stringify(data, null, 2)
+
+			    // Applying `innerHTML` hangs the browser when there're a lot of rows/columns.
+			    // For example, for a file having 2000 rows and 20 columns on a modern
+			    // mid-tier CPU it parses the file (using a "schema") for 3 seconds
+			    // (blocking) with 100% single CPU core usage.
+			    // Then applying `innerHTML` hangs the browser.
+
+			    // document.getElementById('result-table').innerHTML =
+			    // 	'<table>' +
+			    // 	'<tbody>' +
+			    // 	data.map(function (row) {
+			    // 		return '<tr>' +
+			    // 			row.map(function (cell) {
+			    // 				return '<td>' +
+				   //  				(cell === null ? '' : cell) +
+				   //  				'</td>'
+			    // 			}).join('') +
+			    // 			'</tr>'
+			    // 	}).join('') +
+			    // 	'</tbody>' +
+			    // 	'</table>'
+			  }, function (error) {
+			  	console.error(error)
+			  	alert("Error while parsing Excel file. See console output for the error stack trace.")
+			  })
+			})
+		</script>
+	</body>
+</html>
