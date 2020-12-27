@@ -108,11 +108,29 @@ export default function readXlsx(contents, xml, options = {}) {
     data[row][column] = cell.value
   }
 
-  if (options.transformData) {
-    data = options.transformData(data)
+  // Fill in the row map.
+  const { rowMap } = options
+  if (rowMap) {
+    let i = 0
+    while (i < data.length) {
+      rowMap[i] = i
+      i++
+    }
   }
 
-  data = dropEmptyRows(dropEmptyColumns(data), options.rowMap)
+  data = dropEmptyRows(
+    dropEmptyColumns(data, { onlyTrimAtTheEnd: true }),
+    { onlyTrimAtTheEnd: true, rowMap }
+  )
+
+  if (options.transformData) {
+    data = options.transformData(data)
+    // data = options.transformData(data, {
+    //   dropEmptyRowsAndColumns(data) {
+    //     return dropEmptyRows(dropEmptyColumns(data), { rowMap })
+    //   }
+    // })
+  }
 
   if (options.properties) {
     return {
@@ -229,15 +247,11 @@ function Cell(cellNode, sheet, xml, values, styles, properties, options) {
   }
 }
 
-export function dropEmptyRows(data, rowMap, accessor = _ => _) {
-  // Fill in row map.
-  if (rowMap) {
-    let j = 0
-    while (j < data.length) {
-      rowMap[j] = j
-      j++
-    }
-  }
+export function dropEmptyRows(data, {
+  rowMap,
+  accessor = _ => _,
+  onlyTrimAtTheEnd
+} = {}) {
   // Drop empty rows.
   let i = data.length - 1
   while (i >= 0) {
@@ -255,13 +269,18 @@ export function dropEmptyRows(data, rowMap, accessor = _ => _) {
       if (rowMap) {
         rowMap.splice(i, 1)
       }
+    } else if (onlyTrimAtTheEnd) {
+      break
     }
     i--
   }
   return data
 }
 
-export function dropEmptyColumns(data, accessor = _ => _) {
+export function dropEmptyColumns(data, {
+  accessor = _ => _,
+  onlyTrimAtTheEnd
+} = {}) {
   let i = data[0].length - 1
   while (i >= 0) {
     let empty = true
@@ -277,6 +296,8 @@ export function dropEmptyColumns(data, accessor = _ => _) {
         data[j].splice(i, 1)
         j++
       }
+    } else if (onlyTrimAtTheEnd) {
+      break
     }
     i--
   }

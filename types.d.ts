@@ -10,9 +10,6 @@ type BasicType =
 	| number
 	| boolean
 	| typeof Date
-	| 'Integer'
-	| 'URL'
-	| 'Email'
 	| Integer
 	| URL
 	| Email

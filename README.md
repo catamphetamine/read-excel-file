@@ -73,7 +73,7 @@ To convert rows to JSON pass `schema` option to `readXlsxFile()`. It will return
 // -----------------------------------------------------------------------------------------
 // | START DATE | NUMBER OF STUDENTS | IS FREE | COURSE TITLE |    CONTACT     |  STATUS   |
 // -----------------------------------------------------------------------------------------
-// | 03/24/2018 |         123        |   true  |  Chemistry   | (123) 456-7890 | SCHEDULED |
+// | 03/24/2018 |         10         |   true  |  Chemistry   | (123) 456-7890 | SCHEDULED |
 // -----------------------------------------------------------------------------------------
 
 const schema = {
@@ -135,7 +135,7 @@ readXlsxFile(file, { schema }).then(({ rows, errors }) => {
 
   rows === [{
     date: new Date(2018, 2, 24),
-    numberOfStudents: 123,
+    numberOfStudents: 10,
     course: {
       isFree: true,
       title: 'Chemistry'
@@ -156,17 +156,34 @@ There are also some additional exported `type`s:
 
 A schema entry for a column may also define an optional `validate(value)` function for validating the parsed value: in that case, it must `throw` an `Error` if the `value` is invalid.
 
+<details>
+<summary>
+The <code>convertToJson()</code> function is also exported as a standalone one from <code>read-excel-file/schema</code>
+</summary>
+
+#####
+
+```js
+import convertToJson from "read-excel-file/schema"
+
+// `data` is an array of rows, each row being an array of cells.
+// `schema` is a "to JSON" convertion schema (see above).
+const objects = convertToJson(data, schema)
+```
+</details>
+
+
 #### Map
 
 Sometimes, a developer might want to use some other (more advanced) solution for schema parsing and validation (like [`yup`](https://github.com/jquense/yup)). If a developer passes a `map` instead of a `schema` to `readXlsxFile()`, then it would just map each data row to a JSON object without doing any parsing or validation.
 
 ```js
 // An example *.xlsx document:
-// -----------------------------------------------------------------------------------------
-// | START DATE | NUMBER OF STUDENTS | IS FREE | COURSE TITLE |    CONTACT     |  STATUS   |
-// -----------------------------------------------------------------------------------------
-// | 03/24/2018 |         123        |   true  |  Chemistry   | (123) 456-7890 | SCHEDULED |
-// -----------------------------------------------------------------------------------------
+// ------------------------------------------------------------
+// | START DATE | NUMBER OF STUDENTS | IS FREE | COURSE TITLE |
+// ------------------------------------------------------------
+// | 03/24/2018 |         10         |   true  |  Chemistry   |
+// ------------------------------------------------------------
 
 const map = {
   'START DATE': 'date',
@@ -176,21 +193,17 @@ const map = {
       'IS FREE': 'isFree',
       'COURSE TITLE': 'title'
     }
-  },
-  'CONTACT': 'contact',
-  'STATUS': 'status'
+  }
 }
 
 readXlsxFile(file, { map }).then(({ rows }) => {
   rows === [{
     date: new Date(2018, 2, 24),
-    numberOfStudents: 123,
+    numberOfStudents: 10,
     course: {
       isFree: true,
       title: 'Chemistry'
-    },
-    contact: '(123) 456-7890',
-    status: 'SCHEDULED'
+    }
   }]
 })
 ```

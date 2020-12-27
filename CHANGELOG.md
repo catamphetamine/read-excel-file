@@ -1,13 +1,20 @@
 <!--
-5.0.0 / 30.08.2020
+6.0.0 / xx.xx.xxxx
 ==================
 
   * Added [TypeScript](https://github.com/catamphetamine/read-excel-file/issues/71) definitions.
+-->
 
-  * Removed deprecated `URL`, `Integer` and `Email` exports (use the string variants instead: `"URL"`, `"Integer"`, `"Email"`).
+5.0.0 / 27.12.2020
+==================
+
+  * `readXlsxFile()` now [doesn't skip](https://gitlab.com/catamphetamine/read-excel-file/-/issues/10) empty rows or columns: it only skips empty rows or columns at the end, but not in the beginning and not in the middle as it used to.
+
+  * Removed `"URL"`, `"Email"`, `"Integer"` types. Use non-string exported ones instead: `URL`, `Email`, `Integer`.
 
   * Removed undocumented `convertToJson()` export.
--->
+
+  * Removed undocumented `read-excel-file/json` export.
 
 4.1.0 / 09.11.2020
 ==================
