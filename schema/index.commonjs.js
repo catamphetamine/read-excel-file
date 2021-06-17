@@ -1,2 +1,2 @@
-exports = module.exports = require('../commonjs/convertToJson').default
-exports['default'] = require('../commonjs/convertToJson').default
+exports = module.exports = require('../commonjs/read/schema/convertToJson').default
+exports['default'] = require('../commonjs/read/schema/convertToJson').default

@@ -4,13 +4,11 @@ Read small to medium `*.xlsx` files in a browser or Node.js. Parse to JSON with 
 
 [Demo](https://catamphetamine.gitlab.io/read-excel-file/)
 
+Also check [`write-excel-file`](https://www.npmjs.com/package/write-excel-file)
+
 ## Restrictions
 
-There have been some [complaints](https://github.com/catamphetamine/read-excel-file/issues/38#issuecomment-544286628) about this library not being able to handle large `*.xlsx` spreadsheets. It's true that this library's main point have been usability and convenience, and not performance or the ability to handle huge datasets. For example, the time of parsing a 2000 rows / 20 columns file is about 3 seconds, and when parsing a 30k+ rows file, it may throw a `RangeError: Maximum call stack size exceeded`. So, for handling huge datasets, use something like [`xlsx`](https://github.com/catamphetamine/read-excel-file/issues/38#issuecomment-544286628) package instead. This library is suitable for handling small to medium `*.xlsx` files.
-
-## GitHub
-
-On March 9th, 2020, GitHub, Inc. silently [banned](https://medium.com/@catamphetamine/how-github-blocked-me-and-all-my-libraries-c32c61f061d3) my account (and all my libraries) without any notice. I opened a support ticked but they didn't answer. Because of that, I had to move all my libraries to [GitLab](https://gitlab.com/catamphetamine).
+There have been some [complaints](https://github.com/catamphetamine/read-excel-file/issues/38#issuecomment-544286628) about this library not being able to read large `*.xlsx` spreadsheets. It's true that this library's main point have been usability and convenience, and not performance or the ability to handle huge datasets. For example, the time of parsing a file with 2000 rows / 20 columns is about 3 seconds, and when parsing a 30k+ rows file it may throw a `RangeError: Maximum call stack size exceeded`. So, for reading huge datasets, use something like [`xlsx`](https://github.com/catamphetamine/read-excel-file/issues/38#issuecomment-544286628) package instead. This library is suitable for reading small to medium `*.xlsx` files.
 
 ## Install
 
@@ -20,7 +18,9 @@ npm install read-excel-file --save
 
 If you're not using a bundler then use a [standalone version from a CDN](#cdn).
 
-## Browser
+## Use
+
+### Browser
 
 ```html
 <input type="file" id="input" />
@@ -39,10 +39,12 @@ input.addEventListener('change', () => {
 })
 ```
 
-## Node.js
+Note: Internet Explorer 11 requires a `Promise` polyfill. [Example](https://www.npmjs.com/package/promise-polyfill).
+
+### Node.js
 
 ```js
-const readXlsxFile = require('read-excel-file/node');
+const readXlsxFile = require('read-excel-file/node')
 
 // File path.
 readXlsxFile('/path/to/file').then((rows) => {
@@ -56,15 +58,17 @@ readXlsxFile(fs.createReadStream('/path/to/file')).then((rows) => {
 })
 ```
 
-## Dates
+### Dates
 
-XLSX format has no dedicated "date" type so dates are stored internally as simply numbers along with a "format" (e.g. `"MM/DD/YY"`). When using `readXlsx()` with `schema` parameter all dates get parsed correctly in any case. But if using `readXlsx()` without `schema` parameter (to get "raw" data) then this library attempts to guess whether a cell value is a date or not by examining the cell "format" (e.g. `"MM/DD/YY"`), so in most cases dates are detected and parsed automatically. For exotic cases one can pass an explicit `dateFormat` parameter (e.g. `"MM/DD/YY"`) to instruct the library to parse numbers with such "format" as dates:
+XLSX format used to have no dedicated "date" type, so dates are in almost all cases stored simply as numbers (the count of days since `01/01/1900`) along with a ["format"](https://xlsxwriter.readthedocs.io/format.html#format-set-num-format) property (like `"MM/DD/YY"`) that instructs the XLSX viewer to format the date using a certain format.
+
+When using `readXlsx()` with a `schema` parameter, all schema columns having type `Date` are automatically parsed as dates. When using `readXlsx()` without a `schema` parameter (to get "raw" data), this library attempts to guess whether a cell value is a date or not by examining the cell type and "format", and in most cases dates are detected correctly. But in some cases it doesn't detect dates automatically, and one can pass an explicit `dateFormat` parameter (like `"MM/DD/YY"`) to instruct the library to parse numbers having such "format" as dates:
 
 ```js
 readXlsxFile(file, { dateFormat: 'MM/DD/YY' })
 ```
 
-## JSON
+### JSON
 
 To convert rows to JSON pass `schema` option to `readXlsxFile()`. It will return `{ rows, errors }` object instead of just `rows`.
 
@@ -148,13 +152,13 @@ readXlsxFile(file, { schema }).then(({ rows, errors }) => {
 
 If no `type` is specified then the cell value is returned "as is".
 
-There are also some additional exported `type`s:
+There are also some additional exported `type`s available:
 
 * `Integer` for parsing integer `Number`s.
 * `URL` for parsing URLs.
 * `Email` for parsing email addresses.
 
-A schema entry for a column may also define an optional `validate(value)` function for validating the parsed value: in that case, it must `throw` an `Error` if the `value` is invalid.
+A schema entry for a column may also define an optional `validate(value)` function for validating the parsed value: in that case, it must `throw` an `Error` if the `value` is invalid. The `validate(value)` function is only called when `value` exists.
 
 <details>
 <summary>
@@ -258,10 +262,6 @@ readXlsxFile(file, {
 
 See [testing `index.d.ts`](https://github.com/catamphetamine/read-excel-file/issues/71#issuecomment-675140448).
 
-## Browser compatibility
-
-Node.js `*.xlxs` parser uses `xpath` and `xmldom` packages for XML parsing. The same packages could be used in a browser because [all modern browsers](https://caniuse.com/#search=domparser) (except IE 11) have native `DOMParser` built-in which could is used instead (meaning smaller footprint and better performance) but since Internet Explorer 11 support is still required the browser version doesn't use the native `DOMParser` and instead uses `xpath` and `xmldom` packages for XML parsing just like the Node.js version.
-
 ## Gotchas
 
 ### Formulas
@@ -297,12 +297,12 @@ readXlsxFile(file, { getSheets: true }).then((sheets) => {
 One can use any npm CDN service, e.g. [unpkg.com](https://unpkg.com) or [jsdelivr.net](https://jsdelivr.net)
 
 ```html
-<script src="https://unpkg.com/read-excel-file@4.x/bundle/read-excel-file.min.js"></script>
+<script src="https://unpkg.com/read-excel-file@5.x/bundle/read-excel-file.min.js"></script>
 
 <script>
   var input = document.getElementById('input')
   input.addEventListener('change', function() {
-    readXlsxFile(input.files[0]).then(function() {
+    readXlsxFile(input.files[0]).then(function(rows) {
       // `rows` is an array of rows
       // each row being an array of cells.
     })
@@ -312,7 +312,11 @@ One can use any npm CDN service, e.g. [unpkg.com](https://unpkg.com) or [jsdeliv
 
 ## References
 
-For XML parsing [`xmldom`](https://github.com/jindw/xmldom) and [`xpath`](https://github.com/goto100/xpath) are used.
+Uses [`xmldom`](https://github.com/jindw/xmldom) for parsing XML.
+
+## GitHub
+
+On March 9th, 2020, GitHub, Inc. silently [banned](https://medium.com/@catamphetamine/how-github-blocked-me-and-all-my-libraries-c32c61f061d3) my account (erasing all my repos, issues and comments, even in my employer's private repos) without any notice or explanation. Because of that, all source codes had to be promptly moved to GitLab. The [GitHub repo](https://github.com/catamphetamine/read-excel-file) is now only used as a backup (you can star the repo there too), and the primary repo is now the [GitLab one](https://gitlab.com/catamphetamine/read-excel-file). Issues can be reported in any repo.
 
 ## License
 

@@ -1,5 +1,5 @@
 import readXlsxFileBrowser, { parseExcelDate } from '../index.js'
-import readXlsxFileNode from '../modules/readXlsxFileNode'
+import readXlsxFileNode, { parseExcelDate as parseExcelDateNode } from '../node'
 
 describe(`exports`, () => {
 	it(`should export ES6`, () => {
@@ -9,16 +9,17 @@ describe(`exports`, () => {
 
 		// Node.js
 		readXlsxFileNode.should.be.a('function')
+		parseExcelDateNode.should.be.a('function')
 	})
 
 	it(`should export CommonJS`, () => {
 		// Browser
 
-		const Library = require('../index.commonjs')
+		const Read = require('../index.commonjs')
 
-		Library.should.be.a('function')
-		Library.default.should.be.a('function')
-		Library.parseExcelDate.should.be.a('function')
+		Read.should.be.a('function')
+		Read.default.should.be.a('function')
+		Read.parseExcelDate.should.be.a('function')
 
 		// Node.js
 

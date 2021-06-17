@@ -1,4 +1,4 @@
-import readXlsx from '../source/readXlsxFileNode'
+import readXlsx from '../source/read/readXlsxFileNode'
 
 describe('boolean', () => {
 	it('should parse booleans', async () => {

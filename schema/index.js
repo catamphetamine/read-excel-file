@@ -1,1 +1,1 @@
-export { default as default } from '../modules/convertToJson'
+export { default as default } from '../modules/read/schema/convertToJson'

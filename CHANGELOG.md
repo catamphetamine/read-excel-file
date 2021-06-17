@@ -5,6 +5,22 @@
   * Added [TypeScript](https://github.com/catamphetamine/read-excel-file/issues/71) definitions.
 -->
 
+5.2.0 / 17.06.2021
+==================
+
+* (internal) Removed `xpath` dependency to reduce bundle size.
+
+* (internal) Removed `xmldom` dependency in the browser to reduce bundle size.
+
+* (internal) Fixed date parser: in previous versions it was setting time to `12:00` instead of `00:00`.
+
+* (internal) `readXlsxFile()`: Added support for `e`, `d`, `z` and `inlineStr` cell types.
+
+5.1.0 / 06.04.2021
+==================
+
+  * Simply updated all dependencies to their latest version.
+
 5.0.0 / 27.12.2020
 ==================
 

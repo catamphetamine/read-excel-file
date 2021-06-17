@@ -5,40 +5,40 @@
 		{
 			"presets":
 			[
-				"env"
+				"@babel/env"
 			],
 
 			"plugins":
 			[
-				"transform-runtime",
-				"transform-object-rest-spread",
-				["transform-es2015-for-of", { loose: true }]
+				"@babel/transform-runtime",
+				["@babel/transform-for-of", { "loose": true }],
+				"@babel/proposal-class-properties"
 			]
 		},
 		"commonjs":
 		{
 			"presets":
 			[
-				"env"
+				"@babel/env"
 			],
 
 			"plugins":
 			[
-				"transform-object-rest-spread",
-				["transform-es2015-for-of", { loose: true }]
+				["@babel/transform-for-of", { "loose": true }],
+				"@babel/proposal-class-properties"
 			]
 		},
 		"es6":
 		{
 			"presets":
 			[
-				["env", { modules: false }]
+				["@babel/env", { modules: false }]
 			],
 
 			"plugins":
 			[
-				"transform-object-rest-spread",
-				["transform-es2015-for-of", { loose: true }]
+				["@babel/transform-for-of", { "loose": true }],
+				"@babel/proposal-class-properties"
 			]
 		}
 	}

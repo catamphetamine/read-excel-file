@@ -1,60 +1,47 @@
 {
   "name": "read-excel-file",
-  "version": "5.0.0",
+  "version": "5.2.1",
   "description": "Read small to medium `*.xlsx` files in a browser or Node.js. Parse to JSON with a strict schema.",
   "module": "index.js",
   "sideEffects": false,
   "main": "index.commonjs.js",
   "types.test": "./index.d.ts.test",
-  "contributors": [
-    {
-      "name": "Trevor Dixon",
-      "email": "trevordixon@gmail.com"
-    },
-    {
-      "name": "Steve Tarver",
-      "email": "steve.tarver@gmail.com"
-    },
-    {
-      "name": "Jake Scott",
-      "email": "scott.iroh@gmail.com"
-    },
-    {
-      "name": "Fabian Tollenaar",
-      "email": "fabian@starting-point.nl"
-    }
-  ],
   "scripts": {
-    "test": "mocha --require babel-core/register --colors --bail --reporter spec --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
+    "test": "mocha --require @babel/register --colors --bail --reporter spec --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
     "test-coverage": "istanbul cover -x \"commonjs/**\" -x \"modules/**\" -x \"*.test.js\" node_modules/mocha/bin/_mocha -- --compilers js:babel-core/register --colors --reporter dot --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
     "test-travis": "istanbul cover -x \"commonjs/**\" -x \"modules/**\" -x \"*.test.js\" node_modules/mocha/bin/_mocha --report lcovonly -- --compilers js:babel-core/register --colors --reporter spec --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
     "clean-for-build": "rimraf ./commonjs/**/* ./modules/**/*",
     "build-commonjs-modules": "better-npm-run build-commonjs-modules",
     "build-es6-modules": "better-npm-run build-es6-modules",
-    "browser-build": "better-npm-run browser-build",
+    "browser-build": "rollup --config rollup.config.js",
     "build": "npm-run-all clean-for-build build-commonjs-modules build-es6-modules browser-build",
-    "prepublish": "npm-run-all build test browser-build"
+    "prepublishOnly": "npm-run-all build test browser-build"
   },
   "dependencies": {
-    "jszip": "^3.5.0",
-    "unzipper": "^0.9.15",
-    "xmldom": "^0.1.27",
-    "xpath": "0.0.27"
+    "jszip": "^3.6.0",
+    "unzipper": "^0.10.11",
+    "xmldom": "^0.6.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.4",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-runtime": "^6.26.0",
+    "@babel/cli": "^7.14.5",
+    "@babel/core": "^7.14.5",
+    "@babel/plugin-proposal-class-properties": "^7.14.5",
+    "@babel/plugin-transform-for-of": "^7.14.5",
+    "@babel/plugin-transform-runtime": "^7.14.5",
+    "@babel/preset-env": "^7.14.5",
+    "@babel/register": "^7.14.5",
     "better-npm-run": "^0.1.0",
-    "chai": "^4.1.2",
-    "mocha": "^6.2.0",
+    "chai": "^4.3.4",
+    "core-js": "^3.14.0",
+    "mocha": "^9.0.0",
     "npm-run-all": "^4.1.2",
-    "webpack": "^4.1.1",
-    "webpack-cli": "^2.0.12"
+    "regenerator-runtime": "^0.13.7",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.51.1",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^7.0.2"
   },
   "betterScripts": {
     "browser-build": {

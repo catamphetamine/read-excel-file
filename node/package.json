@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "read-excel-file-node",
+  "name": "read-excel-file/node",
   "version": "1.0.0",
   "main": "index.commonjs.js",
   "module": "index.js",

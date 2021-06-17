@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "read-excel-file-schema",
+  "name": "read-excel-file/schema",
   "version": "1.0.0",
   "main": "index.commonjs.js",
   "module": "index.js",

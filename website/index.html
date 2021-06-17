@@ -6,6 +6,10 @@
 
 		<script src="./read-excel-file.min.js"></script>
 
+		<script src="./lib/promise-polyfill.min.js"></script>
+
+		<script src="./lib/prism.js"></script>
+
 		<style>
 			body
 			{
@@ -49,6 +53,8 @@
 				text-decoration : none;
 			}
 		</style>
+
+		<link href="lib/prism.css" rel="stylesheet" />
 	</head>
 
 	<body>
@@ -56,15 +62,25 @@
 			read-excel-file
 		</a>
 
+		<br/>
+
+		<div>
+			Read small to medium <code>*.xlsx</code> files in a browser or Node.js. Parse to JSON with a strict schema.
+		</div>
+
+		<br/>
+
 		<input type="file" id="input" />
 
-		<div style="font-size: 12px">
+		<div style="font-size: 14px">
 			* Parsing to JSON with a strict schema is supported. <a target="_blank" href="https://gitlab.com/catamphetamine/read-excel-file#json" style="color: #0093C4; text-decoration: none">Read more</a>.
 		</div>
 
+		<br/>
+
 		<div id="result-table"></div>
 
-		<pre id="result"></pre>
+		<pre style="display: none"><code class="language-js" id="result"></code></pre>
 
 		<script>
 			var input = document.getElementById('input')
@@ -73,7 +89,13 @@
 			  readXlsxFile(input.files[0], { dateFormat: 'MM/DD/YY' }).then(function(data) {
 			    // `data` is an array of rows
 			    // each row being an array of cells.
-			    document.getElementById('result').innerText = JSON.stringify(data, null, 2)
+			    // document.getElementById('result').innerText = JSON.stringify(data, null, 2)
+			    document.getElementById('result').parentNode.style.display = 'block'
+			    document.getElementById('result').innerHTML = Prism.highlight(
+						JSON.stringify(data, null, 2),
+						Prism.languages.javascript,
+						'javascript'
+					)
 
 			    // Applying `innerHTML` hangs the browser when there're a lot of rows/columns.
 			    // For example, for a file having 2000 rows and 20 columns on a modern
