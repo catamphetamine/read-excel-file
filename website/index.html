@@ -15,6 +15,8 @@
 			{
 				margin : 20px;
 				font-family : Arial, Helvetica;
+				background: #434343;
+				color: #dddddd;
 			}
 
 			#input
@@ -48,9 +50,110 @@
 			{
 				display     : block;
 				font-size   : 24px;
-				color       : #0093C4;
+				color       : #fd8900;
 				font-family : monospace;
 				text-decoration : none;
+			}
+
+			a
+			{
+				color: #fd8900;
+			}
+
+			.file-upload
+			{
+				text-transform: uppercase;
+				letter-spacing: 1px;
+				font-size: 0.75rem;
+				color: #fd8900;
+				border: 1px solid currentColor;
+				border-radius: 4px;
+				display: inline-block;
+				padding: 6px 12px;
+				cursor: pointer;
+			}
+
+			.file-upload:active
+			{
+				color: black;
+				font-weight: bolder;
+				background-color: #fd8900;
+			}
+
+			input[type="file"]
+			{
+				display: none;
+			}
+
+			#result,
+			#error,
+			#loading
+			{
+				display: none;
+				margin-top: 2.5rem;
+			}
+
+			#error
+			{
+				color: #ff7979;
+			}
+
+			/* Loading Indicator */
+			/* https://loading.io/css/ */
+			.lds-ellipsis {
+				display: inline-block;
+				position: relative;
+				width: 40px;
+				height: 40px;
+			}
+			.lds-ellipsis div {
+				position: absolute;
+				top: 16px;
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				background: #fff;
+				animation-timing-function: cubic-bezier(0, 1, 1, 0);
+			}
+			.lds-ellipsis div:nth-child(1) {
+				left: 4px;
+				animation: lds-ellipsis1 0.6s infinite;
+			}
+			.lds-ellipsis div:nth-child(2) {
+				left: 4px;
+				animation: lds-ellipsis2 0.6s infinite;
+			}
+			.lds-ellipsis div:nth-child(3) {
+				left: 16px;
+				animation: lds-ellipsis2 0.6s infinite;
+			}
+			.lds-ellipsis div:nth-child(4) {
+				left: 28px;
+				animation: lds-ellipsis3 0.6s infinite;
+			}
+			@keyframes lds-ellipsis1 {
+				0% {
+					transform: scale(0);
+				}
+				100% {
+					transform: scale(1);
+				}
+			}
+				@keyframes lds-ellipsis3 {
+				0% {
+					transform: scale(1);
+				}
+				100% {
+					transform: scale(0);
+				}
+			}
+			@keyframes lds-ellipsis2 {
+				0% {
+					transform: translate(0, 0);
+				}
+				100% {
+					transform: translate(12px, 0);
+				}
 			}
 		</style>
 
@@ -64,34 +167,62 @@
 
 		<br/>
 
-		<div>
-			Read small to medium <code>*.xlsx</code> files in a browser or Node.js. Parse to JSON with a strict schema.
+		<div style="line-height: 1.35em">
+			Read small to medium <code>*.xlsx</code> files in a browser or Node.js.
+		</div>
+		<div style="line-height: 1.35em; margin-top: 0.35em">
+			Parse file data to an array of JSON objects using a schema.
 		</div>
 
 		<br/>
 
+		<label for="input" class="file-upload">
+			Click here to choose an <code>*.xlsx</code> file
+		</label>
 		<input type="file" id="input" />
 
-		<div style="font-size: 14px">
-			* Parsing to JSON with a strict schema is supported. <a target="_blank" href="https://gitlab.com/catamphetamine/read-excel-file#json" style="color: #0093C4; text-decoration: none">Read more</a>.
+		<div id="loading">
+			<div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
 		</div>
 
-		<br/>
+		<div id="error">
+		</div>
 
-		<div id="result-table"></div>
+		<div id="result">
+			<h2>
+				File Data
+			</h2>
 
-		<pre style="display: none"><code class="language-js" id="result"></code></pre>
+			<div style="margin-top: 1rem">
+				Also supports parsing file data to an array of JSON objects using a schema. <a target="_blank" href="https://gitlab.com/catamphetamine/read-excel-file#json" style="text-decoration: none">Read more</a>
+			</div>
+
+			<br/>
+
+			<div id="result-table"></div>
+
+			<pre><code class="language-js" id="result-data"></code></pre>
+		</div>
 
 		<script>
 			var input = document.getElementById('input')
 
 			input.addEventListener('change', function() {
+		    document.getElementById('result').style.display = 'none'
+		    document.getElementById('error').style.display = 'none'
+		    document.getElementById('loading').style.display = 'block'
+
+		    if (!input.files[0]) {
+		    	return document.getElementById('loading').style.display = 'none'
+		    }
+
 			  readXlsxFile(input.files[0], { dateFormat: 'MM/DD/YY' }).then(function(data) {
 			    // `data` is an array of rows
 			    // each row being an array of cells.
 			    // document.getElementById('result').innerText = JSON.stringify(data, null, 2)
-			    document.getElementById('result').parentNode.style.display = 'block'
-			    document.getElementById('result').innerHTML = Prism.highlight(
+		    	document.getElementById('loading').style.display = 'none'
+			    document.getElementById('result').style.display = 'block'
+			    document.getElementById('result-data').innerHTML = Prism.highlight(
 						JSON.stringify(data, null, 2),
 						Prism.languages.javascript,
 						'javascript'
@@ -119,7 +250,10 @@
 			    // 	'</table>'
 			  }, function (error) {
 			  	console.error(error)
-			  	alert("Error while parsing Excel file. See console output for the error stack trace.")
+			  	// alert("Error while parsing Excel file. See console output for the error stack trace.")
+		    	document.getElementById('loading').style.display = 'none'
+			    document.getElementById('error').style.display = 'block'
+			    document.getElementById('error').innerText = error.message
 			  })
 			})
 		</script>

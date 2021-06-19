@@ -19,6 +19,9 @@ const letters = ["", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
 // https://hexdocs.pm/xlsxir/number_styles.html
 const BUILT_IN_DATE_NUMBER_FORMAT_IDS = [14,15,16,17,18,19,20,21,22,27,30,36,45,46,47,50,57]
 
+// "The minimum viable XLSX reader"
+// https://www.brendanlong.com/the-minimum-viable-xlsx-reader.html
+
 /**
  * Reads an (unzipped) XLSX file structure into a 2D array of cells.
  * @param  {object} contents - A list of XML files inside XLSX file (which is a zipped directory).
@@ -38,10 +41,17 @@ export default function readXlsx(contents, xml, options = {}) {
   // Some Excel editors don't want to use standard naming scheme for sheet files.
   // https://github.com/tidyverse/readxl/issues/104
   const fileNames = parseFileNames(contents['xl/_rels/workbook.xml.rels'], xml)
+
   // Default file path for "shared strings": "xl/sharedStrings.xml".
-  const values = parseValues(contents[`xl/${fileNames.sharedStrings}`], xml)
+  const values = fileNames.sharedStrings
+    ? parseValues(contents[`xl/${fileNames.sharedStrings}`], xml)
+    : []
+
   // Default file path for "styles": "xl/styles.xml".
-  const styles = parseStyles(contents[`xl/${fileNames.styles}`], xml)
+  const styles = fileNames.styles
+    ? parseStyles(contents[`xl/${fileNames.styles}`], xml)
+    : {}
+
   const properties = parseProperties(contents['xl/workbook.xml'], xml)
 
   // A feature for getting the list of sheets in an Excel file.
@@ -585,10 +595,6 @@ function parseFileNames(content, xml) {
   }
 
   getRelationships(document).forEach(addFileNamesInfo)
-
-  if (!fileNames.styles) {
-    throw new Error('"styles.xml" file not found in the *.xlsx file')
-  }
 
   // Seems like "sharedStrings.xml" is not required to exist.
   // For example, when the spreadsheet doesn't contain any strings.
