@@ -4,7 +4,7 @@ Read small to medium `*.xlsx` files in a browser or Node.js. Parse to JSON with 
 
 [Demo](https://catamphetamine.gitlab.io/read-excel-file/)
 
-Also check [`write-excel-file`](https://www.npmjs.com/package/write-excel-file)
+Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-file) for writing simple `*.xlsx` files.
 
 ## Restrictions
 
@@ -114,6 +114,7 @@ const schema = {
   'CONTACT': {
     prop: 'contact',
     required: true,
+    // A custom `type` function only gets called for non-empty cells.
     type: (value) => {
       const number = parsePhoneNumber(value)
       if (!number) {
@@ -157,6 +158,20 @@ There are also some additional exported `type`s available:
 * `Integer` for parsing integer `Number`s.
 * `URL` for parsing URLs.
 * `Email` for parsing email addresses.
+
+A custom `type` can be defined as a simple function:
+
+```js
+// This function will only be called for a non-empty cell.
+type: (value) => {
+  try {
+    return parseValue(value)
+  } catch (error) {
+    console.error(error)
+    throw new Error('invalid')
+  }
+}
+```
 
 A schema entry for a column may also define an optional `validate(value)` function for validating the parsed value: in that case, it must `throw` an `Error` if the `value` is invalid. The `validate(value)` function is only called when `value` exists.
 
