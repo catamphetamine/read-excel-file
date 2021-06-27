@@ -2,9 +2,7 @@ import readXlsx from '../source/read/readXlsxFileNode'
 
 describe('1904', () => {
 	it('should parse 1904 macOS dates', async () => {
-		const data = await readXlsx(__dirname + '/spreadsheets/1904.xlsx', {
-			dateFormat: 'MM/DD/YYYY'
-		})
+		const data = await readXlsx(__dirname + '/spreadsheets/1904.xlsx')
 
 		expect(data.length).to.equal(6)
 

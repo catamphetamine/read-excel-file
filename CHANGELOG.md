@@ -81,7 +81,7 @@
 
   * (breaking change) If using `readXlsx()` without `schema` parameter it now parses boolean cell values as `true`/`false` and numerical cell values are now parsed as numbers, and also date cell values are parsed as dates in some cases (numbers otherwise). If using `readXlsx()` with `schema` parameter then there are no breaking changes.
 
-  * Added `dateFormat` parameter (e.g. `MM/DD/YY`) for parsing dates automatically when using `readXlsx()` without `schema` parameter.
+  * Added `dateFormat` parameter (e.g. `mm/dd/yyyy`) for parsing dates automatically when using `readXlsx()` without `schema` parameter.
 
   * Added `read-excel-file/json` export for `convertToJson()`.
 

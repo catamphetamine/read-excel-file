@@ -26,7 +26,7 @@ const BUILT_IN_DATE_NUMBER_FORMAT_IDS = [14,15,16,17,18,19,20,21,22,27,30,36,45,
  * Reads an (unzipped) XLSX file structure into a 2D array of cells.
  * @param  {object} contents - A list of XML files inside XLSX file (which is a zipped directory).
  * @param  {number?} options.sheet - Workbook sheet id (`1` by default).
- * @param  {string?} options.dateFormat - Date format, e.g. "MM/DD/YY". Values having this format template set will be parsed as dates.
+ * @param  {string?} options.dateFormat - Date format, e.g. "mm/dd/yyyy". Values having this format template set will be parsed as dates.
  * @param  {object} contents - A list of XML files inside XLSX file (which is a zipped directory).
  * @return {object} An object of shape `{ data, cells, properties }`. `data: string[][]` is an array of rows, each row being an array of cell values. `cells: string[][]` is an array of rows, each row being an array of cells. `properties: object` is the spreadsheet properties (e.g. whether date epoch is 1904 instead of 1900).
  */

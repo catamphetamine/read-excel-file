@@ -216,7 +216,7 @@
 		    	return document.getElementById('loading').style.display = 'none'
 		    }
 
-			  readXlsxFile(input.files[0], { dateFormat: 'MM/DD/YY' }).then(function(data) {
+			  readXlsxFile(input.files[0]).then(function(data) {
 			    // `data` is an array of rows
 			    // each row being an array of cells.
 			    // document.getElementById('result').innerText = JSON.stringify(data, null, 2)

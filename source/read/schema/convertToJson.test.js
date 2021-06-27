@@ -32,8 +32,7 @@ describe('convertToJson', () => {
 		], {
 			DATE: {
 				prop: 'date',
-				type: Date,
-				// template: 'MM/DD/YYYY',
+				type: Date
 			},
 			NUMBER: {
 				prop: 'number',
@@ -363,13 +362,11 @@ describe('convertToJson', () => {
 			DATE: {
 				prop: 'date',
 				type: Date,
-				// template: 'MM/DD/YYYY',
 				required: true
 			},
 			INVALID: {
 				prop: 'invalid',
 				type: Date,
-				// template: 'MM/DD/YYYY',
 				required: true
 			}
 		})

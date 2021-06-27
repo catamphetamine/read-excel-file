@@ -6,10 +6,6 @@ Read small to medium `*.xlsx` files in a browser or Node.js. Parse to JSON with 
 
 Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-file) for writing simple `*.xlsx` files.
 
-## Restrictions
-
-There have been some [complaints](https://github.com/catamphetamine/read-excel-file/issues/38#issuecomment-544286628) about this library not being able to read large `*.xlsx` spreadsheets. It's true that this library's main point have been usability and convenience, and not performance or the ability to handle huge datasets. For example, the time of parsing a file with 2000 rows / 20 columns is about 3 seconds, and when parsing a 30k+ rows file it may throw a `RangeError: Maximum call stack size exceeded`. So, for reading huge datasets, use something like [`xlsx`](https://github.com/catamphetamine/read-excel-file/issues/38#issuecomment-544286628) package instead. This library is suitable for reading small to medium `*.xlsx` files.
-
 ## Install
 
 ```js
@@ -58,19 +54,9 @@ readXlsxFile(fs.createReadStream('/path/to/file')).then((rows) => {
 })
 ```
 
-### Dates
+## JSON
 
-XLSX format used to have no dedicated "date" type, so dates are in almost all cases stored simply as numbers (the count of days since `01/01/1900`) along with a ["format"](https://xlsxwriter.readthedocs.io/format.html#format-set-num-format) property (like `"MM/DD/YY"`) that instructs the XLSX viewer to format the date using a certain format.
-
-When using `readXlsx()` with a `schema` parameter, all schema columns having type `Date` are automatically parsed as dates. When using `readXlsx()` without a `schema` parameter (to get "raw" data), this library attempts to guess whether a cell value is a date or not by examining the cell type and "format", and in most cases dates are detected correctly. But in some cases it doesn't detect dates automatically, and one can pass an explicit `dateFormat` parameter (like `"MM/DD/YY"`) to instruct the library to parse numbers having such "format" as dates:
-
-```js
-readXlsxFile(file, { dateFormat: 'MM/DD/YY' })
-```
-
-### JSON
-
-To convert rows to JSON pass `schema` option to `readXlsxFile()`. It will return `{ rows, errors }` object instead of just `rows`.
+To convert table rows to JSON objects, pass a `schema` option to `readXlsxFile()`. It will return `{ rows, errors }` object instead of just `rows`.
 
 ```js
 // An example *.xlsx document:
@@ -82,28 +68,26 @@ To convert rows to JSON pass `schema` option to `readXlsxFile()`. It will return
 
 const schema = {
   'START DATE': {
+    // JSON object property name.
     prop: 'date',
     type: Date
-    // Excel stores dates as integers.
-    // E.g. '24/03/2018' === 43183.
-    // Such dates are parsed to UTC+0 timezone with time 12:00 .
   },
   'NUMBER OF STUDENTS': {
     prop: 'numberOfStudents',
     type: Number,
     required: true
   },
-  // 'COURSE' is not a real Excel file column name,
+  // Nested object example.
+  // 'COURSE' here is not a real Excel file column name,
   // it can be any string — it's just for code readability.
   'COURSE': {
+    // Nested object path: `row.course`
     prop: 'course',
+    // Nested object schema:
     type: {
       'IS FREE': {
         prop: 'isFree',
         type: Boolean
-        // Excel stored booleans as numbers:
-        // `1` is `true` and `0` is `false`.
-        // Such numbers are parsed to booleans.
       },
       'COURSE TITLE': {
         prop: 'title',
@@ -114,7 +98,8 @@ const schema = {
   'CONTACT': {
     prop: 'contact',
     required: true,
-    // A custom `type` function only gets called for non-empty cells.
+    // A custom `type` can be defined.
+    // A `type` function only gets called for non-empty cells.
     type: (value) => {
       const number = parsePhoneNumber(value)
       if (!number) {
@@ -135,7 +120,7 @@ const schema = {
 }
 
 readXlsxFile(file, { schema }).then(({ rows, errors }) => {
-  // `errors` have shape `{ row, column, error, value }`.
+  // `errors` list items have shape: `{ row, column, error, value }`.
   errors.length === 0
 
   rows === [{
@@ -151,7 +136,7 @@ readXlsxFile(file, { schema }).then(({ rows, errors }) => {
 })
 ```
 
-If no `type` is specified then the cell value is returned "as is".
+If no `type` is specified then the cell value is returned "as is": as a string, number, date or boolean.
 
 There are also some additional exported `type`s available:
 
@@ -173,11 +158,31 @@ type: (value) => {
 }
 ```
 
-A schema entry for a column may also define an optional `validate(value)` function for validating the parsed value: in that case, it must `throw` an `Error` if the `value` is invalid. The `validate(value)` function is only called when `value` exists.
+A schema entry for a column may also define an optional `validate(value)` function for validating the parsed value: in that case, it must `throw` an `Error` if the `value` is invalid. The `validate(value)` function is only called when `value` is not empty (not `null` / `undefined`).
+
+<details>
+<summary>Fixing spreadsheet structure for <code>schema</code> parsing.</summary>
+
+#####
+
+Sometimes, a spreadsheet doesn't exactly have the structure required by this library's `schema` parsing feature: for example, it may be missing a header row, or contain some purely presentational / empty / "garbage" rows that should be removed. To fix that, one could pass an optional `transformData(data)` function that would modify the spreadsheet contents as required.
+
+```js
+readXlsxFile(file, {
+  schema,
+  transformData(data) {
+    // Add a missing header row.
+    return [['ID', 'NAME', ...]].concat(data)
+    // Remove empty rows.
+    return data.filter(row => row.filter(column => column !== null).length > 0)
+  }
+})
+```
+</details>
 
 <details>
 <summary>
-The <code>convertToJson()</code> function is also exported as a standalone one from <code>read-excel-file/schema</code>
+The schema conversion function can also be imported standalone, if anyone wants it.
 </summary>
 
 #####
@@ -187,14 +192,47 @@ import convertToJson from "read-excel-file/schema"
 
 // `data` is an array of rows, each row being an array of cells.
 // `schema` is a "to JSON" convertion schema (see above).
-const objects = convertToJson(data, schema)
+const { rows, errors } = convertToJson(data, schema)
 ```
 </details>
 
+<details>
+<summary>A React component for displaying schema parsing/validation errors.</summary>
 
-#### Map
+#####
 
-Sometimes, a developer might want to use some other (more advanced) solution for schema parsing and validation (like [`yup`](https://github.com/jquense/yup)). If a developer passes a `map` instead of a `schema` to `readXlsxFile()`, then it would just map each data row to a JSON object without doing any parsing or validation.
+```js
+import { parseExcelDate } from 'read-excel-file'
+
+function ParseExcelError({ children: error }) {
+  // Get a human-readable value.
+  let value = error.value
+  if (error.type === Date) {
+    value = parseExcelDate(value).toString()
+  }
+  // Render error summary.
+  return (
+    <div>
+      <code>"{error.error}"</code>
+      {' for value '}
+      <code>"{value}"</code>
+      {' in column '}
+      <code>"{error.column}"</code>
+      {error.type && ' of type '}
+      {error.type && <code>"{error.type.name}"</code>}
+      {' in row '}
+      <code>"{error.row}"</code>
+    </div>
+  )
+}
+```
+</details>
+
+## JSON (mapping)
+
+Same as above, but simpler: without any parsing or validation.
+
+Sometimes, a developer might want to use some other (more advanced) solution for schema parsing and validation (like [`yup`](https://github.com/jquense/yup)). If a developer passes a `map` option instead of a `schema` option to `readXlsxFile()`, then it would just map each data row to a JSON object without doing any parsing or validation. Cell values will remain "as is": as a string, number, date or boolean.
 
 ```js
 // An example *.xlsx document:
@@ -227,65 +265,9 @@ readXlsxFile(file, { map }).then(({ rows }) => {
 })
 ```
 
-#### Displaying schema errors
+## Multiple Sheets
 
-A React component for displaying schema parsing/validation errors could look like this:
-
-```js
-import { parseExcelDate } from 'read-excel-file'
-
-function ParseExcelError({ children: error }) {
-  // Get a human-readable value.
-  let value = error.value
-  if (error.type === Date) {
-    value = parseExcelDate(value).toString()
-  }
-  // Render error summary.
-  return (
-    <div>
-      <code>"{error.error}"</code>
-      {' for value '}
-      <code>"{value}"</code>
-      {' in column '}
-      <code>"{error.column}"</code>
-      {error.type && ' of type '}
-      {error.type && <code>"{error.type.name}"</code>}
-      {' in row '}
-      <code>"{error.row}"</code>
-    </div>
-  )
-}
-```
-
-#### Transforming rows/columns before schema is applied
-
-When using a `schema` there's also an optional `transformData(data)` parameter which can be used for the cases when the spreadsheet rows/columns aren't in the correct format. For example, the heading row may be missing, or there may be some purely presentational or empty rows. Example:
-
-```js
-readXlsxFile(file, {
-  schema,
-  transformData(data) {
-    // Adds header row to the data.
-    return [['ID', 'NAME', ...]].concat(data)
-    // Removes empty rows.
-    return data.filter(row => row.filter(column => column !== null).length > 0)
-  }
-})
-```
-
-## TypeScript
-
-See [testing `index.d.ts`](https://github.com/catamphetamine/read-excel-file/issues/71#issuecomment-675140448).
-
-## Gotchas
-
-### Formulas
-
-Dynamically calculated cells using formulas (`SUM`, etc) are not supported.
-
-## Advanced
-
-By default it reads the first sheet in the document. If you have multiple sheets in your spreadsheet then pass either `sheet: number` (sheet index, starting from `1`) or `sheet: string` (sheet name) as part of the `options` argument (`options.sheet` is `1` by default):
+By default, it reads the first sheet in the document. If you have multiple sheets in your spreadsheet then pass either a sheet number (starting from `1`) or a sheet name in the `options` argument.
 
 ```js
 readXlsxFile(file, { sheet: 2 }).then((data) => {
@@ -299,13 +281,39 @@ readXlsxFile(file, { sheet: 'Sheet1' }).then((data) => {
 })
 ```
 
-To get the list of sheets one can pass `getSheets: true` option:
+By default, `options.sheet` is `1`.
+
+To get the list of all sheets, pass `getSheets: true` option:
 
 ```js
 readXlsxFile(file, { getSheets: true }).then((sheets) => {
   // sheets === [{ name: 'Sheet1' }, { name: 'Sheet2' }]
 })
 ```
+
+## Dates
+
+XLSX format originally had no dedicated "date" type, so dates are in almost all cases stored simply as numbers (the count of days since `01/01/1900`) along with a ["format"](https://xlsxwriter.readthedocs.io/format.html#format-set-num-format) description (like `"d mmm yyyy"`) that instructs the spreadsheet viewer software to format the date in the cell using that certain format.
+
+When using `readXlsx()` with a `schema` parameter, all schema columns having type `Date` are automatically parsed as dates. When using `readXlsx()` without a `schema` parameter, this library attempts to guess whether a cell contains a date or just a number by examining the cell's "format" — if the "format" is one of the [built-in date formats](https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.numberingformat?view=openxml-2.8.1) then such cells' values are automatically parsed as dates. In other cases, when date cells use a non-built-in format (like `"mm/dd/yyyy"`), one can pass an explicit `dateFormat` parameter to instruct the library to parse numeric cells having such "format" as dates:
+
+```js
+readXlsxFile(file, { dateFormat: 'mm/dd/yyyy' })
+```
+
+## Limitations
+
+### Performance
+
+There have been some [reports](https://github.com/catamphetamine/read-excel-file/issues/38#issuecomment-544286628) about performance issues when reading very large `*.xlsx` spreadsheets using this library. It's true that this library's main point have been usability and convenience, and not performance when handling huge datasets. For example, the time of parsing a file with 2000 rows / 20 columns is about 3 seconds. So, for reading huge datasets, perhaps use something like [`xlsx`](https://github.com/catamphetamine/read-excel-file/issues/38#issuecomment-544286628) package instead. There're no comparative benchmarks between the two, so if you'll be making one, share it in the Issues.
+
+### Formulas
+
+Dynamically calculated cells using formulas (`SUM`, etc) are not supported.
+
+## TypeScript
+
+I'm not a TypeScript expert, so the community has to write the typings (and test those). See [example `index.d.ts`](https://github.com/catamphetamine/read-excel-file/issues/71#issuecomment-675140448).
 
 ## CDN
 

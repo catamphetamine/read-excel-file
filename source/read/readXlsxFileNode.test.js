@@ -7,8 +7,7 @@ describe('readXlsxFileNode', () => {
 		const schema = {
 			'START DATE': {
 				prop: 'date',
-				type: Date,
-				template: 'MM/DD/YYYY',
+				type: Date
 			},
 			'NUMBER OF STUDENTS': {
 				prop: 'numberOfStudents',
