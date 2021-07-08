@@ -84,7 +84,7 @@ export default function readXlsx(contents, xml, options = {}) {
 
   // Parse sheet data.
   const sheet = parseSheet(
-    contents[`xl/${fileNames.sheets[sheetRelationId]}`],
+    contents[`xl/${fileNames.sheets[sheetRelationId]}`] || contents[(fileNames.sheets[sheetRelationId] || '/').substring(1)],
     xml,
     values,
     styles,
