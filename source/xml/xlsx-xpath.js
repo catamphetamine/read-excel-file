@@ -22,8 +22,16 @@ export function getCells(document) {
   return xpath(document, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces)
 }
 
+export function getMergedCells(document) {
+  return xpath(document, null, '/a:worksheet/a:mergedCells/a:mergedCell/@ref', namespaces)
+}
+
 export function getCellValue(document, node) {
   return xpath(document, node, './a:v', namespaces)[0]
+}
+
+export function getCellInlineStringValue(document, node) {
+  return xpath(document, node, './a:is/a:t', namespaces)[0].textContent
 }
 
 export function getDimensions(document) {

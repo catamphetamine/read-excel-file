@@ -161,7 +161,7 @@ type: (value) => {
 A schema entry for a column may also define an optional `validate(value)` function for validating the parsed value: in that case, it must `throw` an `Error` if the `value` is invalid. The `validate(value)` function is only called when `value` is not empty (not `null` / `undefined`).
 
 <details>
-<summary>Fixing spreadsheet structure for <code>schema</code> parsing.</summary>
+<summary>Fixing spreadsheet structure for <code>schema</code> parsing. For example, how to <strong>ignore empty rows</strong>.</summary>
 
 #####
 
@@ -182,7 +182,7 @@ readXlsxFile(file, {
 
 <details>
 <summary>
-The schema conversion function can also be imported standalone, if anyone wants it.
+The <strong>schema conversion function</strong> can also be imported standalone, if anyone wants it.
 </summary>
 
 #####
@@ -197,7 +197,7 @@ const { rows, errors } = convertToJson(data, schema)
 </details>
 
 <details>
-<summary>A React component for displaying schema parsing/validation errors.</summary>
+<summary>A <strong>React component</strong> for displaying schema parsing/validation <strong>errors</strong>.</summary>
 
 #####
 

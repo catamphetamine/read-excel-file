@@ -12,7 +12,7 @@ const DEFAULT_OPTIONS = {
  * Convert 2D array to nested objects.
  * If row oriented data, row 0 is dotted key names.
  * Column oriented data is transposed.
- * @param {string[][]} data - An array of rows, each row being an array of cells.
+ * @param {any[][]} data - An array of rows, each row being an array of cells.
  * @param {object} schema
  * @return {object[]}
  */
@@ -130,7 +130,7 @@ function read(schema, row, rowIndex, columns, errors, options) {
 
 /**
  * Converts textual value to a javascript typed value.
- * @param  {string} value
+ * @param  {any} value
  * @param  {object} schemaEntry
  * @return {{ value: any, error: string }}
  */
@@ -142,7 +142,16 @@ export function parseValue(value, schemaEntry, options) {
   if (schemaEntry.parse) {
     result = parseCustomValue(value, schemaEntry.parse)
   } else if (schemaEntry.type) {
-    result = parseValueOfType(value, Array.isArray(schemaEntry.type) ? schemaEntry.type[0] : schemaEntry.type, options)
+    result = parseValueOfType(
+      value,
+      // Supports parsing array types.
+      // See `parseArray()` function for more details.
+      // Example `type`: String[]
+      // Input: 'Barack Obama, "String, with, colons", Donald Trump'
+      // Output: ['Barack Obama', 'String, with, colons', 'Donald Trump']
+      Array.isArray(schemaEntry.type) ? schemaEntry.type[0] : schemaEntry.type,
+      options
+    )
   } else {
     result = { value: value }
     // throw new Error('Invalid schema entry: no .type and no .parse():\n\n' + JSON.stringify(schemaEntry, null, 2))
@@ -168,7 +177,7 @@ export function parseValue(value, schemaEntry, options) {
 
 /**
  * Converts textual value to a custom value using supplied `.parse()`.
- * @param  {string} value
+ * @param  {any} value
  * @param  {function} parse
  * @return {{ value: any, error: string }}
  */
@@ -186,45 +195,71 @@ function parseCustomValue(value, parse) {
 
 /**
  * Converts textual value to a javascript typed value.
- * @param  {string} value
+ * @param  {any} value
  * @param  {} type
  * @return {{ value: (string|number|Date|boolean), error: string }}
  */
 function parseValueOfType(value, type, options) {
   switch (type) {
     case String:
-      return { value }
+      if (typeof value === 'string') {
+        return { value }
+      }
+      // The global `isFinite()` function filters out:
+      // * NaN
+      // * -Infinity
+      // * Infinity
+      // All other values pass (including non-numbers).
+      if (typeof value === 'number') {
+        if (isFinite(value)) {
+          return { value: String(value) }
+        }
+      }
+      return { error: 'invalid' }
 
     case Number:
     case Integer:
-      // The global isFinite() function determines
-      // whether the passed value is a finite number.
-      // If  needed, the parameter is first converted to a number.
+      // Convert strings to numbers.
+      // Just an additional feature.
+      // Won't happen when called from `readXlsx()`.
+      if (typeof value === 'string') {
+        const stringifiedValue = value
+        value = parseFloat(value)
+        if (String(value) !== stringifiedValue) {
+          return { error: 'invalid' }
+        }
+      } else if (typeof value !== 'number') {
+        return { error: 'invalid' }
+      }
+      // The global `isFinite()` function filters out:
+      // * NaN
+      // * -Infinity
+      // * Infinity
+      // All other values pass (including non-numbers).
+      // At this point, `value` can only be a number.
       if (!isFinite(value)) {
         return { error: 'invalid' }
       }
       if (type === Integer && !isInteger(value)) {
         return { error: 'invalid' }
       }
-      // Convert strings to numbers.
-      // Just an additional feature.
-      // Won't happen when called from `readXlsx()`.
-      if (typeof value === 'string') {
-        value = parseFloat(value)
-      }
       return { value }
 
     case URL:
-      if (!isURL(value)) {
-        return { error: 'invalid' }
+      if (typeof value === 'string') {
+        if (isURL(value)) {
+          return { value }
+        }
       }
-      return { value }
+      return { error: 'invalid' }
 
     case Email:
-      if (!isEmail(value)) {
-        return { error: 'invalid' }
+      if (typeof value === 'string') {
+        if (isEmail(value)) {
+          return { value }
+        }
       }
-      return { value }
+      return { error: 'invalid' }
 
     case Date:
       // XLSX has no specific format for dates.

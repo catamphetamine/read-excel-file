@@ -1,9 +1,9 @@
-import { findChild, findChildren, forEach, map } from './dom'
+import { findChild, findChildren, forEach, map, getTagName } from './dom'
 
 export function getCells(document) {
   const worksheet = document.documentElement
   const sheetData = findChild(worksheet, 'sheetData')
-  let cells = []
+  const cells = []
   forEach(sheetData, 'row', (row) => {
     forEach(row, 'c', (cell) => {
       cells.push(cell)
@@ -12,8 +12,29 @@ export function getCells(document) {
   return cells
 }
 
+export function getMergedCells(document) {
+  const worksheet = document.documentElement
+  const mergedCells = findChild(worksheet, 'mergeCells')
+  const mergedCellsInfo = []
+  if (mergedCells) {
+    forEach(mergedCells, 'mergeCell', (mergedCell) => {
+      mergedCellsInfo.push(mergedCell.getAttribute('ref'))
+    })
+  }
+  return mergedCellsInfo
+}
+
 export function getCellValue(document, node) {
   return findChild(node, 'v')
+}
+
+export function getCellInlineStringValue(document, node) {
+  if (node.firstChild &&
+    getTagName(node.firstChild) === 'is' &&
+    node.firstChild.firstChild &&
+    getTagName(node.firstChild.firstChild) === 't') {
+    return node.firstChild.firstChild.textContent
+  }
 }
 
 export function getDimensions(document) {
