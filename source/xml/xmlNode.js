@@ -1,4 +1,4 @@
-import XMLDOM from 'xmldom'
+import XMLDOM from '@xmldom/xmldom'
 
 export default {
 	createDocument(content) {
