@@ -5,6 +5,11 @@
   * Added [TypeScript](https://github.com/catamphetamine/read-excel-file/issues/71) definitions.
 -->
 
+5.2.11 / 08.10.2021
+==================
+
+* Added TypeScript "typings".
+
 5.2.0 / 17.06.2021
 ==================
 

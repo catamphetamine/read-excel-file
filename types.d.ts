@@ -1,6 +1,3 @@
-// See the discussion:
-// https://github.com/catamphetamine/read-excel-file/issues/71
-
 export function Integer(): void;
 export function URL(): void;
 export function Email(): void;
@@ -12,24 +9,24 @@ type BasicType =
 	| typeof Date
 	| Integer
 	| URL
-	| Email
+	| Email;
 
 export type Type = <T>(value: Cell) => T?;
 
-interface SchemaEntryBasic {
+interface SchemaEntryBasic<T> {
 	prop: string;
 	type?: BasicType | Type;
-	oneOf?<T>: T[];
+	oneOf?: T[];
 	required?: boolean;
-	validate?<T>(value: T): void;
+	validate?(value: T): void;
 }
 
-interface SchemaEntryParsed {
+interface SchemaEntryParsed<T> {
 	prop: string;
-	parse<T>: (value: Cell) => T?;
-	oneOf?<T>: T[];
+	parse: (value: Cell) => T?;
+	oneOf?: T[];
 	required?: boolean;
-	validate?<T>(value: T): void;
+	validate?(value: T): void;
 }
 
 // Implementing recursive types in TypeScript:
@@ -40,7 +37,7 @@ interface SchemaEntryRecursive {
 	required?: boolean;
 }
 
-type SchemaEntry = SchemaEntryBasic | SchemaEntryParsed | SchemaEntryRecursive
+type SchemaEntry = SchemaEntryBasic<any> | SchemaEntryParsed<any> | SchemaEntryRecursive
 
 export type Schema = Record<string, SchemaEntry>
 

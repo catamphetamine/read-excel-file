@@ -333,6 +333,10 @@ One can use any npm CDN service, e.g. [unpkg.com](https://unpkg.com) or [jsdeliv
 </script>
 ```
 
+## TypeScript
+
+This library comes with TypeScript "typings". If you happen to find any bugs in those, create an issue.
+
 ## References
 
 Uses [`xmldom`](https://github.com/jindw/xmldom) for parsing XML.
