@@ -7,11 +7,11 @@ type BasicType =
 	| number
 	| boolean
 	| typeof Date
-	| Integer
-	| URL
-	| Email;
+	| typeof Integer
+	| typeof URL
+	| typeof Email;
 
-export type Type = <T>(value: Cell) => T?;
+export type Type = <T>(value: Cell) => T | undefined;
 
 interface SchemaEntryBasic<T> {
 	prop: string;
@@ -23,7 +23,7 @@ interface SchemaEntryBasic<T> {
 
 interface SchemaEntryParsed<T> {
 	prop: string;
-	parse: (value: Cell) => T?;
+	parse: (value: Cell) => T | undefined;
 	oneOf?: T[];
 	required?: boolean;
 	validate?(value: T): void;
@@ -47,7 +47,7 @@ export interface Error {
 	column: number;
 	value?: any;
 	type?: SchemaEntry;
-};
+}
 
 type Cell = string | number | boolean | typeof Date
 export type Row = Cell[]
