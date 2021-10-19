@@ -44,7 +44,7 @@ export type Schema = Record<string, SchemaEntry>
 export interface Error {
 	error: string;
 	row: number;
-	column: number;
+	column: string;
 	value?: any;
 	type?: SchemaEntry;
 }
@@ -52,19 +52,25 @@ export interface Error {
 type Cell = string | number | boolean | typeof Date
 export type Row = Cell[]
 
-export interface ParsedObjectsResult {
-	rows: object[];
+export interface ParsedObjectsResult<T extends object> {
+	rows: T[];
 	errors: Error[];
 }
 
-export interface ParseWithSchemaOptions {
+export interface ParseWithSchemaOptions<T extends object> {
 	schema: Schema;
 	transformData?: (rows: Row[]) => Row[];
 	sheet?: number | string;
 }
 
+type MapProperty = string;
+type MapObject = {
+  [key: string]: MapProperty | MapObject;
+};
+type Map = MapObject;
+
 export interface ParseWithMapOptions {
-	map: object;
+	map: Map;
 	transformData?: (rows: Row[]) => Row[];
 	sheet?: number | string;
 }

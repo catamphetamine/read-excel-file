@@ -16,8 +16,8 @@ export function parseExcelDate(excelSerialDate: number) : typeof Date;
 
 type Input = Stream | PathLike;
 
-function readXlsxFile(input: Input, options: ParseWithSchemaOptions) : Promise<ParsedObjectsResult>;
-function readXlsxFile(input: Input, options: ParseWithMapOptions) : Promise<ParsedObjectsResult>;
-function readXlsxFile(input: Input, options?: ParseWithoutSchemaOptions) : Promise<Row[]>;
+export function readXlsxFile<T extends object>(input: Input, options: ParseWithSchemaOptions<T>) : Promise<ParsedObjectsResult<T>>;
+export function readXlsxFile<T extends object>(input: Input, options: ParseWithMapOptions) : Promise<ParsedObjectsResult<T>>;
+export function readXlsxFile(input: Input, options?: ParseWithoutSchemaOptions) : Promise<Row[]>;
 
 export default readXlsxFile;
