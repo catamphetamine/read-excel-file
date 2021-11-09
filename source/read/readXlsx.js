@@ -24,21 +24,28 @@ export default function readXlsx(contents, xml, options = {}) {
     }
   }
 
+  const getXmlFileContent = (filePath) => {
+    if (!contents[filePath]) {
+      throw new Error(`"${filePath}" file not found inside the *.xlsx file zip archive`)
+    }
+    return contents[filePath]
+  }
+
   // Some Excel editors don't want to use standard naming scheme for sheet files.
   // https://github.com/tidyverse/readxl/issues/104
-  const filePaths = parseFilePaths(contents['xl/_rels/workbook.xml.rels'], xml)
+  const filePaths = parseFilePaths(getXmlFileContent('xl/_rels/workbook.xml.rels'), xml)
 
   // Default file path for "shared strings": "xl/sharedStrings.xml".
   const values = filePaths.sharedStrings
-    ? parseSharedStrings(contents[filePaths.sharedStrings], xml)
+    ? parseSharedStrings(getXmlFileContent(filePaths.sharedStrings), xml)
     : []
 
   // Default file path for "styles": "xl/styles.xml".
   const styles = filePaths.styles
-    ? parseStyles(contents[filePaths.styles], xml)
+    ? parseStyles(getXmlFileContent(filePaths.styles), xml)
     : {}
 
-  const properties = parseProperties(contents['xl/workbook.xml'], xml)
+  const properties = parseProperties(getXmlFileContent('xl/workbook.xml'), xml)
 
   // A feature for getting the list of sheets in an Excel file.
   // https://github.com/catamphetamine/read-excel-file/issues/14
@@ -59,7 +66,7 @@ export default function readXlsx(contents, xml, options = {}) {
 
   // Parse sheet data.
   const sheet = parseSheet(
-    contents[filePaths.sheets[sheetId]],
+    getXmlFileContent(filePaths.sheets[sheetId]),
     xml,
     values,
     styles,
