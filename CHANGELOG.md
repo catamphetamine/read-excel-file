@@ -5,6 +5,11 @@
   * Added [TypeScript](https://github.com/catamphetamine/read-excel-file/issues/71) definitions.
 -->
 
+5.2.22 / 11.11.2021
+==================
+
+* [Added](https://github.com/catamphetamine/read-excel-file/issues/100) `/web-worker` export
+
 5.2.11 / 08.10.2021
 ==================
 

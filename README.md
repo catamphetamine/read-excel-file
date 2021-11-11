@@ -50,8 +50,45 @@ readXlsxFile('/path/to/file').then((rows) => {
 
 // Readable Stream.
 readXlsxFile(fs.createReadStream('/path/to/file')).then((rows) => {
-  ...
+  // `rows` is an array of rows
+  // each row being an array of cells.
 })
+```
+
+### Web Worker
+
+```js
+const worker = new Worker('web-worker.js')
+
+worker.onmessage = function(event) {
+  // `event.data` is an array of rows
+  // each row being an array of cells.
+  console.log(event.data)
+}
+
+worker.onerror = function(event) {
+  console.error(event.message)
+}
+
+const input = document.getElementById('input')
+
+input.addEventListener('change', () => {
+  worker.postMessage(input.files[0])
+})
+```
+
+##### `web-worker.js`
+
+```js
+import readXlsxFile from 'read-excel-file/web-worker'
+
+onmessage = function(event) {
+  readXlsxFile(event.data).then((rows) => {
+    // `rows` is an array of rows
+    // each row being an array of cells.
+    postMessage(rows)
+  })
+}
 ```
 
 ## JSON

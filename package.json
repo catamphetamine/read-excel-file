@@ -1,11 +1,11 @@
 {
   "name": "read-excel-file",
-  "version": "5.2.21",
+  "version": "5.2.22",
   "description": "Read small to medium `*.xlsx` files in a browser or Node.js. Parse to JSON with a strict schema.",
   "module": "index.js",
   "sideEffects": false,
   "main": "index.commonjs.js",
-  "types.test": "./index.d.ts.test",
+  "types": "./index.d.ts",
   "scripts": {
     "test": "mocha --require @babel/register --colors --bail --reporter spec --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
     "test-coverage": "istanbul cover -x \"commonjs/**\" -x \"modules/**\" -x \"*.test.js\" node_modules/mocha/bin/_mocha -- --compilers js:babel-core/register --colors --reporter dot --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
