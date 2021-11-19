@@ -6,6 +6,8 @@ import {
   getDimensions
 } from '../xml/xlsx'
 
+// `dimensions` defines the spreadsheet area containing all non-empty cells.
+// https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.sheetdimension?view=openxml-2.8.1
 export default function parseDimensions(sheet) {
   let dimensions = getDimensions(sheet)
   if (dimensions) {

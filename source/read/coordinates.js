@@ -16,6 +16,8 @@ export function calculateDimensions (cells) {
   ]
 }
 
+// Converts a letter coordinate to a digit coordinate.
+// Examples: "A" -> 1, "B" -> 2, "Z" -> 26, "AA" -> 27, etc.
 function columnLettersToNumber(columnLetters) {
   // `for ... of ...` would require Babel polyfill for iterating a string.
   let n = 0
@@ -29,7 +31,7 @@ function columnLettersToNumber(columnLetters) {
 }
 
 export function parseCellCoordinates(coords) {
-  // Examples: "AA2091", "R988", "B1"
+  // Coordinate examples: "AA2091", "R988", "B1".
   coords = coords.split(/(\d+)/)
   return [
     // Row.

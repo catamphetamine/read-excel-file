@@ -11,8 +11,13 @@ export default function getData(sheet, options) {
 
   const [leftTop, rightBottom] = dimensions
 
-  const colsCount = (rightBottom.column - leftTop.column) + 1
-  const rowsCount = (rightBottom.row - leftTop.row) + 1
+  // Don't discard empty rows or columns at the start.
+  // https://github.com/catamphetamine/read-excel-file/issues/102
+  // const colsCount = (rightBottom.column - leftTop.column) + 1
+  // const rowsCount = (rightBottom.row - leftTop.row) + 1
+
+  const colsCount = rightBottom.column
+  const rowsCount = rightBottom.row
 
   // Initialize spreadsheet data structure.
   let data = new Array(rowsCount)
@@ -32,9 +37,13 @@ export default function getData(sheet, options) {
   //  maybe that's not correct, this piece code was initially copy-pasted
   //  from some other library that used `XPath`)
   for (const cell of cells) {
-    const row = cell.row - leftTop.row
-    const column = cell.column - leftTop.column
-    data[row][column] = cell.value
+    // Don't discard empty rows or columns at the start.
+    // https://github.com/catamphetamine/read-excel-file/issues/102
+    // const rowIndex = cell.row - leftTop.row
+    // const columnIndex = cell.column - leftTop.column
+    const rowIndex = cell.row - 1
+    const columnIndex = cell.column - 1
+    data[rowIndex][columnIndex] = cell.value
   }
 
   // Fill in the row map.

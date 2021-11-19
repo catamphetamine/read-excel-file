@@ -1,14 +1,17 @@
 <!--
 6.0.0 / xx.xx.xxxx
 ==================
-
-  * Added [TypeScript](https://github.com/catamphetamine/read-excel-file/issues/71) definitions.
 -->
+
+5.2.25 / 19.11.2021
+==================
+
+* [Fixed](https://github.com/catamphetamine/read-excel-file/issues/102) skipping empty rows and columns at the start.
 
 5.2.22 / 11.11.2021
 ==================
 
-* [Added](https://github.com/catamphetamine/read-excel-file/issues/100) `/web-worker` export
+* [Added](https://github.com/catamphetamine/read-excel-file/issues/100) `/web-worker` export.
 
 5.2.11 / 08.10.2021
 ==================
