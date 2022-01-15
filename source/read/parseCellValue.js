@@ -91,11 +91,13 @@ export default function getCellValue(value, type, {
       }
       value = parseFloat(value)
       // XLSX does have "d" type for dates, but it's not commonly used.
-      //  specific format for dates.
-      // Sometimes a date can be heuristically detected.
+      // Instead, spreadsheets prefer using "n" type for dates for some reason.
+      //
+      // In such cases, sometimes a "date" type could be heuristically detected
+      // by looking at such numeric value "format" and seeing if it's a date-specific one.
       // https://github.com/catamphetamine/read-excel-file/issues/3#issuecomment-395770777
       //
-      // Format IDs:
+      // The list of generic numeric value "formats":
       // https://xlsxwriter.readthedocs.io/format.html#format-set-num-format
       //
       const styleId = getStyleId()
@@ -154,11 +156,48 @@ function decodeError(errorCode) {
 }
 
 function isDateTemplate(template) {
+  // Date format tokens could be in upper case or in lower case.
+  // There seems to be no single standard.
+  // So lowercase the template first.
+  template = template.toLowerCase()
   const tokens = template.split(/\W+/)
   for (const token of tokens) {
-    if (['MM', 'DD', 'YY', 'YYYY'].indexOf(token) < 0) {
+    if (DATE_TEMPLATE_TOKENS.indexOf(token) < 0) {
       return false
     }
   }
   return true
 }
+
+// These tokens could be in upper case or in lower case.
+// There seems to be no single standard, so using lower case.
+const DATE_TEMPLATE_TOKENS = [
+  // Seconds (min two digits). Example: "05".
+  'ss',
+  // Minutes (min two digits). Example: "05". Could also be "Months". Weird.
+  'mm',
+  // Hours. Example: "1".
+  'h',
+  // Hours (min two digits). Example: "01".
+  'hh',
+  // "AM" part of "AM/PM". Lowercased just in case.
+  'am',
+  // "PM" part of "AM/PM". Lowercased just in case.
+  'pm',
+  // Day. Example: "1"
+  'd',
+  // Day (min two digits). Example: "01"
+  'dd',
+  // Month (numeric). Example: "1".
+  'm',
+  // Month (numeric, min two digits). Example: "01". Could also be "Minutes". Weird.
+  'mm',
+  // Month (shortened month name). Example: "Jan".
+  'mmm',
+  // Month (full month name). Example: "January".
+  'mmmm',
+  // Two-digit year. Example: "20".
+  'yy',
+  // Full year. Example: "2020".
+  'yyyy'
+];
