@@ -1,4 +1,5 @@
 export { default as default } from './modules/read/readXlsxFileBrowser'
+export { default as readSheetNames } from './modules/read/readSheetNamesBrowser'
 export { default as parseExcelDate } from './modules/read/parseDate'
 export { default as Integer } from './modules/types/Integer'
 export { default as Email } from './modules/types/Email'

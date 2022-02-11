@@ -320,11 +320,11 @@ readXlsxFile(file, { sheet: 'Sheet1' }).then((data) => {
 
 By default, `options.sheet` is `1`.
 
-To get the list of all sheets, pass `getSheets: true` option:
+To get the names of all sheets, use `readSheetNames()` function:
 
 ```js
-readXlsxFile(file, { getSheets: true }).then((sheets) => {
-  // sheets === [{ name: 'Sheet1' }, { name: 'Sheet2' }]
+readSheetNames(file).then((sheetNames) => {
+  // sheetNames === ['Sheet1', 'Sheet2']
 })
 ```
 

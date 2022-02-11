@@ -1,5 +1,6 @@
 exports = module.exports = require('../commonjs/read/readXlsxFileWebWorker').default
 exports['default'] = require('../commonjs/read/readXlsxFileWebWorker').default
+exports.readSheetNames = require('../commonjs/read/readSheetNamesWebWorker').default
 exports.parseExcelDate = require('../commonjs/read/parseDate').default
 exports.Integer = require('../commonjs/types/Integer').default
 exports.Email = require('../commonjs/types/Email').default
