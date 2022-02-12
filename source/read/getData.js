@@ -32,7 +32,7 @@ export default function getData(sheet, options) {
     i++
   }
 
-  // Fill in spreadsheet data structure.
+  // Fill in spreadsheet `data`.
   // (this code implies that `cells` aren't necessarily sorted by row and column:
   //  maybe that's not correct, this piece code was initially copy-pasted
   //  from some other library that used `XPath`)
@@ -43,7 +43,10 @@ export default function getData(sheet, options) {
     // const columnIndex = cell.column - leftTop.column
     const rowIndex = cell.row - 1
     const columnIndex = cell.column - 1
-    data[rowIndex][columnIndex] = cell.value
+    // Ignore the data in the cell if it's outside of the spreadsheet's "dimensions".
+    if (columnIndex < colsCount && rowIndex < rowsCount) {
+      data[rowIndex][columnIndex] = cell.value
+    }
   }
 
   // Fill in the row map.

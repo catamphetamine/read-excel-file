@@ -15,8 +15,13 @@ export default function parseDimensions(sheet) {
       row,
       column
     }))
-    // When there's only a single cell on a sheet
-    // there can sometimes be just "A1" for the dimensions string.
+    // Sometimes there can be just a single cell as a spreadsheet's "dimensions".
+    // For example, the default "dimensions" in Apache POI library is "A1",
+    // meaning that only the first cell in the spreadsheet is used.
+    //
+    // A quote from Apache POI library:
+    // "Single cell ranges are formatted like single cell references (e.g. 'A1' instead of 'A1:A1')."
+    //
     if (dimensions.length === 1) {
       dimensions = [dimensions[0], dimensions[0]]
     }
