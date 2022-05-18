@@ -1,4 +1,4 @@
-import parseDate from './parseDate'
+import parseDate from './parseDate.js'
 
 describe('parseDate', () => {
 	it('should parse Excel "serial" dates', () => {

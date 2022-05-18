@@ -1,8 +1,8 @@
-import parseDate from '../parseDate'
+import parseDate from '../parseDate.js'
 
-import Integer, { isInteger } from '../../types/Integer'
-import URL, { isURL } from '../../types/URL'
-import Email, { isEmail } from '../../types/Email'
+import Integer, { isInteger } from '../../types/Integer.js'
+import URL, { isURL } from '../../types/URL.js'
+import Email, { isEmail } from '../../types/Email.js'
 
 const DEFAULT_OPTIONS = {
   isColumnOriented: false

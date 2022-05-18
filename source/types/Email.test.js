@@ -1,4 +1,4 @@
-import { isEmail } from './Email'
+import { isEmail } from './Email.js'
 
 describe('Email', () => {
 	it('should validate an Email', () => {

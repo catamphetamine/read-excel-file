@@ -1,4 +1,4 @@
-import parseExcel from '../source/read/readXlsxFileNode'
+import parseExcel from '../source/read/readXlsxFileNode.js'
 import assert from 'assert'
 
 function parseXlsx(path, sheet, callback) {
@@ -9,7 +9,7 @@ function parseXlsx(path, sheet, callback) {
   parseExcel(path, sheet).then((data) => callback(null, data), callback);
 }
 
-var sheetsDir = __dirname + '/spreadsheets';
+var sheetsDir = './test/spreadsheets';
 var sheets = {
   'excel_mac_2011-basic.xlsx': [ [ 'One', 'Two' ], [ 'Three', 'Four' ] ],
   'excel_mac_2011-formatting.xlsx': [ [ 'Hey', 'now', 'so' ], [ 'cool', null, null ] ],

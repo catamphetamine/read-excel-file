@@ -1,4 +1,4 @@
-import readXlsxFile from './readXlsxFileWebWorker'
+import readXlsxFile from './readXlsxFileWebWorker.js'
 
 /**
  * Reads the list of sheet names in an XLSX file in a Web Worker.

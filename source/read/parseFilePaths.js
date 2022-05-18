@@ -1,6 +1,6 @@
 import {
   getRelationships
-} from '../xml/xlsx'
+} from '../xml/xlsx.js'
 
 /**
  * Returns sheet file paths.

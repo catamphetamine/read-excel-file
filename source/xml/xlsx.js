@@ -1,4 +1,4 @@
-import { findChild, findChildren, forEach, map, getTagName } from './dom'
+import { findChild, findChildren, forEach, map, getTagName } from './dom.js'
 
 export function getCells(document) {
   const worksheet = document.documentElement

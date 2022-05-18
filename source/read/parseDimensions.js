@@ -1,10 +1,10 @@
 import {
   parseCellCoordinates
-} from './coordinates'
+} from './coordinates.js'
 
 import {
   getDimensions
-} from '../xml/xlsx'
+} from '../xml/xlsx.js'
 
 // `dimensions` defines the spreadsheet area containing all non-empty cells.
 // https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.sheetdimension?view=openxml-2.8.1

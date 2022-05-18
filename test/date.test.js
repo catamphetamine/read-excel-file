@@ -1,8 +1,8 @@
-import readXlsx from '../source/read/readXlsxFileNode'
+import readXlsx from '../source/read/readXlsxFileNode.js'
 
 describe('date', () => {
 	it('should parse dates', async () => {
-		const data = await readXlsx(__dirname + '/spreadsheets/date.xlsx')
+		const data = await readXlsx('./test/spreadsheets/date.xlsx')
 
 		expect(data).to.deep.equal([
 			// ['Date'],

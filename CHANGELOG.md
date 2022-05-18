@@ -1,7 +1,12 @@
-<!--
-6.0.0 / xx.xx.xxxx
+5.3.0 / 18.05.2022
 ==================
--->
+
+* Migrated to [ES Modules](https://gitlab.com/catamphetamine/read-excel-file/-/issues/44) exports.
+
+5.2.27 / 11.02.2022
+==================
+
+* Added `readSheetNames()` function.
 
 5.2.25 / 19.11.2021
 ==================

@@ -1,7 +1,7 @@
-import readXlsx from './readXlsx'
+import readXlsx from './readXlsx.js'
 
-import convertToJson from './schema/convertToJson'
-import convertMapToSchema from './schema/convertMapToSchema'
+import convertToJson from './schema/convertToJson.js'
+import convertMapToSchema from './schema/convertMapToSchema.js'
 
 export default function readXlsxFileContents(entries, xml, { schema, map, ...options}) {
 	if (!schema && map) {

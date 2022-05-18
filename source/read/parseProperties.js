@@ -1,7 +1,7 @@
 import {
   getWorkbookProperties,
   getSheets
-} from '../xml/xlsx'
+} from '../xml/xlsx.js'
 
 // I guess `xl/workbook.xml` file should always be present inside the *.xlsx archive.
 export default function parseProperties(content, xml) {

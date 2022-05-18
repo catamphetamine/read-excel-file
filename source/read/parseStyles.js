@@ -2,7 +2,7 @@ import {
   getBaseStyles,
   getCellStyles,
   getNumberFormats
-} from '../xml/xlsx'
+} from '../xml/xlsx.js'
 
 // http://officeopenxml.com/SSstyles.php
 // Returns an array of cell styles.

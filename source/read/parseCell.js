@@ -1,13 +1,13 @@
-import parseCellValue from './parseCellValue'
+import parseCellValue from './parseCellValue.js'
 
 import {
   parseCellCoordinates
-} from './coordinates'
+} from './coordinates.js'
 
 import {
   getCellValue,
   getCellInlineStringValue
-} from '../xml/xlsx'
+} from '../xml/xlsx.js'
 
 // Example of a `<c/>`ell element:
 //

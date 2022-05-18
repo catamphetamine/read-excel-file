@@ -1,8 +1,8 @@
-import convertToJson, { parseArray, getBlock } from './convertToJson'
+import convertToJson, { parseArray, getBlock } from './convertToJson.js'
 
-import Integer from '../../types/Integer'
-import URL from '../../types/URL'
-import Email from '../../types/Email'
+import Integer from '../../types/Integer.js'
+import URL from '../../types/URL.js'
+import Email from '../../types/Email.js'
 
 const date = convertToUTCTimezone(new Date(2018, 3 - 1, 24))
 

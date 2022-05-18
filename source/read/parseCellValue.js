@@ -1,4 +1,4 @@
-import parseDate from './parseDate'
+import parseDate from './parseDate.js'
 
 // https://hexdocs.pm/xlsxir/number_styles.html
 const BUILT_IN_DATE_NUMBER_FORMAT_IDS = [14,15,16,17,18,19,20,21,22,27,30,36,45,46,47,50,57]

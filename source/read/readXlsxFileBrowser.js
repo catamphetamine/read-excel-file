@@ -1,7 +1,7 @@
-import xml from '../xml/xmlBrowser'
+import xml from '../xml/xmlBrowser.js'
 
-import unpackXlsxFile from './unpackXlsxFileBrowser'
-import readXlsxFileContents from './readXlsxFileContents'
+import unpackXlsxFile from './unpackXlsxFileBrowser.js'
+import readXlsxFileContents from './readXlsxFileContents.js'
 
 /**
  * Reads XLSX file into a 2D array of cells in a browser.

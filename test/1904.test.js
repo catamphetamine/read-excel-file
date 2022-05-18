@@ -1,8 +1,8 @@
-import readXlsx from '../source/read/readXlsxFileNode'
+import readXlsx from '../source/read/readXlsxFileNode.js'
 
 describe('1904', () => {
 	it('should parse 1904 macOS dates', async () => {
-		const data = await readXlsx(__dirname + '/spreadsheets/1904.xlsx')
+		const data = await readXlsx('./test/spreadsheets/1904.xlsx')
 
 		expect(data.length).to.equal(6)
 
@@ -15,7 +15,7 @@ describe('1904', () => {
 	})
 
 	it('should parse 1904 macOS dates', async () => {
-		const data = await readXlsx(__dirname + '/spreadsheets/1904.xlsx', {
+		const data = await readXlsx('./test/spreadsheets/1904.xlsx', {
 			schema: {
 				Date: {
 					type: Date,
@@ -36,13 +36,13 @@ describe('1904', () => {
 	it('should list sheet names in sheet not found error', async () => {
 		// By id.
 		try {
-			await readXlsx(__dirname + '/spreadsheets/1904.xlsx', { sheet: 2 })
+			await readXlsx('./test/spreadsheets/1904.xlsx', { sheet: 2 })
 		} catch (error) {
 			error.message.should.equal('Sheet #2 not found in the *.xlsx file. Available sheets: "sheet 1" (#1).')
 		}
 		// By name.
 		try {
-			await readXlsx(__dirname + '/spreadsheets/1904.xlsx', { sheet: 'sheet 2' })
+			await readXlsx('./test/spreadsheets/1904.xlsx', { sheet: 'sheet 2' })
 		} catch (error) {
 			error.message.should.equal('Sheet "sheet 2" not found in the *.xlsx file. Available sheets: "sheet 1" (#1).')
 		}

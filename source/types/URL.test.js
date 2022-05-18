@@ -1,4 +1,4 @@
-import { isURL } from './URL'
+import { isURL } from './URL.js'
 
 describe('URL', () => {
 	it('should validate a URL', () => {

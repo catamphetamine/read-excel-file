@@ -2,8 +2,16 @@
   "private": true,
   "name": "read-excel-file/web-worker",
   "version": "1.0.0",
-  "main": "index.commonjs.js",
+  "main": "index.cjs",
   "module": "index.js",
   "types": "./index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    }
+  },
   "sideEffects": false
 }

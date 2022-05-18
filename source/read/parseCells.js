@@ -1,9 +1,9 @@
-import parseCell from './parseCell'
+import parseCell from './parseCell.js'
 
 import {
   getCells,
   getMergedCells
-} from '../xml/xlsx'
+} from '../xml/xlsx.js'
 
 export default function parseCells(sheet, xml, values, styles, properties, options) {
   const cells = getCells(sheet)

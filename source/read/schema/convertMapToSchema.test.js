@@ -1,4 +1,4 @@
-import convertMapToSchema from './convertMapToSchema'
+import convertMapToSchema from './convertMapToSchema.js'
 
 describe('convertMapToSchema', () => {
 	it('should convert map to schema', () => {

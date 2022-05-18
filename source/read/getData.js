@@ -1,5 +1,5 @@
-import dropEmptyRows from './dropEmptyRows'
-import dropEmptyColumns from './dropEmptyColumns'
+import dropEmptyRows from './dropEmptyRows.js'
+import dropEmptyColumns from './dropEmptyColumns.js'
 
 export default function getData(sheet, options) {
   const { dimensions, cells } = sheet

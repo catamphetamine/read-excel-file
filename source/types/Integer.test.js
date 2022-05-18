@@ -1,4 +1,4 @@
-import { isInteger } from './Integer'
+import { isInteger } from './Integer.js'
 
 describe('Integer', () => {
 	it('should validate an Integer', () => {

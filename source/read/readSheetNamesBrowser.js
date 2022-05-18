@@ -1,4 +1,4 @@
-import readXlsxFile from './readXlsxFileBrowser'
+import readXlsxFile from './readXlsxFileBrowser.js'
 
 /**
  * Reads the list of sheet names in an XLSX file in a web browser.

@@ -1,4 +1,4 @@
-import readXlsxFile from './readXlsxFileNode'
+import readXlsxFile from './readXlsxFileNode.js'
 
 /**
  * Reads the list of sheet names in an XLSX file in Node.js.

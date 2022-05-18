@@ -1,4 +1,4 @@
-import dropEmptyRows from './dropEmptyRows'
+import dropEmptyRows from './dropEmptyRows.js'
 
 describe('dropEmptyRows', () => {
 	it('should drop empty rows (only at the end)', () => {

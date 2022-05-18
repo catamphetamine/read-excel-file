@@ -1,9 +1,9 @@
-import parseProperties from './parseProperties'
-import parseFilePaths from './parseFilePaths'
-import parseStyles from './parseStyles'
-import parseSharedStrings from './parseSharedStrings'
-import parseSheet from './parseSheet'
-import getData from './getData'
+import parseProperties from './parseProperties.js'
+import parseFilePaths from './parseFilePaths.js'
+import parseStyles from './parseStyles.js'
+import parseSharedStrings from './parseSharedStrings.js'
+import parseSheet from './parseSheet.js'
+import getData from './getData.js'
 
 // For an introduction in reading `*.xlsx` files see "The minimum viable XLSX reader":
 // https://www.brendanlong.com/the-minimum-viable-xlsx-reader.html

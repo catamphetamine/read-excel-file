@@ -1,4 +1,4 @@
-import dropEmptyColumns from './dropEmptyColumns'
+import dropEmptyColumns from './dropEmptyColumns.js'
 
 describe('dropEmptyColumns', () => {
 	it('should drop empty columns (only at the end)', () => {

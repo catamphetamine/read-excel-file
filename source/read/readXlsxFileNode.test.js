@@ -1,6 +1,6 @@
 import path from 'path'
 
-import readXlsxFileNode from './readXlsxFileNode'
+import readXlsxFileNode from './readXlsxFileNode.js'
 
 describe('readXlsxFileNode', () => {
 	it('should read *.xlsx file on Node.js and parse it to JSON', () => {
@@ -45,7 +45,7 @@ describe('readXlsxFileNode', () => {
 
 		const rowMap = []
 
-		return readXlsxFileNode(path.resolve(__dirname, '../../test/spreadsheets/course.xlsx'), { schema, rowMap }).then(({ rows }) => {
+		return readXlsxFileNode(path.resolve('./test/spreadsheets/course.xlsx'), { schema, rowMap }).then(({ rows }) => {
 			rows[0].date = rows[0].date.getTime()
 			rows.should.deep.equal([{
 				date: convertToUTCTimezone(new Date(2018, 2, 24)).getTime(),
@@ -77,7 +77,7 @@ describe('readXlsxFileNode', () => {
 
 		const rowMap = []
 
-		return readXlsxFileNode(path.resolve(__dirname, '../../test/spreadsheets/course.xlsx'), { map, rowMap }).then(({ rows, errors }) => {
+		return readXlsxFileNode(path.resolve('./test/spreadsheets/course.xlsx'), { map, rowMap }).then(({ rows, errors }) => {
 			errors.should.deep.equal([])
 			rows[0].date = rows[0].date.getTime()
 			rows.should.deep.equal([{

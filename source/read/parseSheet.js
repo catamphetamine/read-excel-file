@@ -1,7 +1,7 @@
-import parseCells from './parseCells'
-import parseDimensions from './parseDimensions'
+import parseCells from './parseCells.js'
+import parseDimensions from './parseDimensions.js'
 
-import { calculateDimensions } from './coordinates'
+import { calculateDimensions } from './coordinates.js'
 
 export default function parseSheet(content, xml, values, styles, properties, options) {
   const sheet = xml.createDocument(content)
