@@ -26,7 +26,9 @@ export default function getCellValue(value, type, {
   switch (type) {
     // If the cell contains formula string.
     case 'str':
-      value = value.trim()
+      if (options.trimStringValues != false) {
+        value = value.trim();
+      }
       if (value === '') {
         value = undefined
       }
@@ -38,7 +40,9 @@ export default function getCellValue(value, type, {
       if (value === undefined) {
         throw new Error(`Unsupported "inline string" cell value structure`) // : ${cellNode.textContent}`)
       }
-      value = value.trim()
+      if (options.trimStringValues != false) {
+        value = value.trim();
+      }
       if (value === '') {
         value = undefined
       }
@@ -54,7 +58,9 @@ export default function getCellValue(value, type, {
       // The `<v/>`alue is a key in the "shared strings" dictionary of the
       // XLSX file, so look it up in the `values` dictionary by the numeric key.
       value = values[parseInt(value)]
-      value = value.trim()
+      if (options.trimStringValues != false) {
+        value = value.trim();
+      }
       if (value === '') {
         value = undefined
       }
