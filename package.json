@@ -25,7 +25,8 @@
       "types": "./schema/index.d.ts",
       "import": "./schema/index.js",
       "require": "./schema/index.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "sideEffects": false,
   "types": "./index.d.ts",

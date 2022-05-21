@@ -8,4 +8,4 @@ fs.writeFileSync('./commonjs/package.json', JSON.stringify({
 	name: 'read-excel-file/commonjs',
 	type: 'commonjs',
 	private: true
-}), 'utf8')
+}, null, 2), 'utf8')
