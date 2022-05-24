@@ -26,10 +26,7 @@ export default function getCellValue(value, type, {
   switch (type) {
     // If the cell contains formula string.
     case 'str':
-      value = value.trim()
-      if (value === '') {
-        value = undefined
-      }
+      value = parseString(value, options)
       break
 
     // If the cell contains an "inline" (not "shared") string.
@@ -38,10 +35,7 @@ export default function getCellValue(value, type, {
       if (value === undefined) {
         throw new Error(`Unsupported "inline string" cell value structure`) // : ${cellNode.textContent}`)
       }
-      value = value.trim()
-      if (value === '') {
-        value = undefined
-      }
+      value = parseString(value, options)
       break
 
     // If the cell contains a "shared" string.
@@ -53,11 +47,8 @@ export default function getCellValue(value, type, {
       // If a `<c/>` element exists then it's not empty.
       // The `<v/>`alue is a key in the "shared strings" dictionary of the
       // XLSX file, so look it up in the `values` dictionary by the numeric key.
-      value = values[parseInt(value)]
-      value = value.trim()
-      if (value === '') {
-        value = undefined
-      }
+      value = values[Number(value)]
+      value = parseString(value, options)
       break
 
     case 'b':
@@ -201,3 +192,17 @@ const DATE_TEMPLATE_TOKENS = [
   // Full year. Example: "2020".
   'yyyy'
 ];
+
+function parseString(value, options) {
+  // In some weird cases, a developer might want to disable
+  // the automatic trimming of all strings.
+  // For example, leading spaces might express a tree-like hierarchy.
+  // https://github.com/catamphetamine/read-excel-file/pull/106#issuecomment-1136062917
+  if (options.trim !== false) {
+    value = value.trim()
+  }
+  if (value === '') {
+    value = undefined
+  }
+  return value
+}

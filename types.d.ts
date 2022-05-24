@@ -57,10 +57,14 @@ export interface ParsedObjectsResult<T extends object> {
 	errors: Error[];
 }
 
-export interface ParseWithSchemaOptions<T extends object> {
+interface ParseCommonOptions {
+	sheet?: number | string;
+	trim?: false;
+}
+
+export interface ParseWithSchemaOptions<T extends object> extends ParseCommonOptions {
 	schema: Schema;
 	transformData?: (rows: Row[]) => Row[];
-	sheet?: number | string;
 }
 
 type MapProperty = string;
@@ -69,12 +73,12 @@ type MapObject = {
 };
 type Map = MapObject;
 
-export interface ParseWithMapOptions {
+export interface ParseWithMapOptions extends ParseCommonOptions {
 	map: Map;
 	transformData?: (rows: Row[]) => Row[];
-	sheet?: number | string;
+	dateFormat?: string;
 }
 
-export interface ParseWithoutSchemaOptions {
-	sheet?: number | string;
+export interface ParseWithoutSchemaOptions extends ParseCommonOptions {
+	dateFormat?: string;
 }

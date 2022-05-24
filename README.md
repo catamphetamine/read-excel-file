@@ -338,6 +338,14 @@ When using `readXlsx()` with a `schema` parameter, all schema columns having typ
 readXlsxFile(file, { dateFormat: 'mm/dd/yyyy' })
 ```
 
+## Trim
+
+By default, it automatically trims all string values. To disable this feature, pass `trim: false` option.
+
+```js
+readXlsxFile(file, { trim: false })
+```
+
 ## Limitations
 
 ### Performance
