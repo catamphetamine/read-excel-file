@@ -43,6 +43,7 @@ export type Schema = Record<string, SchemaEntry>
 
 export interface Error {
 	error: string;
+	reason?: string;
 	row: number;
 	column: string;
 	value?: any;

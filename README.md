@@ -157,7 +157,7 @@ const schema = {
 }
 
 readXlsxFile(file, { schema }).then(({ rows, errors }) => {
-  // `errors` list items have shape: `{ row, column, error, value }`.
+  // `errors` list items have shape: `{ row, column, error, reason?, value?, type? }`.
   errors.length === 0
 
   rows === [{
@@ -241,26 +241,33 @@ const { rows, errors } = convertToJson(data, schema)
 ```js
 import { parseExcelDate } from 'read-excel-file'
 
-function ParseExcelError({ children: error }) {
-  // Get a human-readable value.
-  let value = error.value
-  if (error.type === Date) {
-    value = parseExcelDate(value).toString()
-  }
-  // Render error summary.
+function ParseExcelError({ children }) {
+  const { type, value, error, reason, row, column } = children
+
+  // Error summary.
   return (
     <div>
-      <code>"{error.error}"</code>
+      <code>"{error}"</code>
+      {reason && ' '}
+      {reason && <code>("{reason}")</code>}
       {' for value '}
-      <code>"{value}"</code>
+      <code>{stringifyValue(value)}</code>
       {' in column '}
-      <code>"{error.column}"</code>
-      {error.type && ' of type '}
-      {error.type && <code>"{error.type.name}"</code>}
+      <code>"{column}"</code>
+      {type && type.name && ' of type '}
+      {type && type.name && <code>"{type.name}"</code>}
       {' in row '}
-      <code>"{error.row}"</code>
+      <code>{row}</code>
     </div>
   )
+}
+
+function stringifyValue(value) {
+  // Wrap strings in quotes.
+  if (typeof value === 'string') {
+    return '"' + value + '"'
+  }
+  return String(value)
 }
 ```
 </details>

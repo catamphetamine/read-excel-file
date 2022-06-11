@@ -183,9 +183,14 @@ describe('convertToJson', () => {
 		})
 
 		errors.length.should.equal(1)
-		errors[0].row.should.equal(2)
-		errors[0].column.should.equal('INTEGER')
-		errors[0].error.should.equal('invalid')
+		errors[0].should.deep.equal({
+			error: 'invalid',
+			reason: 'not_an_integer',
+			row: 2,
+			column: 'INTEGER',
+			type: Integer,
+			value: '1.2'
+		})
 
 		rows.should.deep.equal([{
 			value: 1
@@ -294,6 +299,7 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'invalid',
+			reason: 'not_a_number_string',
 			row: 1,
 			column: 'NUMBER',
 			type: Number,
@@ -334,6 +340,7 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'invalid',
+			reason: 'not_a_boolean',
 			row: 1,
 			column: 'INVALID',
 			type: Boolean,
@@ -373,12 +380,14 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'invalid',
+			reason: 'not_a_number',
 			row: 1,
 			column: 'INVALID',
 			type: Date,
 			value: '-'
 		}, {
 			error: 'invalid',
+			reason: 'not_a_number',
 			row: 2,
 			column: 'INVALID',
 			type: Date,
@@ -449,6 +458,7 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'invalid',
+			reason: 'not_a_number_string',
 			row: 6,
 			column: 'NUMBER',
 			type: Number,
@@ -499,6 +509,7 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'invalid',
+			reason: 'unknown',
 			row: 1,
 			column: 'STATUS',
 			type: String,

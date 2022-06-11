@@ -1,7 +1,7 @@
-import XMLDOM from '@xmldom/xmldom'
+import { DOMParser } from '@xmldom/xmldom'
 
 export default {
 	createDocument(content) {
-		return new XMLDOM.DOMParser().parseFromString(content)
+		return new DOMParser().parseFromString(content)
 	}
 }

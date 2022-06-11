@@ -66,3 +66,32 @@ export function getTagName(element) {
 	// before a colon, if any.
 	return element.tagName.replace(NAMESPACE_REG_EXP, '')
 }
+
+// This function is only used for occasional debug messages.
+export function getOuterXml(node) {
+	// `nodeType: 1` means "Element".
+	// https://www.w3schools.com/xml/prop_element_nodetype.asp
+	if (node.nodeType !== 1) {
+		return node.textContent
+	}
+
+  let xml = '<' + getTagName(node)
+
+  let j = 0
+  while (j < node.attributes.length) {
+    xml += ' ' + node.attributes[j].name + '=' + '"' + node.attributes[j].value + '"'
+    j++
+  }
+
+  xml += '>'
+
+  let i = 0
+  while (i < node.childNodes.length) {
+  	xml += getOuterXml(node.childNodes[i])
+    i++
+  }
+
+  xml += '</' + getTagName(node) + '>'
+
+  return xml
+}

@@ -3,6 +3,7 @@ import { findChild, findChildren, forEach, map, getTagName } from './dom.js'
 export function getCells(document) {
   const worksheet = document.documentElement
   const sheetData = findChild(worksheet, 'sheetData')
+
   const cells = []
   forEach(sheetData, 'row', (row) => {
     forEach(row, 'c', (cell) => {
@@ -29,10 +30,12 @@ export function getCellValue(document, node) {
 }
 
 export function getCellInlineStringValue(document, node) {
-  if (node.firstChild &&
+  if (
+    node.firstChild &&
     getTagName(node.firstChild) === 'is' &&
     node.firstChild.firstChild &&
-    getTagName(node.firstChild.firstChild) === 't') {
+    getTagName(node.firstChild.firstChild) === 't'
+  ) {
     return node.firstChild.firstChild.textContent
   }
 }

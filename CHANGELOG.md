@@ -1,3 +1,8 @@
+5.3.4 / 11.06.2022
+==================
+
+* Added an optional `reason?: string` property of a with-schema parsing error.
+
 5.3.3 / 24.05.2022
 ==================
 

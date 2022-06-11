@@ -9,6 +9,10 @@ import {
   getCellInlineStringValue
 } from '../xml/xlsx.js'
 
+import {
+  getOuterXml
+} from '../xml/dom.js'
+
 // Example of a `<c/>`ell element:
 //
 // <c>
@@ -54,6 +58,7 @@ export default function parseCell(node, sheet, xml, values, styles, properties, 
     column: coords[1],
     value: parseCellValue(value, type, {
       getInlineStringValue: () => getCellInlineStringValue(sheet, node),
+      getInlineStringXml: () => getOuterXml(node),
       getStyleId: () => node.getAttribute('s'),
       styles,
       values,

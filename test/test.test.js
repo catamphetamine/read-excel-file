@@ -1,40 +1,29 @@
-import parseExcel from '../source/read/readXlsxFileNode.js'
-import assert from 'assert'
+import parseXlsx from '../source/read/readXlsxFileNode.js'
 
-function parseXlsx(path, sheet, callback) {
-  if (typeof callback === 'undefined') {
-    callback = sheet;
-    sheet = '1';
-  }
-  parseExcel(path, sheet).then((data) => callback(null, data), callback);
-}
+const sheetsDir = './test/spreadsheets'
 
-var sheetsDir = './test/spreadsheets';
-var sheets = {
+const sheets = {
   'excel_mac_2011-basic.xlsx': [ [ 'One', 'Two' ], [ 'Three', 'Four' ] ],
   'excel_mac_2011-formatting.xlsx': [ [ 'Hey', 'now', 'so' ], [ 'cool', null, null ] ],
-  'excel_multiple_text_nodes.xlsx': [ [ 'id', 'memo' ], [ '1.0', 'abc def ghi' ], [ '2.0', 'pqr stu' ] ]
-};
+  'excel_multiple_text_nodes.xlsx': [ [ 'id', 'memo' ], [ 1, 'abc def ghi' ], [ 2, 'pqr stu' ] ]
+}
 
-describe('excel.js', function() {
-  for (var filename in sheets) {
+describe('read-excel-file', function() {
+  for (const filename in sheets) {
+    // Creates a javascript "closure".
+    // Otherwise, in every test, `expected` variable value would be equal
+    // to the last `for` cycle's `expected` variable value.
     (function(filename, expected) {
-
       describe(filename + ' basic test', function() {
-        it('should return the right value', function(done) {
-          parseXlsx(sheetsDir + '/' + filename, function(err, data) {
-            assert.deepEqual(data, expected);
-            done(err);
-          });
+        it('should return the right value', async function() {
+          const result = await parseXlsx(sheetsDir + '/' + filename)
+          expect(result).to.deep.equal(expected)
         })
-        it('should return the right value with the sheet specified', function(done) {
-          parseXlsx(sheetsDir + '/' + filename, '1', function(err, data) {
-            assert.deepEqual(data, expected);
-            done(err);
-          });
+        it('should return the right value with the sheet specified', async function() {
+          const result = await parseXlsx(sheetsDir + '/' + filename, '1')
+          expect(result).to.deep.equal(expected)
         })
-      });
-
-    })(filename, sheets[filename]);
+      })
+    })(filename, sheets[filename])
   }
-});
+})
