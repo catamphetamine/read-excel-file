@@ -60,7 +60,7 @@ export interface ParsedObjectsResult<T extends object> {
 
 interface ParseCommonOptions {
 	sheet?: number | string;
-	trim?: false;
+	trim?: boolean;
 }
 
 export interface ParseWithSchemaOptions<T extends object> extends ParseCommonOptions {
