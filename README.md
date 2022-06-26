@@ -93,7 +93,29 @@ onmessage = function(event) {
 
 ## JSON
 
-To convert table rows to JSON objects, pass a `schema` option to `readXlsxFile()`. It will return `{ rows, errors }` object instead of just `rows`.
+To read spreadsheet data and then convert it to an array of JSON objects, pass a `schema` option when calling `readXlsxFile()`. In that case, instead of returning an array of rows of cells, it will return an object of shape `{ rows, errors }` where `rows` is gonna be an array of JSON objects created from the spreadsheet data according to the `schema`, and `errors` is gonna be an array of errors encountered while converting spreadsheet data to JSON objects.
+
+Each property of a JSON object should be described by an "entry" in the `schema`. The key of the entry should be the column's title in the spreadsheet. The value of the entry should be an object with properties:
+
+* `property` — The name of the object's property.
+* `required` — (optional) Required properties can be marked as `required: true`.
+* `validate(value)` — (optional) Cell value validation function. Is only called on non-empty cells. If the cell value is invalid, it should throw an error with the error message set to the error code.
+* `type` — (optional) The type of the value. Defines how the cell value will be parsed. If no `type` is specified then the cell value is returned "as is": as a string, number, date or boolean. A `type` could be a:
+  * Built-in type:
+    * `String`
+    * `Number`
+    * `Boolean`
+    * `Date`
+  * "Utility" type exported from the library:
+    * `Integer`
+    * `Email`
+    * `URL`
+  * Custom type:
+    * A function that receives a cell value and returns a parsed value. If the value is invalid, it should throw an error with the error message set to the error code.
+
+Sidenote: When converting cell values to object properties, by default, it skips all `null` values (skips all empty cells). That's for simplicity. In some edge cases though, it may be required to keep all `null` values for all the empty cells. For example, that's the case when updating data in an SQL database from an XLSX spreadsheet using Sequelize ORM library that requires a property to explicitly be `null` in order to clear it during an `UPDATE` operation. To keep all `null` values, pass `includeNullValues: true` option when calling `readXlsxFile()`.
+
+#### An example of using a `schema`
 
 ```js
 // An example *.xlsx document:
@@ -173,32 +195,36 @@ readXlsxFile(file, { schema }).then(({ rows, errors }) => {
 })
 ```
 
-If no `type` is specified then the cell value is returned "as is": as a string, number, date or boolean.
+<!-- If no `type` is specified then the cell value is returned "as is": as a string, number, date or boolean. -->
 
-There are also some additional exported `type`s available:
+<!-- There are also some additional exported `type`s available: -->
 
-* `Integer` for parsing integer `Number`s.
-* `URL` for parsing URLs.
-* `Email` for parsing email addresses.
+<details>
+<summary><strong>Custom <code>type</code></strong> example.</summary>
 
-A custom `type` can be defined as a simple function:
+#####
 
 ```js
-// This function will only be called for a non-empty cell.
-type: (value) => {
-  try {
-    return parseValue(value)
-  } catch (error) {
-    console.error(error)
-    throw new Error('invalid')
+{
+  'COLUMN_TITLE': {
+    // This function will only be called for a non-empty cell.
+    type: (value) => {
+      try {
+        return parseValue(value)
+      } catch (error) {
+        console.error(error)
+        throw new Error('invalid')
+      }
+    }
   }
 }
 ```
+</details>
 
-A schema entry for a column may also define an optional `validate(value)` function for validating the parsed value: in that case, it must `throw` an `Error` if the `value` is invalid. The `validate(value)` function is only called when `value` is not empty (not `null` / `undefined`).
+<!-- A schema entry for a column may also define an optional `validate(value)` function for validating the parsed value: in that case, it must `throw` an `Error` if the `value` is invalid. The `validate(value)` function is only called when `value` is not empty (not `null` / `undefined`). -->
 
 <details>
-<summary>Fixing spreadsheet structure for <code>schema</code> parsing. For example, how to <strong>ignore empty rows</strong>.</summary>
+<summary>How to fix spreadsheet data before <code>schema</code> parsing. For example, <strong>how to ignore empty rows</strong>.</summary>
 
 #####
 
@@ -219,7 +245,7 @@ readXlsxFile(file, {
 
 <details>
 <summary>
-The <strong>schema conversion function</strong> can also be imported standalone, if anyone wants it.
+The <strong>function for converting data to JSON objects using a schema</strong> is exported from this library too, if anyone wants it.
 </summary>
 
 #####
@@ -234,7 +260,7 @@ const { rows, errors } = convertToJson(data, schema)
 </details>
 
 <details>
-<summary>A <strong>React component</strong> for displaying schema parsing/validation <strong>errors</strong>.</summary>
+<summary>A <strong>React component for displaying errors</strong> that occured during schema parsing/validation.</summary>
 
 #####
 

@@ -67,6 +67,7 @@ export default function(data, schema, options) {
 
 function read(schema, row, rowIndex, columns, errors, options) {
   const object = {}
+  let isEmptyObject = true
   for (const key of Object.keys(schema)) {
     const schemaEntry = schema[key]
     const isNestedSchema = typeof schemaEntry.type === 'object' && !Array.isArray(schemaEntry.type)
@@ -124,14 +125,19 @@ function read(schema, row, rowIndex, columns, errors, options) {
         error.type = schemaEntry.type
       }
       errors.push(error)
-    } else if (value !== null) {
-      object[schemaEntry.prop] = value
+    } else {
+      if (isEmptyObject && value !== null) {
+        isEmptyObject = false
+      }
+      if (value !== null || options.includeNullValues) {
+        object[schemaEntry.prop] = value
+      }
     }
   }
-  if (Object.keys(object).length > 0) {
-    return object
+  if (isEmptyObject) {
+    return null
   }
-  return null
+  return object
 }
 
 /**

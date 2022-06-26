@@ -516,8 +516,86 @@ describe('convertToJson', () => {
 			value: 'SCHEDULED'
 		}])
 	})
-})
 
+	it('should not include `null` values by default', function() {
+		const { rows } = convertToJson(
+			[
+				['A', 'B', 'CA', 'CB'],
+				['a', 'b', 'ca', null],
+				['a', null]
+			],
+			{
+				A: {
+					prop: 'a',
+					type: String
+				},
+				B: {
+					prop: 'b',
+					type: String
+				},
+				C: {
+					prop: 'c',
+    			type: {
+						CA: {
+							prop: 'a',
+							type: String
+						},
+						CB: {
+							prop: 'b',
+							type: String
+						}
+					}
+				}
+			}
+		)
+
+		rows.should.deep.equal([
+			{ a: 'a', b: 'b', c: { a: 'ca' } },
+			{ a: 'a' },
+		])
+	})
+
+	it('should include `null` values when `includeNullValues: true` option is passed', function() {
+		const { rows } = convertToJson(
+			[
+				['A', 'B', 'CA', 'CB'],
+				['a', 'b', 'ca', null],
+				['a', null]
+			],
+			{
+				A: {
+					prop: 'a',
+					type: String
+				},
+				B: {
+					prop: 'b',
+					type: String
+				},
+				C: {
+					prop: 'c',
+    			type: {
+						CA: {
+							prop: 'a',
+							type: String
+						},
+						CB: {
+							prop: 'b',
+							type: String
+						}
+					}
+				}
+			},
+			{
+				includeNullValues: true
+			}
+		)
+
+		rows.should.deep.equal([
+			{ a: 'a', b: 'b', c: { a: 'ca', b: null } },
+			{ a: 'a', b: null, c: null },
+		])
+	})
+})
 
 // Converts timezone to UTC while preserving the same time
 function convertToUTCTimezone(date) {

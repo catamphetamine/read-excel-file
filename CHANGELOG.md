@@ -1,3 +1,8 @@
+5.3.5 / 26.06.2022
+==================
+
+* Added `includeNullValues: true` option when parsing spreadsheet data using a `schema`. By default, it ignores all `null` values (ignores all empty cells).
+
 5.3.4 / 11.06.2022
 ==================
 
