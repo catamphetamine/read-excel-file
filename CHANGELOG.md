@@ -1,3 +1,8 @@
+5.4.0 / 04.07.2022
+==================
+
+* [Fixed](https://gitlab.com/catamphetamine/read-excel-file/-/issues/54) non-ASCII character encoding by forcing Node.js version of the library to read zipped contents of an XLSX file in UTF-8 character encoding. I suppose it won't break the existing code.
+
 5.3.5 / 26.06.2022
 ==================
 

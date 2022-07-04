@@ -29,6 +29,20 @@ export default function unpackXlsxFile(input) {
         let contents = ''
         // To ignore an entry: `entry.autodrain()`.
         entryPromises.push(new Promise((resolve) => {
+          // It's not clear what encoding are the files inside XLSX in.
+          // https://stackoverflow.com/questions/45194771/are-xlsx-files-utf-8-encoded-by-definition
+          // For example, for XML files, encoding is specified at the top node:
+          // `<?xml version="1.0" encoding="UTF-8"/>`.
+          //
+          // `unzipper` supports setting encoding when reading an `entry`.
+          // https://github.com/ZJONSSON/node-unzipper/issues/35
+          // https://gitlab.com/catamphetamine/read-excel-file/-/issues/54
+          //
+          // If the `entry.setEncoding('utf8')` line would be commented out,
+          // there's a `nonAsciiCharacterEncoding` test that wouldn't pass.
+          //
+          entry.setEncoding('utf8')
+          //
           entry
             .on('data', data => contents += data.toString())
             .on('end', () => resolve(entries[entry.path] = contents))
