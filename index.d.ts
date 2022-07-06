@@ -8,7 +8,10 @@ import {
 
 export {
 	ParsedObjectsResult,
-	Row
+	Row,
+	Integer,
+	Email,
+	URL
 } from './types.d';
 
 export function parseExcelDate(excelSerialDate: number) : typeof Date;
