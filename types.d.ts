@@ -67,6 +67,7 @@ export interface ParseWithSchemaOptions<T extends object> extends ParseCommonOpt
 	schema: Schema;
 	transformData?: (rows: Row[]) => Row[];
 	includeNullValues?: boolean;
+	ignoreEmptyRows?: boolean;
 }
 
 type MapProperty = string;

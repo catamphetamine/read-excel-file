@@ -133,7 +133,7 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'required',
-			row: 1,
+			row: 2,
 			column: 'NUMBER',
 			type: Number,
 			value: null
@@ -186,7 +186,7 @@ describe('convertToJson', () => {
 		errors[0].should.deep.equal({
 			error: 'invalid',
 			reason: 'not_an_integer',
-			row: 2,
+			row: 3,
 			column: 'INTEGER',
 			type: Integer,
 			value: '1.2'
@@ -215,7 +215,7 @@ describe('convertToJson', () => {
 		})
 
 		errors.length.should.equal(1)
-		errors[0].row.should.equal(2)
+		errors[0].row.should.equal(3)
 		errors[0].column.should.equal('URL')
 		errors[0].error.should.equal('invalid')
 
@@ -242,7 +242,7 @@ describe('convertToJson', () => {
 		})
 
 		errors.length.should.equal(1)
-		errors[0].row.should.equal(2)
+		errors[0].row.should.equal(3)
 		errors[0].column.should.equal('EMAIL')
 		errors[0].error.should.equal('invalid')
 
@@ -273,7 +273,7 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'custom-error',
-			row: 1,
+			row: 2,
 			column: 'NAME',
 			type: String,
 			value: 'George Bush'
@@ -300,7 +300,7 @@ describe('convertToJson', () => {
 		errors.should.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_number_string',
-			row: 1,
+			row: 2,
 			column: 'NUMBER',
 			type: Number,
 			value: '123abc'
@@ -341,7 +341,7 @@ describe('convertToJson', () => {
 		errors.should.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_boolean',
-			row: 1,
+			row: 2,
 			column: 'INVALID',
 			type: Boolean,
 			value: 'TRUE'
@@ -381,14 +381,14 @@ describe('convertToJson', () => {
 		errors.should.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_number',
-			row: 1,
+			row: 2,
 			column: 'INVALID',
 			type: Date,
 			value: '-'
 		}, {
 			error: 'invalid',
 			reason: 'not_a_number',
-			row: 2,
+			row: 3,
 			column: 'INVALID',
 			type: Date,
 			value: '-'
@@ -427,12 +427,12 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'invalid',
-			row: 1,
+			row: 2,
 			column: 'PHONE',
 			value: '123'
 		}, {
 			error: 'invalid',
-			row: 1,
+			row: 2,
 			column: 'PHONE_TYPE',
 			value: '123'
 		}])
@@ -510,7 +510,7 @@ describe('convertToJson', () => {
 		errors.should.deep.equal([{
 			error: 'invalid',
 			reason: 'unknown',
-			row: 1,
+			row: 2,
 			column: 'STATUS',
 			type: String,
 			value: 'SCHEDULED'

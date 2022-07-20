@@ -1,3 +1,10 @@
+5.5.0 / 20.07.2022
+==================
+
+* [Added](https://gitlab.com/catamphetamine/read-excel-file/-/issues/7) `ignoreEmptyRows: false` option when parsing using a `schema`.
+
+* Changed `errors.row` property when parsing using a `schema`: from "object number" to "spreadsheet row number". Example: was `1` for the first row of data, now is `2` for the first row of data (because `1` now is the header row).
+
 5.4.0 / 04.07.2022
 ==================
 

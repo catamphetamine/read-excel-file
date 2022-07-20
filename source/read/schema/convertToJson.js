@@ -28,7 +28,8 @@ export default function(data, schema, options) {
 
   const {
     isColumnOriented,
-    rowMap
+    rowMap,
+    ignoreEmptyRows
   } = options
 
   validateSchema(schema)
@@ -43,8 +44,8 @@ export default function(data, schema, options) {
   const errors = []
 
   for (let i = 1; i < data.length; i++) {
-    const result = read(schema, data[i], i - 1, columns, errors, options)
-    if (result) {
+    const result = read(schema, data[i], i, columns, errors, options)
+    if (result !== null || ignoreEmptyRows === false) {
       results.push(result)
     }
   }
@@ -54,8 +55,9 @@ export default function(data, schema, options) {
     for (const error of errors) {
       // Convert the `row` index in `data` to the
       // actual `row` index in the spreadsheet.
-      // The `1` compensates for the header row.
-      error.row = rowMap[error.row] + 1
+      // `- 1` converts row number to row index.
+      // `+ 1` converts row index to row number.
+      error.row = rowMap[error.row - 1] + 1
     }
   }
 

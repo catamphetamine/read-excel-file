@@ -115,6 +115,19 @@ Each property of a JSON object should be described by an "entry" in the `schema`
 
 Sidenote: When converting cell values to object properties, by default, it skips all `null` values (skips all empty cells). That's for simplicity. In some edge cases though, it may be required to keep all `null` values for all the empty cells. For example, that's the case when updating data in an SQL database from an XLSX spreadsheet using Sequelize ORM library that requires a property to explicitly be `null` in order to clear it during an `UPDATE` operation. To keep all `null` values, pass `includeNullValues: true` option when calling `readXlsxFile()`.
 
+#### `errors`
+
+If there were any errors while converting spreadsheet data to JSON objects, the `errors` property returned from the function will be a non-empty array. An element of the `errors` property contains properties:
+
+* `error: string` — The error code. Examples: `"required"`, `"invalid"`.
+  * If a custom `validate()` function is defined and it throws a `new Error(message)` then the `error` property will be the same as the `message` value.
+  * If a custom `type()` function is defined and it throws a `new Error(message)` then the `error` property will be the same as the `message` value.
+* `reason?: string` — An optional secondary error code providing more details about the error. Currently, it's only returned for "built-in" `type`s. Example: `{ error: "invalid", reason: "not_a_number" }` for `type: Number` means that "the cell value is _invalid_ because it's _not a number_".
+* `row: number` — The row number in the original file. `1` means the first row, etc.
+* `column: string` — The column title.
+* `value?: any` — The cell value.
+* `type?: any` — The schema `type` for this column.
+
 #### An example of using a `schema`
 
 ```js
@@ -222,6 +235,21 @@ readXlsxFile(file, { schema }).then(({ rows, errors }) => {
 </details>
 
 <!-- A schema entry for a column may also define an optional `validate(value)` function for validating the parsed value: in that case, it must `throw` an `Error` if the `value` is invalid. The `validate(value)` function is only called when `value` is not empty (not `null` / `undefined`). -->
+
+<details>
+<summary><strong>Ignoring empty rows</strong>.</summary>
+
+#####
+
+By default, it ignores any empty rows. To disable that behavior, pass `ignoreEmptyRows: false` option.
+
+```js
+readXlsxFile(file, {
+  schema,
+  ignoreEmptyRows: false
+})
+```
+</details>
 
 <details>
 <summary>How to fix spreadsheet data before <code>schema</code> parsing. For example, <strong>how to ignore empty rows</strong>.</summary>
@@ -378,6 +406,24 @@ By default, it automatically trims all string values. To disable this feature, p
 ```js
 readXlsxFile(file, { trim: false })
 ```
+
+## Transform
+
+Sometimes, a spreadsheet doesn't exactly have the structure required by this library's `schema` parsing feature: for example, it may be missing a header row, or contain some purely presentational / empty / "garbage" rows that should be removed. To fix that, one could pass an optional `transformData(data)` function that would modify the spreadsheet contents as required.
+
+```js
+readXlsxFile(file, {
+  schema,
+  transformData(data) {
+    // Add a missing header row.
+    return [['ID', 'NAME', ...]].concat(data)
+    // Remove empty rows.
+    return data.filter(row => row.filter(column => column !== null).length > 0)
+  }
+})
+```
+</details>
+
 
 ## Limitations
 
