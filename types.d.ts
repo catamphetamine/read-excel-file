@@ -11,7 +11,7 @@ type BasicType =
 	| typeof URL
 	| typeof Email;
 
-export type Type = <T>(value: Cell) => T | undefined;
+export type Type<T> = (value: Cell) => T | undefined;
 
 interface SchemaEntryBasic<T> {
 	prop: string;
