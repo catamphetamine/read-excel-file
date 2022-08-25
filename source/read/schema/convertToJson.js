@@ -230,6 +230,9 @@ function parseValueOfType(value, type, options) {
       // converted it to a number, perform a backwards conversion.
       //
       if (typeof value === 'number') {
+        if (isNaN(value)) {
+          return { error: 'invalid', reason: 'invalid_number' }
+        }
         // The global `isFinite()` function filters out:
         // * NaN
         // * -Infinity
@@ -237,10 +240,10 @@ function parseValueOfType(value, type, options) {
         //
         // All other values pass (including non-numbers).
         //
-        if (isFinite(value)) {
-          return { value: String(value) }
+        if (!isFinite(value)) {
+          return { error: 'invalid', reason: 'out_of_bounds' }
         }
-        return { error: 'invalid', reason: 'not_a_number' }
+        return { value: String(value) }
       }
       return { error: 'invalid', reason: 'not_a_string' }
 
@@ -258,10 +261,14 @@ function parseValueOfType(value, type, options) {
         const stringifiedValue = value
         value = Number(value)
         if (String(value) !== stringifiedValue) {
-          return { error: 'invalid', reason: 'not_a_number_string' }
+          return { error: 'invalid', reason: 'not_a_number' }
         }
-      } else if (typeof value !== 'number') {
+      }
+      if (typeof value !== 'number') {
         return { error: 'invalid', reason: 'not_a_number' }
+      }
+      if (isNaN(value)) {
+        return { error: 'invalid', reason: 'invalid_number' }
       }
       // At this point, `value` can only be a number.
       //
@@ -273,7 +280,7 @@ function parseValueOfType(value, type, options) {
       // All other values pass (including non-numbers).
       //
       if (!isFinite(value)) {
-        return { error: 'invalid', reason: 'not_a_number' }
+        return { error: 'invalid', reason: 'out_of_bounds' }
       }
       if (type === Integer && !isInteger(value)) {
         return { error: 'invalid', reason: 'not_an_integer' }
@@ -309,17 +316,19 @@ function parseValueOfType(value, type, options) {
         return { value }
       }
       if (typeof value === 'number') {
-        if (!isFinite(value)) {
-          return { error: 'invalid', reason: 'not_a_number' }
+        if (isNaN(value)) {
+          return { error: 'invalid', reason: 'invalid_number' }
         }
-        value = Number(value)
+        if (!isFinite(value)) {
+          return { error: 'invalid', reason: 'out_of_bounds' }
+        }
         const date = parseDate(value, options.properties)
         if (isNaN(date)) {
           return { error: 'invalid', reason: 'out_of_bounds' }
         }
         return { value: date }
       }
-      return { error: 'invalid', reason: 'not_a_number' }
+      return { error: 'invalid', reason: 'not_a_date' }
 
     case Boolean:
       if (typeof value === 'boolean') {

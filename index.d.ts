@@ -7,6 +7,7 @@ import {
 } from './types.d';
 
 export {
+	Schema,
 	ParsedObjectsResult,
 	Row,
 	Integer,

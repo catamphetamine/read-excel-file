@@ -308,10 +308,9 @@ function ParseExcelError({ children }) {
       <code>{stringifyValue(value)}</code>
       {' in column '}
       <code>"{column}"</code>
-      {type && type.name && ' of type '}
-      {type && type.name && <code>"{type.name}"</code>}
       {' in row '}
       <code>{row}</code>
+      {' of spreadsheet'}
     </div>
   )
 }

@@ -299,7 +299,7 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'invalid',
-			reason: 'not_a_number_string',
+			reason: 'not_a_number',
 			row: 2,
 			column: 'NUMBER',
 			type: Number,
@@ -380,14 +380,14 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'invalid',
-			reason: 'not_a_number',
+			reason: 'not_a_date',
 			row: 2,
 			column: 'INVALID',
 			type: Date,
 			value: '-'
 		}, {
 			error: 'invalid',
-			reason: 'not_a_number',
+			reason: 'not_a_date',
 			row: 3,
 			column: 'INVALID',
 			type: Date,
@@ -458,7 +458,7 @@ describe('convertToJson', () => {
 
 		errors.should.deep.equal([{
 			error: 'invalid',
-			reason: 'not_a_number_string',
+			reason: 'not_a_number',
 			row: 6,
 			column: 'NUMBER',
 			type: Number,
