@@ -1,25 +1,31 @@
-import JSZip from 'jszip'
+import { unzipSync, strFromU8 } from 'fflate'
 
 /**
  * Reads XLSX file in a browser.
- * @param  {file} file - A file being uploaded in the browser.
+ * @param  {File} file - A `File` object being uploaded in the browser.
  * @return {Promise} Resolves to an object holding XLSX file entries.
  */
 export default function unpackXlsxFile(file) {
-	const files = {}
-
-	return JSZip.loadAsync(file).then((zip) => {
-		const files = []
-		zip.forEach((relativePath, zipEntry) => {
-			if (!zipEntry.dir) {
-				files.push(zipEntry.name)
-			}
-		})
-
-		const entries = {}
-		return Promise.all(files.map((file) => {
-			return zip.file(file).async('string').then(content => entries[file] = content)
-		}))
-		.then(() => entries)
+	const startedAt = Date.now()
+	return file.arrayBuffer().then((fileBuffer) => {
+		const archive = new Uint8Array(fileBuffer)
+		const contents = unzipSync(archive)
+		return getContents(contents)
+		// return new Promise((resolve, reject) => {
+		// 	unzip(archive, (error, contents) => {
+		// 		if (error) {
+		// 			return reject(error)
+		// 		}
+		// 		return resolve(getContents(contents))
+		// 	})
+		// })
 	})
+}
+
+function getContents(contents) {
+	const unzippedFiles = []
+	for (const key of Object.keys(contents)) {
+		unzippedFiles[key] = strFromU8(contents[key])
+	}
+	return unzippedFiles
 }

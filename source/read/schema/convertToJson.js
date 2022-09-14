@@ -310,7 +310,7 @@ function parseValueOfType(value, type, options) {
       // Sometimes a date can be heuristically detected.
       // https://github.com/catamphetamine/read-excel-file/issues/3#issuecomment-395770777
       if (value instanceof Date) {
-        if (isNaN(value)) {
+        if (isNaN(value.valueOf())) {
           return { error: 'invalid', reason: 'out_of_bounds' }
         }
         return { value }
@@ -323,7 +323,7 @@ function parseValueOfType(value, type, options) {
           return { error: 'invalid', reason: 'out_of_bounds' }
         }
         const date = parseDate(value, options.properties)
-        if (isNaN(date)) {
+        if (isNaN(date.valueOf())) {
           return { error: 'invalid', reason: 'out_of_bounds' }
         }
         return { value: date }

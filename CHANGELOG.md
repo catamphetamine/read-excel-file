@@ -1,4 +1,9 @@
-5.5.0 / 20.07.2022
+5.5.0 / 14.09.2022
+==================
+
+* [Moved](https://gitlab.com/catamphetamine/read-excel-file/-/issues/62) from `jszip` to `fflate`. Most likely not a "breaking change". See [browser support](https://github.com/101arrowz/fflate/#browser-support).
+
+5.4.3 / 20.07.2022
 ==================
 
 * [Added](https://gitlab.com/catamphetamine/read-excel-file/-/issues/7) `ignoreEmptyRows: false` option when parsing using a `schema`.

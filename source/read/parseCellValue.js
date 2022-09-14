@@ -100,7 +100,7 @@ export default function parseCellValue(value, type, {
         break
       }
       const parsedDate = new Date(value)
-      if (isNaN(parsedDate)) {
+      if (isNaN(parsedDate.valueOf())) {
         throw new Error(`Unsupported "date" cell value: ${value}`)
       }
       value = parsedDate
