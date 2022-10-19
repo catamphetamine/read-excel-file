@@ -1,5 +1,5 @@
 import fs from 'fs'
-import Stream from 'stream'
+import Stream, { Readable } from 'stream'
 import unzip from 'unzipper'
 
 /**
@@ -13,7 +13,13 @@ export default function unpackXlsxFile(input) {
   // and their contents from this XLSX zip archive.
   const entries = {}
 
-  const stream = input instanceof Stream ? input : fs.createReadStream(input)
+  const stream = input instanceof Stream
+    ? input
+    : (
+      input instanceof Buffer
+        ? Readable.from(input)
+        : fs.createReadStream(input)
+    )
 
   return new Promise((resolve, reject) => {
     const entryPromises = []
