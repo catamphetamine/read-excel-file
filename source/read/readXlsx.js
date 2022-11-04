@@ -81,6 +81,7 @@ export default function readXlsx(contents, xml, options = {}) {
   if (options.properties) {
     return {
       data,
+      mergedCells: sheet.mergedCells,
       properties
     }
   }
