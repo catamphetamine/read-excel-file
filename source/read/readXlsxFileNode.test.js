@@ -20,9 +20,9 @@ describe('readXlsxFileNode', () => {
 					'IS FREE': {
 						prop: 'isFree',
 						type: Boolean
-						// Excel stored booleans as numbers:
+						// Excel stores booleans as numbers:
 						// `1` is `true` and `0` is `false`.
-						// Such numbers are parsed to booleans.
+						// Such numbers are parsed into booleans.
 					},
 					'COST': {
 						prop: 'cost',

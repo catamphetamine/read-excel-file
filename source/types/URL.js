@@ -1,4 +1,14 @@
-export default function URL() {}
+import InvalidError from './InvalidError.js'
+
+export default function URL(value) {
+  if (typeof value === 'string') {
+    if (isURL(value)) {
+      return value
+    }
+    throw new InvalidError('not_a_url')
+  }
+  throw new InvalidError('not_a_string')
+}
 
 // URL regexp explanation:
 //

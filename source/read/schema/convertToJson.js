@@ -1,8 +1,7 @@
-import parseDate from '../parseDate.js'
-
-import Integer, { isInteger } from '../../types/Integer.js'
-import URL, { isURL } from '../../types/URL.js'
-import Email, { isEmail } from '../../types/Email.js'
+import NumberType from '../../types/Number.js'
+import StringType from '../../types/String.js'
+import BooleanType from '../../types/Boolean.js'
+import DateType from '../../types/Date.js'
 
 const DEFAULT_OPTIONS = {
   isColumnOriented: false
@@ -203,7 +202,11 @@ function parseCustomValue(value, parse) {
     }
     return { value }
   } catch (error) {
-    return { error: error.message }
+    const result = { error: error.message }
+    if (error.reason) {
+      result.reason = error.reason;
+    }
+    return result
   }
 }
 
@@ -216,131 +219,22 @@ function parseCustomValue(value, parse) {
 function parseValueOfType(value, type, options) {
   switch (type) {
     case String:
-      if (typeof value === 'string') {
-        return { value }
-      }
-      // Excel tends to perform a forced automatic convertion of string-type values
-      // to number-type ones when the user has input them. Otherwise, users wouldn't
-      // be able to perform formula calculations on those cell values because users
-      // won't bother manually choosing a "numeric" cell type for each cell, and
-      // even if they did, choosing a "numeric" cell type every time wouldn't be an
-      // acceptable "user experience".
-      //
-      // So, if a cell value is supposed to be a string and Excel has automatically
-      // converted it to a number, perform a backwards conversion.
-      //
-      if (typeof value === 'number') {
-        if (isNaN(value)) {
-          return { error: 'invalid', reason: 'invalid_number' }
-        }
-        // The global `isFinite()` function filters out:
-        // * NaN
-        // * -Infinity
-        // * Infinity
-        //
-        // All other values pass (including non-numbers).
-        //
-        if (!isFinite(value)) {
-          return { error: 'invalid', reason: 'out_of_bounds' }
-        }
-        return { value: String(value) }
-      }
-      return { error: 'invalid', reason: 'not_a_string' }
+      return parseCustomValue(value, StringType)
 
     case Number:
-    case Integer:
-      // An XLSX file editing software might not always correctly
-      // detect numeric values in string-type cells. Users won't bother
-      // manually selecting a cell type, so the editing software has to guess
-      // based on the user's input. One can assume that such auto-detection
-      // might not always work.
-      //
-      // So, if a cell is supposed to be a numeric one, convert a string value to a number.
-      //
-      if (typeof value === 'string') {
-        const stringifiedValue = value
-        value = Number(value)
-        if (String(value) !== stringifiedValue) {
-          return { error: 'invalid', reason: 'not_a_number' }
-        }
-      }
-      if (typeof value !== 'number') {
-        return { error: 'invalid', reason: 'not_a_number' }
-      }
-      if (isNaN(value)) {
-        return { error: 'invalid', reason: 'invalid_number' }
-      }
-      // At this point, `value` can only be a number.
-      //
-      // The global `isFinite()` function filters out:
-      // * NaN
-      // * -Infinity
-      // * Infinity
-      //
-      // All other values pass (including non-numbers).
-      //
-      if (!isFinite(value)) {
-        return { error: 'invalid', reason: 'out_of_bounds' }
-      }
-      if (type === Integer && !isInteger(value)) {
-        return { error: 'invalid', reason: 'not_an_integer' }
-      }
-      return { value }
-
-    case URL:
-      if (typeof value === 'string') {
-        if (isURL(value)) {
-          return { value }
-        }
-        return { error: 'invalid', reason: 'not_a_url' }
-      }
-      return { error: 'invalid', reason: 'not_a_string' }
-
-    case Email:
-      if (typeof value === 'string') {
-        if (isEmail(value)) {
-          return { value }
-        }
-        return { error: 'invalid', reason: 'not_an_email' }
-      }
-      return { error: 'invalid', reason: 'not_a_string' }
+      return parseCustomValue(value, NumberType)
 
     case Date:
-      // XLSX has no specific format for dates.
-      // Sometimes a date can be heuristically detected.
-      // https://github.com/catamphetamine/read-excel-file/issues/3#issuecomment-395770777
-      if (value instanceof Date) {
-        if (isNaN(value.valueOf())) {
-          return { error: 'invalid', reason: 'out_of_bounds' }
-        }
-        return { value }
-      }
-      if (typeof value === 'number') {
-        if (isNaN(value)) {
-          return { error: 'invalid', reason: 'invalid_number' }
-        }
-        if (!isFinite(value)) {
-          return { error: 'invalid', reason: 'out_of_bounds' }
-        }
-        const date = parseDate(value, options.properties)
-        if (isNaN(date.valueOf())) {
-          return { error: 'invalid', reason: 'out_of_bounds' }
-        }
-        return { value: date }
-      }
-      return { error: 'invalid', reason: 'not_a_date' }
+      return parseCustomValue(value, (value) => DateType(value, { properties: options.properties }))
 
     case Boolean:
-      if (typeof value === 'boolean') {
-        return { value }
-      }
-      return { error: 'invalid', reason: 'not_a_boolean' }
+      return parseCustomValue(value, BooleanType)
 
     default:
       if (typeof type === 'function') {
         return parseCustomValue(value, type)
       }
-      throw new Error(`Unknown schema type: ${type && type.name || type}`)
+      throw new Error(`Unsupported schema type: ${type && type.name || type}`)
   }
 }
 

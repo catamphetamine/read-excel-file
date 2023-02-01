@@ -236,6 +236,8 @@ readXlsxFile(file, { schema }).then(({ rows, errors }) => {
 })
 ```
 
+#### Tips and Features
+
 <!-- If no `type` is specified then the cell value is returned "as is": as a string, number, date or boolean. -->
 
 <!-- There are also some additional exported `type`s available: -->
@@ -280,11 +282,11 @@ readXlsxFile(file, {
 </details>
 
 <details>
-<summary>How to fix spreadsheet data before <code>schema</code> parsing. For example, <strong>how to ignore empty rows</strong>.</summary>
+<summary>How to fix spreadsheet data before <code>schema</code> parsing. For example, <strong>how to ignore irrelevant rows</strong>.</summary>
 
 #####
 
-Sometimes, a spreadsheet doesn't exactly have the structure required by this library's `schema` parsing feature: for example, it may be missing a header row, or contain some purely presentational / empty / "garbage" rows that should be removed. To fix that, one could pass an optional `transformData(data)` function that would modify the spreadsheet contents as required.
+Sometimes, a spreadsheet doesn't exactly have the structure required by this library's `schema` parsing feature: for example, it may be missing a header row, or contain some purely presentational / irrelevant / "garbage" rows that should be removed. To fix that, one could pass an optional `transformData(data)` function that would modify the spreadsheet contents as required.
 
 ```js
 readXlsxFile(file, {
@@ -292,7 +294,7 @@ readXlsxFile(file, {
   transformData(data) {
     // Add a missing header row.
     return [['ID', 'NAME', ...]].concat(data)
-    // Remove empty rows.
+    // Remove irrelevant rows.
     return data.filter(row => row.filter(column => column !== null).length > 0)
   }
 })
