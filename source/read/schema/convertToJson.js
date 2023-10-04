@@ -69,16 +69,43 @@ export default function(data, schema, options) {
 function read(schema, row, rowIndex, columns, errors, options) {
   const object = {}
   let isEmptyObject = true
+
+  const createError = ({
+    column,
+    value,
+    error: errorMessage,
+    reason
+  }) => {
+    const error = {
+      error: errorMessage,
+      row: rowIndex + 1,
+      column,
+      value
+    }
+    if (reason) {
+      error.reason = reason
+    }
+    if (schema[column].type) {
+      error.type = schema[column].type
+    }
+    return error
+  }
+
+  const pendingRequiredChecks = []
+
   for (const key of Object.keys(schema)) {
     const schemaEntry = schema[key]
     const isNestedSchema = typeof schemaEntry.type === 'object' && !Array.isArray(schemaEntry.type)
+
     let rawValue = row[columns.indexOf(key)]
     if (rawValue === undefined) {
       rawValue = null
     }
+
     let value
     let error
     let reason
+
     if (isNestedSchema) {
       value = read(schemaEntry.type, row, rowIndex, columns, errors, options)
     } else {
@@ -109,23 +136,22 @@ function read(schema, row, rowIndex, columns, errors, options) {
         value = error ? rawValue : result.value
       }
     }
-    if (!error && value === null && schemaEntry.required) {
-      error = 'required'
+
+    if (!error && value === null) {
+      if (typeof schemaEntry.required === 'function') {
+        pendingRequiredChecks.push({ column: key })
+      } else if (schemaEntry.required === true) {
+        error = 'required'
+      }
     }
+
     if (error) {
-      error = {
-        error,
-        row: rowIndex + 1,
+      errors.push(createError({
         column: key,
-        value
-      }
-      if (reason) {
-        error.reason = reason
-      }
-      if (schemaEntry.type) {
-        error.type = schemaEntry.type
-      }
-      errors.push(error)
+        value,
+        error,
+        reason
+      }))
     } else {
       if (isEmptyObject && value !== null) {
         isEmptyObject = false
@@ -135,9 +161,22 @@ function read(schema, row, rowIndex, columns, errors, options) {
       }
     }
   }
+
   if (isEmptyObject) {
     return null
   }
+
+  for (const { column } of pendingRequiredChecks) {
+    const required = schema[column].required(object)
+    if (required) {
+      errors.push(createError({
+        column,
+        value: null,
+        error: 'required'
+      }))
+    }
+  }
+
   return object
 }
 

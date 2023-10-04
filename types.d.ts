@@ -2,6 +2,9 @@ export function Integer(): void;
 export function URL(): void;
 export function Email(): void;
 
+type Cell = string | number | boolean | typeof Date
+export type Row = Cell[]
+
 type BasicType =
 	| string
 	| number
@@ -13,11 +16,13 @@ type BasicType =
 
 export type Type<T> = (value: Cell) => T | undefined;
 
+type SchemaEntryRequired = boolean | (row: Row) => boolean;
+
 interface SchemaEntryBasic<T> {
 	prop: string;
 	type?: BasicType | Type<T>;
 	oneOf?: T[];
-	required?: boolean;
+	required?: SchemaEntryRequired;
 	validate?(value: T): void;
 }
 
@@ -27,7 +32,7 @@ interface SchemaEntryParsed<T> {
 	prop: string;
 	parse: (value: Cell) => T | undefined;
 	oneOf?: T[];
-	required?: boolean;
+	required?: SchemaEntryRequired;
 	validate?(value: T): void;
 }
 
@@ -36,7 +41,7 @@ interface SchemaEntryParsed<T> {
 interface SchemaEntryRecursive {
 	prop: string;
 	type: Record<string, SchemaEntry>;
-	required?: boolean;
+	required?: SchemaEntryRequired;
 }
 
 type SchemaEntry = SchemaEntryBasic<any> | SchemaEntryParsed<any> | SchemaEntryRecursive
@@ -52,9 +57,6 @@ export interface Error {
 	type?: SchemaEntry;
 }
 
-type Cell = string | number | boolean | typeof Date
-export type Row = Cell[]
-
 export interface ParsedObjectsResult<T extends object> {
 	rows: T[];
 	errors: Error[];
@@ -63,6 +65,7 @@ export interface ParsedObjectsResult<T extends object> {
 interface ParseCommonOptions {
 	sheet?: number | string;
 	trim?: boolean;
+	parseNumber?: (string: string) => any;
 }
 
 export interface ParseWithSchemaOptions<T extends object> extends ParseCommonOptions {

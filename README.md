@@ -126,7 +126,9 @@ To read spreadsheet data and then convert it to an array of JSON objects, pass a
 Each property of a JSON object should be described by an "entry" in the `schema`. The key of the entry should be the column's title in the spreadsheet. The value of the entry should be an object with properties:
 
 * `property` — The name of the object's property.
-* `required` — (optional) Required properties can be marked as `required: true`.
+* `required` — (optional) Required properties of the object could be marked as such.
+  * `required: boolean` — `true` or `false`.
+  * `required: (object) => boolean` — A function returning `true` or `false` depending on some other properties of the object.
 * `validate(value)` — (optional) Cell value validation function. Is only called on non-empty cells. If the cell value is invalid, it should throw an error with the error message set to the error code.
 * `type` — (optional) The type of the value. Defines how the cell value will be parsed. If no `type` is specified then the cell value is returned "as is": as a string, number, date or boolean. A `type` could be a:
   * Built-in type:
@@ -434,6 +436,19 @@ By default, it automatically trims all string values. To disable this feature, p
 
 ```js
 readXlsxFile(file, { trim: false })
+```
+
+## Parse Numbers
+
+By default, it parses numeric cell values from strings. In some rare cases though, javascript's [inherently limited](https://www.youtube.com/watch?v=2gIxbTn7GSc) floating-point number precision might become an issue. An example might be finance and banking domain. To work around that, this library supports passing a custom `parseNumber(string)` function option.
+
+```js
+// Arbitrary-precision numbers in javascript.
+import Decimal from 'decimal.js'
+
+readXlsxFile(file, {
+  parseNumber: (string) => new Decimal(string)
+})
 ```
 
 ## Transform

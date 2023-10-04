@@ -8,7 +8,7 @@
 // The list of generic numeric value "formats":
 // https://xlsxwriter.readthedocs.io/format.html#format-set-num-format
 //
-export default function isDateTimestamp(value, styleId, styles, options) {
+export default function isDateTimestamp(styleId, styles, options) {
   if (styleId) {
     const style = styles[styleId]
     if (!style) {

@@ -111,16 +111,19 @@ export default function parseCellValue(value, type, {
       if (value === undefined) {
         break
       }
-      const parsedNumber = Number(value)
-      if (isNaN(parsedNumber)) {
-        throw new Error(`Invalid "numeric" cell value: ${value}`)
-      }
-      value = parsedNumber
+      const isDateTimestampNumber = isDateTimestamp(getStyleId(), styles, options)
       // XLSX does have "d" type for dates, but it's not commonly used.
       // Instead, it prefers using "n" type for storing dates as timestamps.
-      if (isDateTimestamp(value, getStyleId(), styles, options)) {
+      if (isDateTimestampNumber) {
+        // Parse the number from string.
+        value = parseNumberDefault(value)
         // Parse the number as a date timestamp.
         value = parseDate(value, properties)
+      } else {
+        // Parse the number from string.
+        // Supports custom parsing function to work around javascript number encoding precision issues.
+        // https://gitlab.com/catamphetamine/read-excel-file/-/issues/85
+        value = (options.parseNumber || parseNumberDefault)(value)
       }
       break
 
@@ -176,4 +179,18 @@ function parseString(value, options) {
     value = undefined
   }
   return value
+}
+
+// Parses a number from string.
+// Throws an error if the number couldn't be parsed.
+// When parsing floating-point number, is affected by
+// the javascript number encoding precision issues:
+// https://www.youtube.com/watch?v=2gIxbTn7GSc
+// https://www.avioconsulting.com/blog/overcoming-javascript-numeric-precision-issues
+function parseNumberDefault(stringifiedNumber) {
+  const parsedNumber = Number(stringifiedNumber)
+  if (isNaN(parsedNumber)) {
+    throw new Error(`Invalid "numeric" cell value: ${stringifiedNumber}`)
+  }
+  return parsedNumber
 }

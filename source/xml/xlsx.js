@@ -1,5 +1,7 @@
 import { findChild, findChildren, forEach, map, getTagName } from './dom.js'
 
+// Returns an array of cells,
+// each element being an XML DOM element representing a cell.
 export function getCells(document) {
   const worksheet = document.documentElement
   const sheetData = findChild(worksheet, 'sheetData')
