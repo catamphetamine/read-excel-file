@@ -16,7 +16,7 @@ type BasicType =
 
 export type Type<T> = (value: Cell) => T | undefined;
 
-type SchemaEntryRequired = boolean | (row: Row) => boolean;
+type SchemaEntryRequired = boolean | ((row: Row) => boolean);
 
 interface SchemaEntryBasic<T> {
 	prop: string;
