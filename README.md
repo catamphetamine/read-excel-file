@@ -143,7 +143,22 @@ Each property of a JSON object should be described by an "entry" in the `schema`
   * Custom type:
     * A function that receives a cell value and returns a parsed value. If the value is invalid, it should throw an error with the error message set to the error code.
 
-Sidenote: When converting cell values to object properties, by default, it skips all `null` values (skips all empty cells). That's for simplicity. In some edge cases though, it may be required to keep all `null` values for all the empty cells. For example, that's the case when updating data in an SQL database from an XLSX spreadsheet using Sequelize ORM library that requires a property to explicitly be `null` in order to clear it during an `UPDATE` operation. To keep all `null` values, pass `includeNullValues: true` option when calling `readXlsxFile()`.
+#### Note on missing columns or empty cells
+
+When converting cell values to object properties, by default, it skips any missing columns or empty cells, which means that property values for such cells will be `undefined`. To be more specific, first it interprets any missing columns as if those columns existed but had empty cells, and then it interprets all empty cells as `undefined`s in the output objects.
+
+In some cases thought that default behavior is not appropriate.
+
+For example, spreadsheet data might be used to update an SQL database using Sequelize ORM library, and Sequelize completely ignores any `undefined` values. In order for Sequelize to set a certain field value to `NULL` in the database, it must be passed as `null` rather than `undefined`.
+
+So for Sequelize use case, property values for any missing columns should stay `undefined` but property values for any empty cells should be `null`. That could be achieved by passing two parameters to `read-excel-file`: `schemaPropertyValueForMissingColumn: undefined` and `schemaPropertyValueForEmptyCell: null`.
+
+An additional option that could be passed in that case would be `schemaPropertyShouldSkipRequiredValidationForMissingColumn: (column, { object }) => true`: it would skip `required` validation for columns that're missing from the spreadsheet.
+
+There's also a legacy parameter `includeNullValues: true` that could be replaced with the following combination of parameters:
+* `schemaPropertyValueForMissingColumn: null`
+* `schemaPropertyValueForEmptyCell: null`
+* `getEmptyObjectValue = () => null`
 
 #### `errors`
 
@@ -238,7 +253,35 @@ readXlsxFile(file, { schema }).then(({ rows, errors }) => {
 })
 ```
 
-#### Tips and Features
+#### Separate use
+
+The function for converting input data rows to JSON objects using a schema is exported independently as `read-excel-file/map`, if anyone's interested.
+
+```js
+import convertToJson from "read-excel-file/map"
+
+const { rows, errors } = convertToJson(data, schema, options)
+```
+
+Maps a list of rows — `data` — into a list of objects — `rows` — using a `schema` as a mapping specification.
+
+* `data` — An array of rows, each row being an array of cells. The first row should be the list of column headers and the rest of the rows should be the data.
+* `schema` — A "to JSON" convertion schema (see above).
+* `options` — (optional) Schema conversion parameters of `read-excel-file`:
+  * `schemaPropertyValueForMissingColumn` — By default, when some of the `schema` columns are missing in the input `data`, those properties are set to `undefined` in the output objects. Pass `schemaPropertyValueForMissingColumn: null` to set such "missing column" properties to `null` in the output objects.
+  * `schemaPropertyValueForNullCellValue` — By default, when it encounters a `null` value in a cell in input `data`, it sets it to `undefined` in the output object. Pass `schemaPropertyValueForNullCellValue: null` to make it set such values as `null`s in output objects.
+  * `schemaPropertyValueForUndefinedCellValue` — By default, when it encounters an `undefined` value in a cell in input `data`, it it sets it to `undefined` in the output object. Pass `schemaPropertyValueForUndefinedCellValue: null` to make it set such values as `null`s in output objects.
+  * `schemaPropertyShouldSkipRequiredValidationForMissingColumn: (column: string, { object }) => boolean` — By default, it does apply `required` validation to `schema` properties for which columns are missing in the input `data`. One could pass a custom `schemaPropertyShouldSkipRequiredValidationForMissingColumn(column, { object })` to disable `required` validation for missing columns in some or all cases.
+  * `getEmptyObjectValue(object, { path? })` — By default, it returns `null` for an "empty" resulting object. One could override that value using `getEmptyObjectValue(object, { path })` parameter. The value applies to both top-level object and any nested sub-objects in case of a nested schema, hence the additional (optional) `path?: string` parameter.
+  * `getEmptyArrayValue(array, { path })` — By default, it returns `null` for an "empty" array value. One could override that value using `getEmptyArrayValue(array, { path })` parameter.
+
+Returns a list of "mapped objects".
+
+When parsing a schema property value, in case of an error, the value of that property is gonna be `undefined`.
+
+When a "mapped object" is empty, i.e. when all property values of it are `null` or `undefined`, it is returned as `null` rather than an object.
+
+#### Schema: Tips and Features
 
 <!-- If no `type` is specified then the cell value is returned "as is": as a string, number, date or boolean. -->
 
@@ -300,22 +343,6 @@ readXlsxFile(file, {
     return data.filter(row => row.filter(column => column !== null).length > 0)
   }
 })
-```
-</details>
-
-<details>
-<summary>
-The <strong>function for converting data to JSON objects using a schema</strong> is exported from this library too, if anyone wants it.
-</summary>
-
-#####
-
-```js
-import convertToJson from "read-excel-file/schema"
-
-// `data` is an array of rows, each row being an array of cells.
-// `schema` is a "to JSON" convertion schema (see above).
-const { rows, errors } = convertToJson(data, schema)
 ```
 </details>
 
@@ -516,4 +543,3 @@ On March 9th, 2020, GitHub, Inc. silently [banned](https://medium.com/@catamphet
 ## License
 
 [MIT](LICENSE)
-

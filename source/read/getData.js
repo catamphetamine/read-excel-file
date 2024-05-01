@@ -50,11 +50,11 @@ export default function getData(sheet, options) {
   }
 
   // Fill in the row map.
-  const { rowMap } = options
-  if (rowMap) {
+  const { rowMap: rowIndexMap } = options
+  if (rowIndexMap) {
     let i = 0
     while (i < data.length) {
-      rowMap[i] = i
+      rowIndexMap[i] = i
       i++
     }
   }
@@ -62,7 +62,7 @@ export default function getData(sheet, options) {
   // Drop empty columns or rows.
   data = dropEmptyRows(
     dropEmptyColumns(data, { onlyTrimAtTheEnd: true }),
-    { onlyTrimAtTheEnd: true, rowMap }
+    { onlyTrimAtTheEnd: true, rowIndexMap }
   )
 
   // Optionally transform data before applying `schema`.
@@ -70,7 +70,7 @@ export default function getData(sheet, options) {
     data = options.transformData(data)
     // data = options.transformData(data, {
     //   dropEmptyRowsAndColumns(data) {
-    //     return dropEmptyRows(dropEmptyColumns(data), { rowMap })
+    //     return dropEmptyRows(dropEmptyColumns(data), { rowIndexMap })
     //   }
     // })
   }

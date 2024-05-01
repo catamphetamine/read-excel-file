@@ -26,7 +26,8 @@ describe('read-excel-file', () => {
 				error: 'required',
 				row: 2,
 				column: 'NOT EXISTS',
-				value: null,
+				value: undefined,
+				// value: null,
 				type: Number
 			}])
 		})

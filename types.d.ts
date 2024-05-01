@@ -68,11 +68,16 @@ interface ParseCommonOptions {
 	parseNumber?: (string: string) => any;
 }
 
-export interface ParseWithSchemaOptions<T extends object> extends ParseCommonOptions {
+export interface ParseWithSchemaOptions<T extends object> extends ParseCommonOptions, MappingParametersReadExcelFile {
 	schema: Schema;
 	transformData?: (rows: Row[]) => Row[];
-	includeNullValues?: boolean;
 	ignoreEmptyRows?: boolean;
+	// `includeNullValues: true` parameter is deprecated.
+	// It could be replaced with the following combination of parameters:
+	// * `schemaPropertyValueForMissingColumn: null`
+	// * `schemaPropertyValueForEmptyCell: null`
+	// * `getEmptyObjectValue = () => null`
+	includeNullValues?: boolean;
 }
 
 type MapProperty = string;
@@ -89,4 +94,22 @@ export interface ParseWithMapOptions extends ParseCommonOptions {
 
 export interface ParseWithoutSchemaOptions extends ParseCommonOptions {
 	dateFormat?: string;
+}
+
+interface MappingParametersCommon {
+	schemaPropertyValueForMissingColumn?: any;
+	schemaPropertyShouldSkipRequiredValidationForMissingColumn?(column: string, parameters: { object: Record<string, any> }): boolean;
+	getEmptyObjectValue?(object: Record<string, any>, parameters: { path?: string }): any;
+	getEmptyArrayValue?(array: any[], parameters: { path: string }): any;
+}
+
+interface MappingParametersReadExcelFile extends MappingParametersCommon {
+	schemaPropertyValueForEmptyCell?: null | undefined;
+}
+
+export interface MappingParameters extends MappingParametersCommon {
+	schemaPropertyValueForUndefinedCellValue?: any;
+	schemaPropertyValueForNullCellValue?: any;
+	isColumnOriented?: boolean;
+	rowIndexMap?: Record<string, number>;
 }

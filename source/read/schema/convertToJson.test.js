@@ -9,7 +9,7 @@ const date = convertToUTCTimezone(new Date(2018, 3 - 1, 24))
 describe('convertToJson', () => {
 	it('should parse arrays', () => {
 		getBlock('abc"de,f"g,h', ',', 0).should.deep.equal(['abcde,fg', 10])
-		parseArray(' abc"de,f"g  , h ').should.deep.equal(['abcde,fg', 'h'])
+		parseArray(' abc"de,f"g  , h ', ',').should.deep.equal(['abcde,fg', 'h'])
 	})
 
 	it('should convert to json', () => {
@@ -116,17 +116,25 @@ describe('convertToJson', () => {
 		}])
 	})
 
-	it('should require fields', () => {
+	it('should require fields when cell value is empty', () => {
 		const { rows, errors } = convertToJson([
 			[
-				'NUMBER'
-			], [
-				null
+				'NUMBER',
+				'STRING'
+			],
+			[
+				null,
+				'abc'
 			]
 		], {
 			NUMBER: {
 				prop: 'number',
 				type: Number,
+				required: true
+			},
+			STRING: {
+				prop: 'string',
+				type: String,
 				required: true
 			}
 		})
@@ -139,7 +147,29 @@ describe('convertToJson', () => {
 			value: null
 		}])
 
-		rows.should.deep.equal([])
+		rows.should.deep.equal([{
+			number: null,
+			string: 'abc'
+		}])
+	})
+
+	it('shouldn\'t require fields when cell value is empty and object is empty too', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'NUMBER'
+			],
+			[
+				null
+			]
+		], {
+			NUMBER: {
+				prop: 'number',
+				type: Number,
+				required: true
+			}
+		})
+
+		rows.should.deep.equal([null])
 	})
 
 	it('should parse arrays', () => {
@@ -162,7 +192,7 @@ describe('convertToJson', () => {
 
 		rows.should.deep.equal([{
 			names: ['Barack Obama', 'String, with, colons', 'Donald Trump']
-		}])
+		}, null])
 	})
 
 	it('should parse integers', () =>
@@ -194,7 +224,7 @@ describe('convertToJson', () => {
 
 		rows.should.deep.equal([{
 			value: 1
-		}])
+		}, null])
 	})
 
 	it('should parse URLs', () =>
@@ -221,7 +251,7 @@ describe('convertToJson', () => {
 
 		rows.should.deep.equal([{
 			value: 'https://kremlin.ru'
-		}])
+		}, null])
 	})
 
 	it('should parse Emails', () =>
@@ -248,7 +278,7 @@ describe('convertToJson', () => {
 
 		rows.should.deep.equal([{
 			value: 'vladimir.putin@kremlin.ru'
-		}])
+		}, null])
 	})
 
 	it('should call .validate()', () => {
@@ -279,7 +309,7 @@ describe('convertToJson', () => {
 			value: 'George Bush'
 		}])
 
-		rows.should.deep.equal([])
+		rows.should.deep.equal([null])
 	})
 
 	it('should validate numbers', () => {
@@ -306,7 +336,7 @@ describe('convertToJson', () => {
 			value: '123abc'
 		}])
 
-		rows.should.deep.equal([])
+		rows.should.deep.equal([null])
 	})
 
 	it('should validate booleans', () => {
@@ -437,7 +467,7 @@ describe('convertToJson', () => {
 			value: '123'
 		}])
 
-		rows.should.deep.equal([])
+		rows.should.deep.equal([null])
 	})
 
 	it('should map row numbers', () => {
@@ -453,7 +483,7 @@ describe('convertToJson', () => {
 				type: Number
 			}
 		}, {
-			rowMap: [2, 5]
+			rowIndexMap: [2, 5]
 		})
 
 		errors.should.deep.equal([{
@@ -550,50 +580,419 @@ describe('convertToJson', () => {
 		)
 
 		rows.should.deep.equal([
-			{ a: 'a', b: 'b', c: { a: 'ca' } },
-			{ a: 'a' },
-		])
-	})
-
-	it('should include `null` values when `includeNullValues: true` option is passed', function() {
-		const { rows } = convertToJson(
-			[
-				['A', 'B', 'CA', 'CB'],
-				['a', 'b', 'ca', null],
-				['a', null]
-			],
-			{
-				A: {
-					prop: 'a',
-					type: String
-				},
-				B: {
-					prop: 'b',
-					type: String
-				},
-				C: {
-					prop: 'c',
-    			type: {
-						CA: {
-							prop: 'a',
-							type: String
-						},
-						CB: {
-							prop: 'b',
-							type: String
-						}
-					}
-				}
-			},
-			{
-				includeNullValues: true
-			}
-		)
-
-		rows.should.deep.equal([
 			{ a: 'a', b: 'b', c: { a: 'ca', b: null } },
 			{ a: 'a', b: null, c: null },
 		])
+	})
+
+	it('should handle missing columns / empty cells (default) (`required: false`)', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'COLUMN_2',
+				'COLUMN_3',
+				'COLUMN_4'
+			], [
+				'12',
+				'13',
+				'14'
+			], [
+				'22',
+				'23',
+				null
+			]
+		], {
+			COLUMN_1: {
+				prop: 'column1',
+				type: String,
+				required: false
+			},
+			COLUMN_2: {
+				prop: 'column2',
+				type: String,
+				required: false
+			},
+			COLUMN_4: {
+				prop: 'column4',
+				type: String,
+				required: false
+			},
+			COLUMN_5: {
+				prop: 'column5',
+				type: String,
+				required: false
+			}
+		})
+
+		errors.should.deep.equal([])
+
+		// Legacy behavior.
+		rows.should.deep.equal([{
+			column2: '12',
+			column4: '14'
+		}, {
+			column2: '22',
+			column4: null
+		}])
+	})
+
+	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn: null`) (`required: false`)', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'COLUMN_2',
+				'COLUMN_3',
+				'COLUMN_4'
+			], [
+				'12',
+				'13',
+				'14'
+			], [
+				'22',
+				'23',
+				null
+			]
+		], {
+			COLUMN_1: {
+				prop: 'column1',
+				type: String,
+				required: false
+			},
+			COLUMN_2: {
+				prop: 'column2',
+				type: String,
+				required: false
+			},
+			COLUMN_4: {
+				prop: 'column4',
+				type: String,
+				required: false
+			},
+			COLUMN_5: {
+				prop: 'column5',
+				type: String,
+				required: false
+			}
+		}, {
+			schemaPropertyValueForMissingColumn: null
+		})
+
+		errors.should.deep.equal([])
+
+		rows.should.deep.equal([{
+			column1: null,
+			column2: '12',
+			column4: '14',
+			column5: null
+		}, {
+			column1: null,
+			column2: '22',
+			column4: null,
+			column5: null
+		}])
+	})
+
+	it('should handle missing columns / empty cells (`schemaPropertyValueForNullCellValue: null`) (`required: false`)', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'COLUMN_2',
+				'COLUMN_3',
+				'COLUMN_4'
+			], [
+				'12',
+				'13',
+				'14'
+			], [
+				'22',
+				'23',
+				null
+			]
+		], {
+			COLUMN_1: {
+				prop: 'column1',
+				type: String,
+				required: false
+			},
+			COLUMN_2: {
+				prop: 'column2',
+				type: String,
+				required: false
+			},
+			COLUMN_4: {
+				prop: 'column4',
+				type: String,
+				required: false
+			},
+			COLUMN_5: {
+				prop: 'column5',
+				type: String,
+				required: false
+			}
+		}, {
+			schemaPropertyValueForNullCellValue: null
+		})
+
+		errors.should.deep.equal([])
+
+		rows.should.deep.equal([{
+			// column1: undefined,
+			column2: '12',
+			column4: '14',
+			// column5: undefined
+		}, {
+			// column1: undefined,
+			column2: '22',
+			column4: null,
+			// column5: undefined
+		}])
+	})
+
+	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn: null` and `schemaPropertyValueForNullCellValue: null`) (`required: false`)', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'COLUMN_2',
+				'COLUMN_3',
+				'COLUMN_4'
+			], [
+				'12',
+				'13',
+				'14'
+			], [
+				'22',
+				'23',
+				null
+			]
+		], {
+			COLUMN_1: {
+				prop: 'column1',
+				type: String,
+				required: false
+			},
+			COLUMN_2: {
+				prop: 'column2',
+				type: String,
+				required: false
+			},
+			COLUMN_4: {
+				prop: 'column4',
+				type: String,
+				required: false
+			},
+			COLUMN_5: {
+				prop: 'column5',
+				type: String,
+				required: false
+			}
+		}, {
+			schemaPropertyValueForMissingColumn: null,
+			schemaPropertyValueForNullCellValue: null
+		})
+
+		errors.should.deep.equal([])
+
+		rows.should.deep.equal([{
+			column1: null,
+			column2: '12',
+			column4: '14',
+			column5: null
+		}, {
+			column1: null,
+			column2: '22',
+			column4: null,
+			column5: null
+		}])
+	})
+
+	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn: null` and `schemaPropertyValueForNullCellValue: null` and `schemaPropertyShouldSkipRequiredValidationForMissingColumn()` not specified) (`required: true`)', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'COLUMN_2',
+				'COLUMN_3',
+				'COLUMN_4'
+			], [
+				'12',
+				'13',
+				'14'
+			], [
+				'22',
+				'23',
+				null
+			]
+		], {
+			COLUMN_1: {
+				prop: 'column1',
+				type: String,
+				required: false
+			},
+			COLUMN_2: {
+				prop: 'column2',
+				type: String,
+				required: false
+			},
+			COLUMN_4: {
+				prop: 'column4',
+				type: String,
+				required: false
+			},
+			COLUMN_5: {
+				prop: 'column5',
+				type: String,
+				required: true
+			}
+		}, {
+			schemaPropertyValueForMissingColumn: null,
+			schemaPropertyValueForNullCellValue: null
+		})
+
+		errors.should.deep.equal([{
+			column: 'COLUMN_5',
+			error: 'required',
+			row: 2,
+			type: String,
+			value: null
+		}, {
+			column: 'COLUMN_5',
+			error: 'required',
+			row: 3,
+			type: String,
+			value: null
+		}])
+
+		rows.should.deep.equal([{
+			column1: null,
+			column2: '12',
+			column4: '14',
+			column5: null
+		}, {
+			column1: null,
+			column2: '22',
+			column4: null,
+			column5: null
+		}])
+	})
+
+	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn: null` and `schemaPropertyValueForNullCellValue: null` and `schemaPropertyShouldSkipRequiredValidationForMissingColumn: () => false`) (`required: true`)', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'COLUMN_2',
+				'COLUMN_3',
+				'COLUMN_4'
+			], [
+				'12',
+				'13',
+				'14'
+			], [
+				'22',
+				'23',
+				null
+			]
+		], {
+			COLUMN_1: {
+				prop: 'column1',
+				type: String,
+				required: false
+			},
+			COLUMN_2: {
+				prop: 'column2',
+				type: String,
+				required: false
+			},
+			COLUMN_4: {
+				prop: 'column4',
+				type: String,
+				required: false
+			},
+			COLUMN_5: {
+				prop: 'column5',
+				type: String,
+				required: true
+			}
+		}, {
+			schemaPropertyValueForMissingColumn: null,
+			schemaPropertyValueForNullCellValue: null,
+			schemaPropertyShouldSkipRequiredValidationForMissingColumn: () => false
+		})
+
+		errors.should.deep.equal([{
+			column: 'COLUMN_5',
+			error: 'required',
+			row: 2,
+			type: String,
+			value: null
+		}, {
+			column: 'COLUMN_5',
+			error: 'required',
+			row: 3,
+			type: String,
+			value: null
+		}])
+
+		rows.should.deep.equal([{
+			column1: null,
+			column2: '12',
+			column4: '14',
+			column5: null
+		}, {
+			column1: null,
+			column2: '22',
+			column4: null,
+			column5: null
+		}])
+	})
+
+	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn: null` and `schemaPropertyValueForNullCellValue: null` and `schemaPropertyShouldSkipRequiredValidationForMissingColumn: () => true`) (`required: true`)', () => {
+		const { rows, errors } = convertToJson([
+			[
+				'COLUMN_2',
+				'COLUMN_3',
+				'COLUMN_4'
+			], [
+				'12',
+				'13',
+				'14'
+			], [
+				'22',
+				'23',
+				null
+			]
+		], {
+			COLUMN_1: {
+				prop: 'column1',
+				type: String,
+				required: false
+			},
+			COLUMN_2: {
+				prop: 'column2',
+				type: String,
+				required: false
+			},
+			COLUMN_4: {
+				prop: 'column4',
+				type: String,
+				required: false
+			},
+			COLUMN_5: {
+				prop: 'column5',
+				type: String,
+				required: true
+			}
+		}, {
+			schemaPropertyValueForMissingColumn: null,
+			schemaPropertyValueForNullCellValue: null,
+			schemaPropertyShouldSkipRequiredValidationForMissingColumn: () => true
+		})
+
+		errors.should.deep.equal([])
+
+		rows.should.deep.equal([{
+			column1: null,
+			column2: '12',
+			column4: '14',
+			column5: null
+		}, {
+			column1: null,
+			column2: '22',
+			column4: null,
+			column5: null
+		}])
 	})
 })
 

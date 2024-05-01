@@ -1,6 +1,6 @@
 {
   "name": "read-excel-file",
-  "version": "5.7.1",
+  "version": "5.8.0",
   "description": "Read small to medium `*.xlsx` files in a browser or Node.js. Parse to JSON with a strict schema.",
   "module": "index.js",
   "main": "index.cjs",
@@ -25,6 +25,11 @@
       "types": "./schema/index.d.ts",
       "import": "./schema/index.js",
       "require": "./schema/index.cjs"
+    },
+    "./map": {
+      "types": "./map/index.d.ts",
+      "import": "./map/index.js",
+      "require": "./map/index.cjs"
     },
     "./package.json": "./package.json"
   },

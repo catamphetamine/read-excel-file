@@ -74,6 +74,13 @@ export default function readXlsx(contents, xml, options = {}) {
     options
   )
 
+  options = {
+    // Create a `rowIndexMap` for the original dataset, if not passed,
+    // because "empty" rows will be dropped from the input data.
+    rowMap: [],
+    ...options
+  }
+
   // Get spreadsheet data.
   const data = getData(sheet, options)
 

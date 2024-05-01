@@ -1,3 +1,13 @@
+5.8.0 / 01.05.2024
+==================
+
+* Added new parameters to replace the old `includeNullValues: true` parameter: `schemaPropertyValueEmptyCellValue`, `schemaPropertyValueForMissingColumn`, `getEmptyObjectValue`. Now `includeNullValues: true` could be replaced with the following combination of parameters:
+  * `schemaPropertyValueForMissingColumn: null`
+  * `schemaPropertyValueForEmptyCell: null`
+  * `getEmptyObjectValue = (object, { path? }) => null`
+* Added `schemaPropertyShouldSkipRequiredValidationForMissingColumn: () => boolean` parameter. It is `() => false` by default.
+* Added `getEmptyArrayValue: (array, { path }) => any` parameter. It is `() => null` by default.
+
 5.5.0 / 14.09.2022
 ==================
 
