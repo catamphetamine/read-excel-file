@@ -10,7 +10,7 @@ import {
 	ParseWithoutSchemaOptions,
 	ParsedObjectsResult,
 	Row
-} from '../types.d';
+} from '../types.d.js';
 
 export {
 	ParsedObjectsResult,
@@ -18,7 +18,7 @@ export {
 	Integer,
 	Email,
 	URL
-} from '../types.d';
+} from '../types.d.js';
 
 export function parseExcelDate(excelSerialDate: number) : typeof Date;
 
