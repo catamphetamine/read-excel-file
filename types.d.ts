@@ -14,51 +14,55 @@ type BasicType =
 	| typeof URL
 	| typeof Email;
 
-export type Type<T> = (value: Cell) => T | undefined;
+// A cell "type" is a function that receives a "raw" value and returns a "parsed" value or `undefined`.
+export type Type<Value> = (value: Cell) => Value | undefined;
 
-type SchemaEntryRequired = boolean | ((row: Row) => boolean);
+type SchemaEntryRequiredProperty<Object> = boolean | ((row: Object) => boolean);
 
-interface SchemaEntryBasic<T> {
-	prop: string;
-	type?: BasicType | Type<T>;
-	oneOf?: T[];
-	required?: SchemaEntryRequired;
-	validate?(value: T): void;
+interface SchemaEntryForValue<Key extends keyof Object, Object, TopLevelObject> {
+	prop: Key;
+	type?: BasicType | Type<Object[Key]>;
+	oneOf?: Object[Key][];
+	required?: SchemaEntryRequiredProperty<TopLevelObject>;
+	validate?(value: Object[Key]): void;
 }
 
 // Legacy versions of this library supported supplying a custom `parse()` function.
 // Since then, the `parse()` function has been renamed to `type()` function.
-interface SchemaEntryParsed<T> {
-	prop: string;
-	parse: (value: Cell) => T | undefined;
-	oneOf?: T[];
-	required?: SchemaEntryRequired;
-	validate?(value: T): void;
+interface SchemaEntryForValueLegacy<Key extends keyof Object, Object, TopLevelObject> {
+	prop: Key;
+	parse: (value: Cell) => Object[Key] | undefined;
+	oneOf?: Object[Key][];
+	required?: SchemaEntryRequiredProperty<TopLevelObject>;
+	validate?(value: Object[Key]): void;
 }
 
 // Implementing recursive types in TypeScript:
 // https://dev.to/busypeoples/notes-on-typescript-recursive-types-and-immutability-5ck1
-interface SchemaEntryRecursive {
-	prop: string;
-	type: Record<string, SchemaEntry>;
-	required?: SchemaEntryRequired;
+interface SchemaEntryRecursive<Key extends keyof Object, Object, TopLevelObject> {
+	prop: Key;
+	type: Record<keyof Object[Key], SchemaEntry<keyof Object[Key], Object[Key], TopLevelObject>>;
+	required?: SchemaEntryRequiredProperty<TopLevelObject>;
 }
 
-type SchemaEntry = SchemaEntryBasic<any> | SchemaEntryParsed<any> | SchemaEntryRecursive
+type SchemaEntry<Key extends keyof Object, Object, TopLevelObject> =
+	SchemaEntryForValue<Key, Object, TopLevelObject> |
+	SchemaEntryForValueLegacy<Key, Object, TopLevelObject> |
+	SchemaEntryRecursive<Key, Object, TopLevelObject>
 
-export type Schema = Record<string, SchemaEntry>
+export type Schema<Object = Record<string, any>> = Record<keyof Object, SchemaEntry<keyof Object, Object, Object>>
 
-export interface Error {
+export interface Error<Value = any> {
 	error: string;
 	reason?: string;
 	row: number;
 	column: string;
-	value?: any;
-	type?: SchemaEntry;
+	value?: Value;
+	type?: Type<Value>;
 }
 
-export interface ParsedObjectsResult<T extends object> {
-	rows: T[];
+export interface ParsedObjectsResult<Object> {
+	rows: Object[];
 	errors: Error[];
 }
 
@@ -68,8 +72,8 @@ interface ParseCommonOptions {
 	parseNumber?: (string: string) => any;
 }
 
-export interface ParseWithSchemaOptions<T extends object> extends ParseCommonOptions, MappingParametersReadExcelFile {
-	schema: Schema;
+export interface ParseWithSchemaOptions<Object> extends ParseCommonOptions, MappingParametersReadExcelFile {
+	schema: Schema<Object>;
 	transformData?: (rows: Row[]) => Row[];
 	ignoreEmptyRows?: boolean;
 	// `includeNullValues: true` parameter is deprecated.
