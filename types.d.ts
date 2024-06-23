@@ -39,18 +39,18 @@ interface SchemaEntryForValueLegacy<Key extends keyof Object, Object, TopLevelOb
 
 // Implementing recursive types in TypeScript:
 // https://dev.to/busypeoples/notes-on-typescript-recursive-types-and-immutability-5ck1
-interface SchemaEntryRecursive<Key extends keyof Object, Object, TopLevelObject> {
+interface SchemaEntryRecursive<Key extends keyof Object, Object, TopLevelObject, ColumnTitle extends string> {
 	prop: Key;
-	type: Record<keyof Object[Key], SchemaEntry<keyof Object[Key], Object[Key], TopLevelObject>>;
+	type: Record<ColumnTitle, SchemaEntry<keyof Object[Key], Object[Key], TopLevelObject, ColumnTitle>>;
 	required?: SchemaEntryRequiredProperty<TopLevelObject>;
 }
 
-type SchemaEntry<Key extends keyof Object, Object, TopLevelObject> =
+type SchemaEntry<Key extends keyof Object, Object, TopLevelObject, ColumnTitle extends string> =
 	SchemaEntryForValue<Key, Object, TopLevelObject> |
 	SchemaEntryForValueLegacy<Key, Object, TopLevelObject> |
-	SchemaEntryRecursive<Key, Object, TopLevelObject>
+	SchemaEntryRecursive<Key, Object, TopLevelObject, ColumnTitle>
 
-export type Schema<Object = Record<string, any>> = Record<keyof Object, SchemaEntry<keyof Object, Object, Object>>
+export type Schema<Object = Record<string, any>, ColumnTitle extends string = string> = Record<ColumnTitle, SchemaEntry<keyof Object, Object, Object, ColumnTitle>>
 
 export interface Error<Value = any> {
 	error: string;
