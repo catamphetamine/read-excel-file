@@ -1,6 +1,6 @@
 {
   "name": "read-excel-file",
-  "version": "5.8.3",
+  "version": "5.8.4",
   "description": "Read small to medium `*.xlsx` files in a browser or Node.js. Parse to JSON with a strict schema.",
   "module": "index.js",
   "main": "index.cjs",
@@ -49,7 +49,7 @@
   "dependencies": {
     "@xmldom/xmldom": "^0.8.2",
     "fflate": "^0.7.3",
-    "unzipper": "^0.10.11"
+    "unzipper": "^0.12.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.10",
