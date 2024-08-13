@@ -9,6 +9,7 @@ import {
 export {
 	Schema,
 	ParsedObjectsResult,
+	Error,
 	Row,
 	Integer,
 	Email,
