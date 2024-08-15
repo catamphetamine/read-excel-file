@@ -7,7 +7,9 @@ import {
 } from '../types.d.js';
 
 export {
+	Schema,
 	ParsedObjectsResult,
+	Error,
 	Row,
 	Integer,
 	Email,
