@@ -280,11 +280,11 @@ export function parseValue(value, schemaEntry, options) {
  */
 function parseCustomValue(value, parse) {
   try {
-    value = parse(value)
-    if (value === undefined) {
+    const parsedValue = parse(value)
+    if (parsedValue === undefined) {
       return { value: null }
     }
-    return { value }
+    return { value: parsedValue }
   } catch (error) {
     const result = { error: error.message }
     if (error.reason) {

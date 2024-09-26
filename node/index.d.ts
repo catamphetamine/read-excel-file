@@ -16,6 +16,7 @@ export {
 	Schema,
 	ParsedObjectsResult,
 	Error,
+	CellValue,
 	Row,
 	Integer,
 	Email,

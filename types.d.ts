@@ -2,8 +2,8 @@ export function Integer(): void;
 export function URL(): void;
 export function Email(): void;
 
-type Cell = string | number | boolean | typeof Date
-export type Row = Cell[]
+export type CellValue = string | number | boolean | typeof Date
+export type Row = CellValue[]
 
 type BasicType =
 	| string
@@ -15,7 +15,7 @@ type BasicType =
 	| typeof Email;
 
 // A cell "type" is a function that receives a "raw" value and returns a "parsed" value or `undefined`.
-export type Type<Value> = (value: Cell) => Value | undefined;
+export type Type<ParsedValue> = (value: CellValue) => ParsedValue | undefined;
 
 type SchemaEntryRequiredProperty<Object> = boolean | ((row: Object) => boolean);
 
@@ -31,7 +31,7 @@ interface SchemaEntryForValue<Key extends keyof Object, Object, TopLevelObject> 
 // Since then, the `parse()` function has been renamed to `type()` function.
 interface SchemaEntryForValueLegacy<Key extends keyof Object, Object, TopLevelObject> {
 	prop: Key;
-	parse: (value: Cell) => Object[Key] | undefined;
+	parse: (value: CellValue) => Object[Key] | undefined;
 	oneOf?: Object[Key][];
 	required?: SchemaEntryRequiredProperty<TopLevelObject>;
 	validate?(value: Object[Key]): void;
@@ -52,13 +52,13 @@ type SchemaEntry<Key extends keyof Object, Object, TopLevelObject, ColumnTitle e
 
 export type Schema<Object = Record<string, any>, ColumnTitle extends string = string> = Record<ColumnTitle, SchemaEntry<keyof Object, Object, Object, ColumnTitle>>
 
-export interface Error<Value = any> {
+export interface Error<CellValue_ = CellValue, ParsedValue = any> {
 	error: string;
 	reason?: string;
 	row: number;
 	column: string;
-	value?: Value;
-	type?: Type<Value>;
+	value?: CellValue_;
+	type?: Type<ParsedValue>;
 }
 
 export interface ParsedObjectsResult<Object> {
