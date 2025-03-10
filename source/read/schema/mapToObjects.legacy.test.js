@@ -1,10 +1,10 @@
-import convertToJson from './convertToJson.legacy.js'
+import mapToObjects from './mapToObjects.legacy.js'
 
 import Integer from '../../types/Integer.js'
 
-describe('convertToJson (legacy behavior)', () => {
+describe('mapToObjects (legacy behavior)', () => {
 	it('should include `null` values when `includeNullValues: true` option is passed', function() {
-		const { rows } = convertToJson(
+		const { rows } = mapToObjects(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', 'ca', null],
@@ -45,7 +45,7 @@ describe('convertToJson (legacy behavior)', () => {
 	})
 
 	it('should handle missing columns / empty cells (default) (`required: false`)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -94,7 +94,7 @@ describe('convertToJson (legacy behavior)', () => {
 	})
 
 	it('should handle missing columns / empty cells (`includeNullValues: true`) (`required: false`)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -149,7 +149,7 @@ describe('convertToJson (legacy behavior)', () => {
 	})
 
 	it('should require fields when cell value is empty', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'NUMBER',
 				'STRING'
@@ -186,7 +186,7 @@ describe('convertToJson (legacy behavior)', () => {
 	})
 
 	it('shouldn\'t require fields when cell value is empty and object is empty too', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'NUMBER'
 			],
@@ -205,7 +205,7 @@ describe('convertToJson (legacy behavior)', () => {
 	})
 
 	it('should parse arrays (and remove `null` empty objects from result)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'NAMES'
 			], [
@@ -229,7 +229,7 @@ describe('convertToJson (legacy behavior)', () => {
 
 	it('should parse integers (and drop `null` errored objects from result)', () =>
 	{
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'INTEGER'
 			], [
@@ -260,7 +260,7 @@ describe('convertToJson (legacy behavior)', () => {
 	})
 
 	it('should not include `null` values by default (and set `null` for an "empty" object)', function() {
-		const { rows } = convertToJson(
+		const { rows } = mapToObjects(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', 'ca', null],

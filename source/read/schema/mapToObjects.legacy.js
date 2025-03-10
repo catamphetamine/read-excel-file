@@ -1,6 +1,6 @@
-import convertToJson from './convertToJson.js'
+import mapToObjects from './mapToObjects.js'
 
-export default function convertToJsonLegacyBehavior(data, schema, options = {}) {
+export default function mapToObjectsLegacyBehavior(data, schema, options = {}) {
 	const {
 		includeNullValues,
 		ignoreEmptyRows,
@@ -22,7 +22,7 @@ export default function convertToJsonLegacyBehavior(data, schema, options = {}) 
 		defaultConversionOptions.schemaPropertyValueForNullCellValue = null
 		defaultConversionOptions.getEmptyObjectValue = (object, { path }) => null
 	}
-	const result = convertToJson(data, schema, {
+	const result = mapToObjects(data, schema, {
 		...defaultConversionOptions,
 		rowIndexMap: rowMap,
 		isColumnOriented

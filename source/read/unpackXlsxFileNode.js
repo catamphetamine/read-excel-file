@@ -1,5 +1,19 @@
 import fs from 'fs'
 import Stream, { Readable } from 'stream'
+
+// `unzipper` has a bug when it doesn't include "@aws-sdk/client-s3" package in the `dependencies`
+// which causes some "bundlers" throw an error.
+// https://github.com/ZJONSSON/node-unzipper/issues/330
+//
+// One workaround is to install "@aws-sdk/client-s3" package manually, which would still lead to increased bundle size.
+// If the code is bundled for server-side-use only, that is will not be used in a web browser,
+// then the increased bundle size would not be an issue.
+//
+// Another workaround could be to "alias" "@aws-sdk/client-s3" package in a "bundler" configuration file
+// with a path to a `*.js` file containing just "export default null". But that kind of a workaround would also
+// result in errors when using other packages that `import` anything from "@aws-sdk/client-s3" package,
+// so it's not really a workaround but more of a ticking bomb.
+//
 import unzip from 'unzipper'
 
 /**

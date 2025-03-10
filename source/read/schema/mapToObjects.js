@@ -33,7 +33,7 @@ const DEFAULT_OPTIONS = {
  * @param {object} [options.rowIndexMap] — Custom row index mapping `data` rows. If present, will overwrite the indexes of `data` rows with the indexes from this `rowIndexMap`.
  * @return {object[]}
  */
-export default function(data, schema, options) {
+export default function mapToObjects(data, schema, options) {
   if (options) {
     options = {
       ...DEFAULT_OPTIONS,

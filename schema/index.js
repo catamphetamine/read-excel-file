@@ -1,1 +1,1 @@
-export { default as default } from '../modules/read/schema/convertToJson.legacy.js'
+export { default as default } from '../modules/read/schema/mapToObjects.legacy.js'

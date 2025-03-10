@@ -258,9 +258,9 @@ readXlsxFile(file, { schema }).then(({ rows, errors }) => {
 The function for converting input data rows to JSON objects using a schema is exported independently as `read-excel-file/map`, if anyone's interested.
 
 ```js
-import convertToJson from "read-excel-file/map"
+import mapToObjects from "read-excel-file/map"
 
-const { rows, errors } = convertToJson(data, schema, options)
+const { rows, errors } = mapToObjects(data, schema, options)
 ```
 
 Maps a list of rows — `data` — into a list of objects — `rows` — using a `schema` as a mapping specification.

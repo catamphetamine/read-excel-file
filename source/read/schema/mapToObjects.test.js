@@ -1,4 +1,4 @@
-import convertToJson, { parseArray, getBlock } from './convertToJson.js'
+import mapToObjects, { parseArray, getBlock } from './mapToObjects.js'
 
 import Integer from '../../types/Integer.js'
 import URL from '../../types/URL.js'
@@ -6,14 +6,14 @@ import Email from '../../types/Email.js'
 
 const date = convertToUTCTimezone(new Date(2018, 3 - 1, 24))
 
-describe('convertToJson', () => {
+describe('mapToObjects', () => {
 	it('should parse arrays', () => {
 		getBlock('abc"de,f"g,h', ',', 0).should.deep.equal(['abcde,fg', 10])
 		parseArray(' abc"de,f"g  , h ', ',').should.deep.equal(['abcde,fg', 'h'])
 	})
 
 	it('should convert to json', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'DATE',
 				'NUMBER',
@@ -76,7 +76,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should support schema entries with no `type`s', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'DATE',
 				'NUMBER',
@@ -117,7 +117,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should require fields when cell value is empty', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'NUMBER',
 				'STRING'
@@ -154,7 +154,7 @@ describe('convertToJson', () => {
 	})
 
 	it('shouldn\'t require fields when cell value is empty and object is empty too', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'NUMBER'
 			],
@@ -173,7 +173,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should parse arrays', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'NAMES'
 			], [
@@ -197,7 +197,7 @@ describe('convertToJson', () => {
 
 	it('should parse integers', () =>
 	{
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'INTEGER'
 			], [
@@ -229,7 +229,7 @@ describe('convertToJson', () => {
 
 	it('should parse URLs', () =>
 	{
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'URL'
 			], [
@@ -256,7 +256,7 @@ describe('convertToJson', () => {
 
 	it('should parse Emails', () =>
 	{
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'EMAIL'
 			], [
@@ -282,7 +282,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should call .validate()', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'NAME'
 			], [
@@ -313,7 +313,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should validate numbers', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'NUMBER'
 			], [
@@ -340,7 +340,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should validate booleans', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'TRUE',
 				'FALSE',
@@ -384,7 +384,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should validate dates', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'DATE',
 				'INVALID'
@@ -432,7 +432,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should throw parse() errors', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'PHONE',
 				'PHONE_TYPE'
@@ -471,7 +471,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should map row numbers', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'NUMBER'
 			], [
@@ -497,7 +497,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should validate "oneOf" (valid)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'STATUS'
 			],
@@ -519,7 +519,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should validate "oneOf" (not valid)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'STATUS'
 			],
@@ -548,7 +548,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should not include `null` values by default', function() {
-		const { rows } = convertToJson(
+		const { rows } = mapToObjects(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', 'ca', null],
@@ -586,7 +586,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should handle missing columns / empty cells (default) (`required: false`)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -636,7 +636,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn: null`) (`required: false`)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -691,7 +691,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should handle missing columns / empty cells (`schemaPropertyValueForNullCellValue: null`) (`required: false`)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -746,7 +746,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn: null` and `schemaPropertyValueForNullCellValue: null`) (`required: false`)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -802,7 +802,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn: null` and `schemaPropertyValueForNullCellValue: null` and `schemaPropertyShouldSkipRequiredValidationForMissingColumn()` not specified) (`required: true`)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -870,7 +870,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn: null` and `schemaPropertyValueForNullCellValue: null` and `schemaPropertyShouldSkipRequiredValidationForMissingColumn: () => false`) (`required: true`)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -939,7 +939,7 @@ describe('convertToJson', () => {
 	})
 
 	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn: null` and `schemaPropertyValueForNullCellValue: null` and `schemaPropertyShouldSkipRequiredValidationForMissingColumn: () => true`) (`required: true`)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'COLUMN_2',
 				'COLUMN_3',

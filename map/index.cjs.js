@@ -3,5 +3,5 @@
 // It fixes the issue when some software doesn't see files with `*.cjs` file extensions
 // when used as the `main` property value in `package.json`.
 
-exports = module.exports = require('../commonjs/read/schema/convertToJson.js').default
-exports['default'] = require('../commonjs/read/schema/convertToJson.js').default
+exports = module.exports = require('../commonjs/read/schema/mapToObjects.js').default
+exports['default'] = require('../commonjs/read/schema/mapToObjects.js').default

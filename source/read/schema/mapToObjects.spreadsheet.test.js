@@ -1,13 +1,13 @@
-import convertToJson_ from './convertToJson.js'
-import convertToJsonSpreadsheetBehavior from './convertToJson.spreadsheet.js'
+import mapToObjects_ from './mapToObjects.js'
+import mapToObjectsSpreadsheetBehavior from './mapToObjects.spreadsheet.js'
 
-function convertToJson(data, schema, options) {
-	return convertToJsonSpreadsheetBehavior(convertToJson_, data, schema, options)
+function mapToObjects(data, schema, options) {
+	return mapToObjectsSpreadsheetBehavior(mapToObjects_, data, schema, options)
 }
 
-describe('convertToJson (spreadsheet behavior)', () => {
+describe('mapToObjects (spreadsheet behavior)', () => {
 	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn: null`) (`required: false`)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -62,7 +62,7 @@ describe('convertToJson (spreadsheet behavior)', () => {
 	})
 
 	it('should handle missing columns / empty cells (`schemaPropertyValueForEmptyCell: null`) (`required: false`)', () => {
-		const { rows, errors } = convertToJson([
+		const { rows, errors } = mapToObjects([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
