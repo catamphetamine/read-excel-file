@@ -15,4 +15,8 @@ describe('buffer', () => {
 			['Test 123']
 		])
 	})
+
+	it('should handle empty buffer input', async () => {
+		expect(() => readXlsx(Buffer.alloc(0))).to.throw('No data')
+	})
 })

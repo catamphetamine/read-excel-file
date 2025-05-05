@@ -31,7 +31,7 @@ export default function unpackXlsxFile(input) {
     ? input
     : (
       input instanceof Buffer
-        ? Readable.from(input)
+        ? createReadableStreamFromBuffer(input)
         : fs.createReadStream(input)
     )
 
@@ -44,7 +44,11 @@ export default function unpackXlsxFile(input) {
       .pipe(unzip.Parse())
       // This second "error" listener is for the unzip stream errors.
       .on('error', reject)
-      .on('close', () =>  Promise.all(entryPromises).then(() => resolve(entries)))
+      .on('finish', () => {
+      })
+      .on('close', () => {
+        Promise.all(entryPromises).then(() => resolve(entries))
+      })
       .on('entry', (entry) => {
         let contents = ''
         // To ignore an entry: `entry.autodrain()`.
@@ -69,4 +73,15 @@ export default function unpackXlsxFile(input) {
         }))
       })
   })
+}
+
+// Creates a readable stream from a `Buffer`.
+function createReadableStreamFromBuffer(buffer) {
+  // Node.js seems to have a bug in `Readable.from()` function:
+  // it doesn't correctly handle empty buffers, i.e. it doesn't return a correct stream.
+  // https://gitlab.com/catamphetamine/read-excel-file/-/issues/106
+  if (buffer.length === 0) {
+    throw new Error('No data')
+  }
+  return Readable.from(buffer)
 }
