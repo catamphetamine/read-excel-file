@@ -62,7 +62,7 @@ Note: Internet Explorer 11 is an old browser that doesn't support [`Promise`](ht
 Example 1: Read data from a file at file path.
 
 ```js
-// Notice how it imports from '/node' subpackage.
+// Import from '/node' subpackage.
 const readXlsxFile = require('read-excel-file/node')
 
 // Read data from a file by file path.
@@ -127,7 +127,7 @@ input.addEventListener('change', () => {
 ##### `web-worker.js`
 
 ```js
-// Notice how it imports from '/web-worker' subpackage.
+// Import from '/web-worker' subpackage.
 import readXlsxFile from 'read-excel-file/web-worker'
 
 onmessage = function(event) {
