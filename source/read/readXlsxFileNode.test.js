@@ -5,47 +5,46 @@ import readXlsxFileNode from './readXlsxFileNode.js'
 describe('readXlsxFileNode', () => {
 	it('should read *.xlsx file on Node.js and parse it to JSON', () => {
 		const schema = {
-			'START DATE': {
-				prop: 'date',
+			date: {
+				column: 'START DATE',
 				type: Date
 			},
-			'NUMBER OF STUDENTS': {
-				prop: 'numberOfStudents',
+			numberOfStudents: {
+				column: 'NUMBER OF STUDENTS',
 				type: Number,
 				required: true
 			},
-			'COURSE': {
-				prop: 'course',
-				type: {
-					'IS FREE': {
-						prop: 'isFree',
+			course: {
+				schema: {
+					isFree: {
+						column: 'IS FREE',
 						type: Boolean
 						// Excel stores booleans as numbers:
 						// `1` is `true` and `0` is `false`.
 						// Such numbers are parsed into booleans.
 					},
-					'COST': {
-						prop: 'cost',
+					cost: {
+						column: 'COST',
 						type: Number
 					},
-					'COURSE TITLE': {
-						prop: 'title',
+					title: {
+						column: 'COURSE TITLE',
 						type: String
 					}
 				}
 			},
-			'CONTACT': {
-				prop: 'contact',
+			contact: {
+				column: 'CONTACT',
 				required: true,
-				parse(value) {
+				type(value) {
 					return '+11234567890'
 				}
 			}
 		}
 
-		const rowMap = []
+		const rowIndexSourceMap = []
 
-		return readXlsxFileNode(path.resolve('./test/spreadsheets/course.xlsx'), { schema, rowMap }).then(({ rows }) => {
+		return readXlsxFileNode(path.resolve('./test/spreadsheets/course.xlsx'), { schema, rowIndexSourceMap }).then(({ rows }) => {
 			rows[0].date = rows[0].date.getTime()
 			rows.should.deep.equal([{
 				date: convertToUTCTimezone(new Date(2018, 2, 24)).getTime(),
@@ -57,40 +56,7 @@ describe('readXlsxFileNode', () => {
 				},
 				contact: '+11234567890'
 			}])
-			rowMap.should.deep.equal([0, 1])
-		})
-	})
-
-	it('should read *.xlsx file on Node.js and map it to JSON', () => {
-		const map = {
-			'START DATE': 'date',
-			'NUMBER OF STUDENTS': 'numberOfStudents',
-			'COURSE': {
-				'course': {
-					'IS FREE': 'isFree',
-					'COST': 'cost',
-					'COURSE TITLE': 'title'
-				}
-			},
-			'CONTACT': 'contact'
-		}
-
-		const rowMap = []
-
-		return readXlsxFileNode(path.resolve('./test/spreadsheets/course.xlsx'), { map, rowMap }).then(({ rows, errors }) => {
-			errors.should.deep.equal([])
-			rows[0].date = rows[0].date.getTime()
-			rows.should.deep.equal([{
-				date: convertToUTCTimezone(new Date(2018, 2, 24)).getTime(),
-				numberOfStudents: 123,
-				course: {
-					isFree: false,
-					cost: 210.45,
-					title: 'Chemistry'
-				},
-				contact: '(123) 456-7890'
-			}])
-			rowMap.should.deep.equal([0, 1])
+			rowIndexSourceMap.should.deep.equal([0, 1])
 		})
 	})
 })

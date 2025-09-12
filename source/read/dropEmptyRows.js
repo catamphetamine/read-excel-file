@@ -1,5 +1,5 @@
 export default function dropEmptyRows(data, {
-  rowIndexMap,
+  rowIndexSourceMap,
   accessor = _ => _,
   onlyTrimAtTheEnd
 } = {}) {
@@ -17,8 +17,8 @@ export default function dropEmptyRows(data, {
     // Remove the empty row.
     if (empty) {
       data.splice(i, 1)
-      if (rowIndexMap) {
-        rowIndexMap.splice(i, 1)
+      if (rowIndexSourceMap) {
+        rowIndexSourceMap.splice(i, 1)
       }
     } else if (onlyTrimAtTheEnd) {
       break

@@ -1,3 +1,40 @@
+6.0.0 / 12.09.2025
+==================
+
+* (breaking change) Removed `ignoreEmptyRows: true` option.
+
+* (breaking change) Removed `read-excel-file/schema` subpackage. Removed `read-excel-file/map` subpackage.
+
+* (breaking change) Changed `schema` parsing of empty columns.
+  - Old behavior: When parsing with a `schema`, empty columns were `undefined` and missing columns were also `undefined`.
+  - New behavior: When parsing with a `schema`, empty columns are `null` and missing columns are still `undefined`.
+    - This new behavior works better with Sequelize: when performing an `.update()` of a database record, `null` values (empty columns) will be set to `NULL` while `undefined` values (missing columns) will be ignored and will not be set to `NULL`.
+    - The old behavior could be restored by passing `schemaPropertyValueForMissingValue: undefined` option.
+
+* (breaking change) Renamed `schemaEntry.parse` property to `schemaEntry.type`.
+
+* (breaking change) Changed `schema` format:
+  - Old behavior: `Object.keys(schema)` were column titles and `schema[key].prop` was the property name.
+    - Example: `{ "COLUMN": { prop: "property" } }`
+  - New behavior: `Object.keys(schema)` are property names and `schema[key].colum` is the column title.
+    - Example: `{ "property": { column: "COLUMN" } }`
+
+* (breaking change) Changed nested `schema` format:
+  - Old behavior: `type` property described the schema of the nested object.
+    - Example: `{ "NESTED OBJECT": { prop: "nestedObject", type: { "COLUMN": { prop: "property" } } } }`
+  - New behavior: `schema` property describes the schema of the nested object.
+    - Example: `{ "nestedObject": { "schema": { "property": { column: "COLUMN" } } } }`
+
+* (breaking change) `errors` entries for nested objects now don't have a `type` property.
+
+* (breaking change) Removed `map` option. Use `schema` option instead.
+
+* (breaking change) Renamed option: `schemaPropertyValueForEmptyCell` → `schemaPropertyValueForMissingValue`.
+
+* (breaking change) Removed deprecated option `includeNullValues: true`.
+
+* (breaking change) Renamed `rowMap` / `rowIndexMap` parameters to `rowIndexSourceMap`.
+
 5.8.0 / 01.05.2024
 ==================
 

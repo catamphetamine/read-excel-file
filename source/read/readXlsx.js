@@ -75,9 +75,9 @@ export default function readXlsx(contents, xml, options = {}) {
   )
 
   options = {
-    // Create a `rowIndexMap` for the original dataset, if not passed,
+    // Create a `rowIndexSourceMap` for the original dataset, if not passed,
     // because "empty" rows will be dropped from the input data.
-    rowMap: [],
+    rowIndexSourceMap: [],
     ...options
   }
 

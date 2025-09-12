@@ -24,6 +24,14 @@ npm-debug.log
 /source/
 *.test.js
 
+# demo
+/bundle/index.html
+/bundle/lib/
+/website/
+
+# utility scripts used during the "build" phase
+/build-scripts/
+
 # Sublime
 *.sublime-workspace
 *.sublime-project

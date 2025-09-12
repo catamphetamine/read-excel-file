@@ -38,7 +38,7 @@ describe('dropEmptyRows', () => {
 	})
 
 	it('should generate row map when dropping empty rows', () => {
-		const rowIndexMap = [0, 1, 2, 3, 4]
+		const rowIndexSourceMap = [0, 1, 2, 3, 4]
 
 		dropEmptyRows([
 			[null, null, null],
@@ -47,13 +47,13 @@ describe('dropEmptyRows', () => {
 			[null, null, null],
 			['E', 'F', 'G']
 		],
-		{ rowIndexMap })
+		{ rowIndexSourceMap })
 		.should.deep.equal([
 			['A', 'B', 'C'],
 			[null, 'D', null],
 			['E', 'F', 'G']
 		])
 
-		rowIndexMap.should.deep.equal([1, 2, 4])
+		rowIndexSourceMap.should.deep.equal([1, 2, 4])
 	})
 })

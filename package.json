@@ -1,7 +1,7 @@
 {
   "name": "read-excel-file",
-  "version": "5.8.8",
-  "description": "Read small to medium `*.xlsx` files in a browser or Node.js. Parse to JSON with a strict schema.",
+  "version": "6.0.1",
+  "description": "Read `*.xlsx` files of moderate size in a web browser or on a server.",
   "module": "index.js",
   "main": "index.cjs",
   "type": "module",
@@ -21,16 +21,6 @@
       "import": "./web-worker/index.js",
       "require": "./web-worker/index.cjs"
     },
-    "./schema": {
-      "types": "./schema/index.d.ts",
-      "import": "./schema/index.js",
-      "require": "./schema/index.cjs"
-    },
-    "./map": {
-      "types": "./map/index.d.ts",
-      "import": "./map/index.js",
-      "require": "./map/index.cjs"
-    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
@@ -39,7 +29,7 @@
     "test": "mocha --colors --bail --reporter spec --require ./test/setup.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
     "clean-for-build": "rimraf ./commonjs/**/* ./modules/**/*",
     "build-commonjs-modules": "better-npm-run build-commonjs-modules",
-    "build-commonjs-package.json": "node runnable/create-commonjs-package-json.js",
+    "build-commonjs-package.json": "node build-scripts/create-commonjs-package-json.js",
     "build-commonjs": "npm-run-all build-commonjs-modules build-commonjs-package.json",
     "build-es6-modules": "better-npm-run build-es6-modules",
     "browser-build": "rollup --config rollup.config.mjs",
@@ -47,9 +37,9 @@
     "prepublishOnly": "npm-run-all build test browser-build"
   },
   "dependencies": {
-    "@xmldom/xmldom": "^0.8.2",
-    "fflate": "^0.7.3",
-    "unzipper": "^0.12.2"
+    "@xmldom/xmldom": "^0.8.11",
+    "fflate": "^0.8.2",
+    "unzipper": "^0.12.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.10",

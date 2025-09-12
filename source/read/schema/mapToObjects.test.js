@@ -30,30 +30,30 @@ describe('mapToObjects', () => {
 				'(123) 456-7890'
 			]
 		], {
-			DATE: {
-				prop: 'date',
+			date: {
+				column: 'DATE',
 				type: Date
 			},
-			NUMBER: {
-				prop: 'number',
+			number: {
+				column: 'NUMBER',
 				type: Number
 			},
-			BOOLEAN: {
-				prop: 'boolean',
+			boolean: {
+				column: 'BOOLEAN',
 				type: Boolean
 			},
-			STRING: {
-				prop: 'string',
+			string: {
+				column: 'STRING',
 				type: String
 			},
-			PHONE: {
-				prop: 'phone',
-				parse(value) {
+			phone: {
+				column: 'PHONE',
+				type(value) {
 					return '+11234567890'
 				}
 			},
-			PHONE_TYPE: {
-				prop: 'phoneType',
+			phoneType: {
+				column: 'PHONE_TYPE',
 				type(value) {
 					return '+11234567890'
 				}
@@ -89,17 +89,17 @@ describe('mapToObjects', () => {
 				'abc'
 			]
 		], {
-			DATE: {
-				prop: 'date'
+			date: {
+				column: 'DATE'
 			},
-			NUMBER: {
-				prop: 'number'
+			number: {
+				column: 'NUMBER'
 			},
-			BOOLEAN: {
-				prop: 'boolean'
+			boolean: {
+				column: 'BOOLEAN'
 			},
-			STRING: {
-				prop: 'string'
+			string: {
+				column: 'STRING'
 			}
 		})
 
@@ -127,13 +127,13 @@ describe('mapToObjects', () => {
 				'abc'
 			]
 		], {
-			NUMBER: {
-				prop: 'number',
+			number: {
+				column: 'NUMBER',
 				type: Number,
 				required: true
 			},
-			STRING: {
-				prop: 'string',
+			string: {
+				column: 'STRING',
 				type: String,
 				required: true
 			}
@@ -153,7 +153,7 @@ describe('mapToObjects', () => {
 		}])
 	})
 
-	it('shouldn\'t require fields when cell value is empty and object is empty too', () => {
+	it('shouldn\'t require fields when cell value is empty and object is empty too (`ignoreEmptyRows: false`', () => {
 		const { rows, errors } = mapToObjects([
 			[
 				'NUMBER'
@@ -162,17 +162,38 @@ describe('mapToObjects', () => {
 				null
 			]
 		], {
-			NUMBER: {
-				prop: 'number',
+			number: {
+				column: 'NUMBER',
 				type: Number,
 				required: true
 			}
+		}, {
+			ignoreEmptyRows: false
 		})
 
 		rows.should.deep.equal([null])
 	})
 
-	it('should parse arrays', () => {
+	it('shouldn\'t require fields when cell value is empty and object is empty too (`ignoreEmptyRows` not specified)', () => {
+		const { rows, errors } = mapToObjects([
+			[
+				'NUMBER'
+			],
+			[
+				null
+			]
+		], {
+			number: {
+				column: 'NUMBER',
+				type: Number,
+				required: true
+			}
+		})
+
+		rows.should.deep.equal([])
+	})
+
+	it('should parse arrays (`ignoreEmptyRows: false`)', () => {
 		const { rows, errors } = mapToObjects([
 			[
 				'NAMES'
@@ -182,8 +203,33 @@ describe('mapToObjects', () => {
 				null
 			]
 		], {
-			NAMES: {
-				prop: 'names',
+			names: {
+				column: 'NAMES',
+				type: [String]
+			}
+		}, {
+			ignoreEmptyRows: false
+		})
+
+		errors.should.deep.equal([])
+
+		rows.should.deep.equal([{
+			names: ['Barack Obama', 'String, with, colons', 'Donald Trump']
+		}, null])
+	})
+
+	it('should parse arrays (`ignoreEmptyRows` not specified)', () => {
+		const { rows, errors } = mapToObjects([
+			[
+				'NAMES'
+			], [
+				'Barack Obama, "String, with, colons", Donald Trump'
+			], [
+				null
+			]
+		], {
+			names: {
+				column: 'NAMES',
 				type: [String]
 			}
 		})
@@ -192,7 +238,7 @@ describe('mapToObjects', () => {
 
 		rows.should.deep.equal([{
 			names: ['Barack Obama', 'String, with, colons', 'Donald Trump']
-		}, null])
+		}])
 	})
 
 	it('should parse integers', () =>
@@ -206,8 +252,8 @@ describe('mapToObjects', () => {
 				'1.2'
 			]
 		], {
-			INTEGER: {
-				prop: 'value',
+			value: {
+				column: 'INTEGER',
 				type: Integer
 			}
 		})
@@ -238,8 +284,8 @@ describe('mapToObjects', () => {
 				'kremlin.ru'
 			]
 		], {
-			URL: {
-				prop: 'value',
+			value: {
+				column: 'URL',
 				type: URL
 			}
 		})
@@ -265,8 +311,8 @@ describe('mapToObjects', () => {
 				'123'
 			]
 		], {
-			EMAIL: {
-				prop: 'value',
+			value: {
+				column: 'EMAIL',
 				type: Email
 			}
 		})
@@ -289,8 +335,8 @@ describe('mapToObjects', () => {
 				'George Bush'
 			]
 		], {
-			NAME: {
-				prop: 'name',
+			name: {
+				column: 'NAME',
 				type: String,
 				required: true,
 				validate: (value) => {
@@ -320,8 +366,8 @@ describe('mapToObjects', () => {
 				'123abc'
 			]
 		], {
-			NUMBER: {
-				prop: 'number',
+			number: {
+				column: 'NUMBER',
 				type: Number,
 				required: true
 			}
@@ -351,18 +397,18 @@ describe('mapToObjects', () => {
 				'TRUE'
 			]
 		], {
-			TRUE: {
-				prop: 'true',
+			true: {
+				column: 'TRUE',
 				type: Boolean,
 				required: true
 			},
-			FALSE: {
-				prop: 'false',
+			false: {
+				column: 'FALSE',
 				type: Boolean,
 				required: true
 			},
-			INVALID: {
-				prop: 'invalid',
+			invalid: {
+				column: 'INVALID',
 				type: Boolean,
 				required: true
 			}
@@ -396,13 +442,13 @@ describe('mapToObjects', () => {
 				'-'
 			]
 		], {
-			DATE: {
-				prop: 'date',
+			date: {
+				column: 'DATE',
 				type: Date,
 				required: true
 			},
-			INVALID: {
-				prop: 'invalid',
+			invalid: {
+				column: 'INVALID',
 				type: Date,
 				required: true
 			}
@@ -432,6 +478,10 @@ describe('mapToObjects', () => {
 	})
 
 	it('should throw parse() errors', () => {
+		const type = () => {
+			throw new Error('invalid')
+		}
+
 		const { rows, errors } = mapToObjects([
 			[
 				'PHONE',
@@ -441,17 +491,13 @@ describe('mapToObjects', () => {
 				'123'
 			]
 		], {
-			PHONE: {
-				prop: 'phone',
-				parse: () => {
-					throw new Error('invalid')
-				}
+			phone: {
+				column: 'PHONE',
+				type
 			},
-			PHONE_TYPE: {
-				prop: 'phoneType',
-				parse: () => {
-					throw new Error('invalid')
-				}
+			phoneType: {
+				column: 'PHONE_TYPE',
+				type
 			}
 		})
 
@@ -459,12 +505,14 @@ describe('mapToObjects', () => {
 			error: 'invalid',
 			row: 2,
 			column: 'PHONE',
-			value: '123'
+			value: '123',
+			type
 		}, {
 			error: 'invalid',
 			row: 2,
 			column: 'PHONE_TYPE',
-			value: '123'
+			value: '123',
+			type
 		}])
 
 		rows.should.deep.equal([null])
@@ -478,12 +526,12 @@ describe('mapToObjects', () => {
 				'123abc'
 			]
 		], {
-			NUMBER: {
-				prop: 'number',
+			number: {
+				column: 'NUMBER',
 				type: Number
 			}
 		}, {
-			rowIndexMap: [2, 5]
+			rowIndexSourceMap: [2, 5]
 		})
 
 		errors.should.deep.equal([{
@@ -505,8 +553,8 @@ describe('mapToObjects', () => {
 				'STARTED'
 			]
 		], {
-			STATUS: {
-				prop: 'status',
+			status: {
+				column: 'STATUS',
 				type: String,
 				oneOf: [
 					'STARTED',
@@ -527,8 +575,8 @@ describe('mapToObjects', () => {
 				'SCHEDULED'
 			]
 		], {
-			STATUS: {
-				prop: 'status',
+			status: {
+				column: 'STATUS',
 				type: String,
 				oneOf: [
 					'STARTED',
@@ -555,23 +603,23 @@ describe('mapToObjects', () => {
 				['a', null]
 			],
 			{
-				A: {
-					prop: 'a',
+				a: {
+					column: 'A',
 					type: String
 				},
-				B: {
-					prop: 'b',
+				b: {
+					column: 'B',
 					type: String
 				},
-				C: {
-					prop: 'c',
-    			type: {
-						CA: {
-							prop: 'a',
+				c: {
+					column: 'C',
+    			schema: {
+						a: {
+							column: 'CA',
 							type: String
 						},
-						CB: {
-							prop: 'b',
+						b: {
+							column: 'CB',
 							type: String
 						}
 					}
@@ -601,23 +649,23 @@ describe('mapToObjects', () => {
 				null
 			]
 		], {
-			COLUMN_1: {
-				prop: 'column1',
+			column1: {
+				column: 'COLUMN_1',
 				type: String,
 				required: false
 			},
-			COLUMN_2: {
-				prop: 'column2',
+			column2: {
+				column: 'COLUMN_2',
 				type: String,
 				required: false
 			},
-			COLUMN_4: {
-				prop: 'column4',
+			column4: {
+				column: 'COLUMN_4',
 				type: String,
 				required: false
 			},
-			COLUMN_5: {
-				prop: 'column5',
+			column5: {
+				column: 'COLUMN_5',
 				type: String,
 				required: false
 			}
@@ -651,23 +699,23 @@ describe('mapToObjects', () => {
 				null
 			]
 		], {
-			COLUMN_1: {
-				prop: 'column1',
+			column1: {
+				column: 'COLUMN_1',
 				type: String,
 				required: false
 			},
-			COLUMN_2: {
-				prop: 'column2',
+			column2: {
+				column: 'COLUMN_2',
 				type: String,
 				required: false
 			},
-			COLUMN_4: {
-				prop: 'column4',
+			column4: {
+				column: 'COLUMN_4',
 				type: String,
 				required: false
 			},
-			COLUMN_5: {
-				prop: 'column5',
+			column5: {
+				column: 'COLUMN_5',
 				type: String,
 				required: false
 			}
@@ -690,6 +738,167 @@ describe('mapToObjects', () => {
 		}])
 	})
 
+	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingValue` option is not passed) (`required: false`)', () => {
+		const { rows, errors } = mapToObjects([
+			[
+				'COLUMN_2',
+				'COLUMN_3',
+				'COLUMN_4'
+			], [
+				'12',
+				'13',
+				'14'
+			], [
+				'22',
+				'23',
+				null
+			]
+		], {
+			column1: {
+				column: 'COLUMN_1',
+				type: String,
+				required: false
+			},
+			column2: {
+				column: 'COLUMN_2',
+				type: String,
+				required: false
+			},
+			column4: {
+				column: 'COLUMN_4',
+				type: String,
+				required: false
+			},
+			column5: {
+				column: 'COLUMN_5',
+				type: String,
+				required: false
+			}
+		})
+
+		errors.should.deep.equal([])
+
+		rows.should.deep.equal([{
+			// column1: undefined,
+			column2: '12',
+			column4: '14',
+			// column5: undefined
+		}, {
+			// column1: undefined,
+			column2: '22',
+			column4: null,
+			// column5: undefined
+		}])
+	})
+
+	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingValue: undefined`) (`required: false`)', () => {
+		const { rows, errors } = mapToObjects([
+			[
+				'COLUMN_2',
+				'COLUMN_3',
+				'COLUMN_4'
+			], [
+				'12',
+				'13',
+				'14'
+			], [
+				'22',
+				'23',
+				null
+			]
+		], {
+			column1: {
+				column: 'COLUMN_1',
+				type: String,
+				required: false
+			},
+			column2: {
+				column: 'COLUMN_2',
+				type: String,
+				required: false
+			},
+			column4: {
+				column: 'COLUMN_4',
+				type: String,
+				required: false
+			},
+			column5: {
+				column: 'COLUMN_5',
+				type: String,
+				required: false
+			}
+		}, {
+			schemaPropertyValueForMissingValue: undefined
+		})
+
+		errors.should.deep.equal([])
+
+		rows.should.deep.equal([{
+			// column1: undefined,
+			column2: '12',
+			column4: '14',
+			// column5: undefined
+		}, {
+			// column1: undefined,
+			column2: '22',
+			// column4: undefined,
+			// column5: undefined
+		}])
+	})
+
+	it('should handle missing columns / empty cells (`schemaPropertyValueForMissingColumn` option is not passed) (`required: false`)', () => {
+		const { rows, errors } = mapToObjects([
+			[
+				'COLUMN_2',
+				'COLUMN_3',
+				'COLUMN_4'
+			], [
+				'12',
+				'13',
+				'14'
+			], [
+				'22',
+				'23',
+				null
+			]
+		], {
+			column1: {
+				column: 'COLUMN_1',
+				type: String,
+				required: false
+			},
+			column2: {
+				column: 'COLUMN_2',
+				type: String,
+				required: false
+			},
+			column4: {
+				column: 'COLUMN_4',
+				type: String,
+				required: false
+			},
+			column5: {
+				column: 'COLUMN_5',
+				type: String,
+				required: false
+			}
+		})
+
+		errors.should.deep.equal([])
+
+		rows.should.deep.equal([{
+			// column1: undefined,
+			column2: '12',
+			column4: '14',
+			// column5: undefined
+		}, {
+			// column1: undefined,
+			column2: '22',
+			column4: null,
+			// column5: undefined
+		}])
+	})
+
 	it('should handle missing columns / empty cells (`schemaPropertyValueForNullCellValue: null`) (`required: false`)', () => {
 		const { rows, errors } = mapToObjects([
 			[
@@ -706,23 +915,23 @@ describe('mapToObjects', () => {
 				null
 			]
 		], {
-			COLUMN_1: {
-				prop: 'column1',
+			column1: {
+				column: 'COLUMN_1',
 				type: String,
 				required: false
 			},
-			COLUMN_2: {
-				prop: 'column2',
+			column2: {
+				column: 'COLUMN_2',
 				type: String,
 				required: false
 			},
-			COLUMN_4: {
-				prop: 'column4',
+			column4: {
+				column: 'COLUMN_4',
 				type: String,
 				required: false
 			},
-			COLUMN_5: {
-				prop: 'column5',
+			column5: {
+				column: 'COLUMN_5',
 				type: String,
 				required: false
 			}
@@ -761,23 +970,23 @@ describe('mapToObjects', () => {
 				null
 			]
 		], {
-			COLUMN_1: {
-				prop: 'column1',
+			column1: {
+				column: 'COLUMN_1',
 				type: String,
 				required: false
 			},
-			COLUMN_2: {
-				prop: 'column2',
+			column2: {
+				column: 'COLUMN_2',
 				type: String,
 				required: false
 			},
-			COLUMN_4: {
-				prop: 'column4',
+			column4: {
+				column: 'COLUMN_4',
 				type: String,
 				required: false
 			},
-			COLUMN_5: {
-				prop: 'column5',
+			column5: {
+				column: 'COLUMN_5',
 				type: String,
 				required: false
 			}
@@ -817,23 +1026,23 @@ describe('mapToObjects', () => {
 				null
 			]
 		], {
-			COLUMN_1: {
-				prop: 'column1',
+			column1: {
+				column: 'COLUMN_1',
 				type: String,
 				required: false
 			},
-			COLUMN_2: {
-				prop: 'column2',
+			column2: {
+				column: 'COLUMN_2',
 				type: String,
 				required: false
 			},
-			COLUMN_4: {
-				prop: 'column4',
+			column4: {
+				column: 'COLUMN_4',
 				type: String,
 				required: false
 			},
-			COLUMN_5: {
-				prop: 'column5',
+			column5: {
+				column: 'COLUMN_5',
 				type: String,
 				required: true
 			}
@@ -885,23 +1094,23 @@ describe('mapToObjects', () => {
 				null
 			]
 		], {
-			COLUMN_1: {
-				prop: 'column1',
+			column1: {
+				column: 'COLUMN_1',
 				type: String,
 				required: false
 			},
-			COLUMN_2: {
-				prop: 'column2',
+			column2: {
+				column: 'COLUMN_2',
 				type: String,
 				required: false
 			},
-			COLUMN_4: {
-				prop: 'column4',
+			column4: {
+				column: 'COLUMN_4',
 				type: String,
 				required: false
 			},
-			COLUMN_5: {
-				prop: 'column5',
+			column5: {
+				column: 'COLUMN_5',
 				type: String,
 				required: true
 			}
@@ -954,23 +1163,23 @@ describe('mapToObjects', () => {
 				null
 			]
 		], {
-			COLUMN_1: {
-				prop: 'column1',
+			column1: {
+				column: 'COLUMN_1',
 				type: String,
 				required: false
 			},
-			COLUMN_2: {
-				prop: 'column2',
+			column2: {
+				column: 'COLUMN_2',
 				type: String,
 				required: false
 			},
-			COLUMN_4: {
-				prop: 'column4',
+			column4: {
+				column: 'COLUMN_4',
 				type: String,
 				required: false
 			},
-			COLUMN_5: {
-				prop: 'column5',
+			column5: {
+				column: 'COLUMN_5',
 				type: String,
 				required: true
 			}

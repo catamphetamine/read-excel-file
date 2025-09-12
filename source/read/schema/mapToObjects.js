@@ -5,32 +5,46 @@ import DateType from '../../types/Date.js'
 
 const DEFAULT_OPTIONS = {
   schemaPropertyValueForMissingColumn: undefined,
-  schemaPropertyValueForUndefinedCellValue: undefined,
-  schemaPropertyValueForNullCellValue: null,
+  schemaPropertyValueForMissingValue: null,
   schemaPropertyShouldSkipRequiredValidationForMissingColumn: () => false,
   // `getEmptyObjectValue(object, { path })` applies to both the top-level object
   // and any of its sub-objects.
   getEmptyObjectValue: () => null,
   getEmptyArrayValue: () => null,
   isColumnOriented: false,
+  ignoreEmptyRows: true,
   arrayValueSeparator: ','
 }
 
 /**
- * (this function is exported from `read-excel-file/map`)
  * Converts spreadsheet-alike data structure into an array of objects.
- * The first row should be the list of column headers.
+ *
+ * Parameters:
+ *
+ * * `data` — An array of rows, each row being an array of cells. The first row should be the list of column headers and the rest of the rows should be the data.
+ * * `schema` — A "to JSON" convertion schema (see above).
+ * * `options` — (optional) Schema conversion parameters of `read-excel-file`:
+ *   * `schemaPropertyValueForMissingColumn` — By default, when some of the `schema` columns are missing in the input `data`, those properties are set to `undefined` in the output objects. Pass `schemaPropertyValueForMissingColumn: null` to set such "missing column" properties to `null` in the output objects.
+ *   * `schemaPropertyValueForNullCellValue` — By default, when it encounters a `null` value in a cell in input `data`, it sets it to `undefined` in the output object. Pass `schemaPropertyValueForNullCellValue: null` to make it set such values as `null`s in output objects.
+ *   * `schemaPropertyValueForUndefinedCellValue` — By default, when it encounters an `undefined` value in a cell in input `data`, it it sets it to `undefined` in the output object. Pass `schemaPropertyValueForUndefinedCellValue: null` to make it set such values as `null`s in output objects.
+ *   * `schemaPropertyShouldSkipRequiredValidationForMissingColumn: (column: string, { object }) => boolean` — By default, it does apply `required` validation to `schema` properties for which columns are missing in the input `data`. One could pass a custom `schemaPropertyShouldSkipRequiredValidationForMissingColumn(column, { object })` to disable `required` validation for missing columns in some or all cases.
+ *   * `getEmptyObjectValue(object, { path? })` — By default, it returns `null` for "empty" objects. One could override that value using `getEmptyObjectValue(object, { path })` parameter. The value applies to both top-level object and any nested sub-objects in case of a nested schema, hence the additional (optional) `path?: string` parameter.
+ *   * `getEmptyArrayValue(array, { path })` — By default, it returns `null` for an "empty" array value. One could override that value using `getEmptyArrayValue(array, { path })` parameter.
+ *
+ * When parsing a property value, in case of an error, the value of that property is gonna be `undefined`.
+ *
  * @param {any[][]} data - An array of rows, each row being an array of cells.
  * @param {object} schema
  * @param {object} [options]
  * @param {null} [options.schemaPropertyValueForMissingColumn] — By default, when some of the `schema` columns are missing in the input `data`, those properties are set to `undefined` in the output objects. Pass `schemaPropertyValueForMissingColumn: null` to set such "missing column" properties to `null` in the output objects.
- * @param {null} [options.schemaPropertyValueForNullCellValue] — By default, when it encounters a `null` value in a cell in input `data`, it sets it to `undefined` in the output object. Pass `schemaPropertyValueForNullCellValue: null` to make it set such values as `null`s in output objects.
- * @param {null} [options.schemaPropertyValueForUndefinedCellValue] — By default, when it encounters an `undefined` value in a cell in input `data`, it it sets it to `undefined` in the output object. Pass `schemaPropertyValueForUndefinedCellValue: null` to make it set such values as `null`s in output objects.
+ * @param {null} [options.schemaPropertyValueForMissingValue] — By default, when it encounters a `null` value in a cell in input `data`, it leaves the value as is. Pass a custom `schemaPropertyValueForMissingValue` to make it set such values to that value.
+ * @param {object} [options.properties] — An optional object with optional property `epoch1904: true/false`. It is used when parsing dates.
  * @param {boolean} [options.schemaPropertyShouldSkipRequiredValidationForMissingColumn(column: string, { object })] — By default, it does apply `required` validation to `schema` properties for which columns are missing in the input `data`. One could pass a custom `schemaPropertyShouldSkipRequiredValidationForMissingColumn(column, { object })` to disable `required` validation for missing columns in some or all cases.
  * @param {function} [options.getEmptyObjectValue(object, { path })] — By default, it returns `null` for an "empty" resulting object. One could override that value using `getEmptyObjectValue(object, { path })` parameter. The value applies to both top-level object and any nested sub-objects in case of a nested schema, hence the additional `path?: string` parameter.
  * @param {function} [getEmptyArrayValue(array, { path })] — By default, it returns `null` for an "empty" array value. One could override that value using `getEmptyArrayValue(array, { path })` parameter.
  * @param {boolean} [options.isColumnOriented] — By default, the headers are assumed to be the first row in the `data`. Pass `isColumnOriented: true` if the headers are the first column in the `data`. i.e. if `data` is "transposed".
- * @param {object} [options.rowIndexMap] — Custom row index mapping `data` rows. If present, will overwrite the indexes of `data` rows with the indexes from this `rowIndexMap`.
+ * @param {string} [options.arrayValueSeparator] — When specified, string values will be split by this separator to get the array.
+ * @param {object} [options.rowIndexSourceMap] — Custom row indexes of `data` rows. If present, will overwrite the indexes of `data` rows with the indexes from this `rowIndexSourceMap`.
  * @return {object[]}
  */
 export default function mapToObjects(data, schema, options) {
@@ -45,8 +59,14 @@ export default function mapToObjects(data, schema, options) {
 
   const {
     isColumnOriented,
-    rowIndexMap
+    ignoreEmptyRows,
+    rowIndexSourceMap: rowIndexSourceMapOriginal,
+    ...schemaTransformOptions
   } = options
+
+  // `rowIndexSourceMap` could be mutated by `ignoreEmptyRows: true` option.
+  // Create a copy of it so that the original `rowIndexSourceMap` is not affected by those changes.
+  let rowIndexSourceMap = rowIndexSourceMapOriginal && rowIndexSourceMapOriginal.slice()
 
   validateSchema(schema)
 
@@ -54,24 +74,39 @@ export default function mapToObjects(data, schema, options) {
     data = transpose(data)
   }
 
+	if (ignoreEmptyRows) {
+		data = data.filter((row, i) => {
+      const isEmptyRow = row.every(cell => cell === null)
+      if (isEmptyRow) {
+        // Adjust `rowIndexSourceMap` now that the row has been removed.
+        if (rowIndexSourceMap) {
+          // Remove the `rowIndexSourceMap` entry that corresponds to the removed row.
+          rowIndexSourceMap.splice(i, 1)
+        }
+        return false;
+      }
+      return true;
+    })
+	}
+
   const columns = data[0]
 
   const results = []
   const errors = []
 
   for (let i = 1; i < data.length; i++) {
-    const result = read(schema, data[i], i, undefined, columns, errors, options)
+    const result = read(schema, data[i], i, undefined, columns, errors, schemaTransformOptions)
     results.push(result)
   }
 
-  // Set the correct `row` number in `errors` if a custom `rowIndexMap` is supplied.
-  if (rowIndexMap) {
+  // Set the correct `row` number in `errors` if a custom `rowIndexSourceMap` is supplied.
+  if (rowIndexSourceMap) {
     for (const error of errors) {
       // Convert the `row` index in `data` to the
       // actual `row` index in the spreadsheet.
       // `- 1` converts row number to row index.
       // `+ 1` converts row index to row number.
-      error.row = rowIndexMap[error.row - 1] + 1
+      error.row = rowIndexSourceMap[error.row - 1] + 1
     }
   }
 
@@ -86,7 +121,7 @@ function read(schema, row, rowIndex, path, columns, errors, options) {
   let isEmptyObject = true
 
   const createError = ({
-    column,
+    schemaEntry,
     value,
     error: errorMessage,
     reason
@@ -94,14 +129,16 @@ function read(schema, row, rowIndex, path, columns, errors, options) {
     const error = {
       error: errorMessage,
       row: rowIndex + 1,
-      column,
+      column: schemaEntry.column,
       value
     }
     if (reason) {
       error.reason = reason
     }
-    if (schema[column].type) {
-      error.type = schema[column].type
+    // * Regular values specify a `type?` property, which is included in the `error` object.
+    // * Nested objects specify a `schema` property, which is not included in the `error` object.
+    if (schemaEntry.type) {
+      error.type = schemaEntry.type
     }
     return error
   }
@@ -111,14 +148,19 @@ function read(schema, row, rowIndex, path, columns, errors, options) {
   // For each schema entry.
   for (const key of Object.keys(schema)) {
     const schemaEntry = schema[key]
-    const isNestedSchema = typeof schemaEntry.type === 'object' && !Array.isArray(schemaEntry.type)
+
+    // `schemaEntry.prop` property is now deprecated and shouldn't be used.
+    // Instead, it now uses `key` as the key in the `object`.
+    // And column name is now read not from `key` but from `schemaEntry.column` property.
+    const propertyName = key
+    const columnTitle = schemaEntry.column
 
     // The path of this property inside the resulting object.
-    const propertyPath = `${path || ''}.${schemaEntry.prop}`
+    const propertyPath = `${path || ''}.${propertyName}`
 
     // Read the cell value for the schema entry.
     let cellValue
-    const columnIndex = columns.indexOf(key)
+    const columnIndex = columns.indexOf(columnTitle)
     const isMissingColumn = columnIndex < 0
     if (!isMissingColumn) {
       cellValue = row[columnIndex]
@@ -129,17 +171,25 @@ function read(schema, row, rowIndex, path, columns, errors, options) {
     let reason
 
     // Get property `value` from cell value.
-    if (isNestedSchema) {
-      value = read(schemaEntry.type, row, rowIndex, propertyPath, columns, errors, options)
+    if (schemaEntry.schema) {
+      value = read(schemaEntry.schema, row, rowIndex, propertyPath, columns, errors, options)
     } else {
       if (isMissingColumn) {
-        value = options.schemaPropertyValueForMissingColumn
+        if ('schemaPropertyValueForMissingColumn' in options) {
+          value = options.schemaPropertyValueForMissingColumn
+        }
       }
       else if (cellValue === undefined) {
-        value = options.schemaPropertyValueForUndefinedCellValue
+        // This isn't supposed to be possible. Cell values are always `null` when cells are empty.
+        // Employ some sensible fallback behavior here.
+        if ('schemaPropertyValueForMissingValue' in options) {
+          value = options.schemaPropertyValueForMissingValue
+        }
       }
       else if (cellValue === null) {
-        value = options.schemaPropertyValueForNullCellValue
+        if ('schemaPropertyValueForMissingValue' in options) {
+          value = options.schemaPropertyValueForMissingValue
+        }
       }
       else if (Array.isArray(schemaEntry.type)) {
         const array = parseArray(cellValue, options.arrayValueSeparator).map((_value) => {
@@ -173,7 +223,7 @@ function read(schema, row, rowIndex, path, columns, errors, options) {
       if (schemaEntry.required) {
         // Will perform this `required()` validation in the end,
         // when all properties of the mapped object have been mapped.
-        pendingRequiredChecks.push({ column: key, value, isMissingColumn })
+        pendingRequiredChecks.push({ schemaEntry, value, isMissingColumn })
       }
     }
 
@@ -181,7 +231,7 @@ function read(schema, row, rowIndex, path, columns, errors, options) {
       // If there was an error then the property value in the `object` will be `undefined`,
       // i.e it won't add the property value to the mapped object.
       errors.push(createError({
-        column: key,
+        schemaEntry,
         value,
         error,
         reason
@@ -192,9 +242,10 @@ function read(schema, row, rowIndex, path, columns, errors, options) {
         isEmptyObject = false
       }
       // Set the value in the mapped object.
-      // Skip setting `undefined` values because they're already `undefined`.
+      // Skip setting `undefined` values because they're already `undefined`
+      // due to not having previously been set.
       if (value !== undefined) {
-        object[schemaEntry.prop] = value
+        object[propertyName] = value
       }
     }
   }
@@ -205,15 +256,15 @@ function read(schema, row, rowIndex, path, columns, errors, options) {
   }
 
   // Perform any `required` validations.
-  for (const { column, value, isMissingColumn } of pendingRequiredChecks) {
+  for (const { schemaEntry, value, isMissingColumn } of pendingRequiredChecks) {
     // Can optionally skip `required` validation for missing columns.
-    const skipRequiredValidation = isMissingColumn && options.schemaPropertyShouldSkipRequiredValidationForMissingColumn(column, { object })
+    const skipRequiredValidation = isMissingColumn && options.schemaPropertyShouldSkipRequiredValidationForMissingColumn(schemaEntry.column, { object })
     if (!skipRequiredValidation) {
-      const { required } = schema[column]
+      const { required } = schemaEntry
       const isRequired = typeof required === 'boolean' ? required : required(object)
       if (isRequired) {
         errors.push(createError({
-          column,
+          schemaEntry,
           value,
           error: 'required'
         }))
@@ -237,7 +288,7 @@ export function parseValue(value, schemaEntry, options) {
   }
   let result
   if (schemaEntry.parse) {
-    result = parseCustomValue(value, schemaEntry.parse)
+    throw new Error('`schemaEntry.parse` property was renamed to `schemaEntry.type`')
   } else if (schemaEntry.type) {
     result = parseValueOfType(
       value,
@@ -251,7 +302,7 @@ export function parseValue(value, schemaEntry, options) {
     )
   } else {
     result = { value: value }
-    // throw new Error('Invalid schema entry: no .type and no .parse():\n\n' + JSON.stringify(schemaEntry, null, 2))
+    // throw new Error('Invalid schema entry: no `type` specified:\n\n' + JSON.stringify(schemaEntry, null, 2))
   }
   // If errored then return the error.
   if (result.error) {
@@ -367,9 +418,16 @@ const transpose = array => array[0].map((_, i) => array.map(row => row[i]))
 
 function validateSchema(schema) {
   for (const key of Object.keys(schema)) {
-    const entry = schema[key]
-    if (!entry.prop) {
-      throw new Error(`"prop" not defined for schema entry "${key}".`)
+    const schemaEntry = schema[key]
+    // Validate that the `schema` is not using a deprecated `type: nestedSchema` format.
+    if (typeof schemaEntry.type === 'object' && !Array.isArray(schemaEntry.type)) {
+      throw new Error('When defining a nested schema, use a `schema` property instead of a `type` property')
+    }
+    // Validate that every property has a source `column` title specified for it.
+    if (!schemaEntry.schema) {
+      if (!schemaEntry.column) {
+        throw new Error(`"column" not defined for schema entry "${key}".`)
+      }
     }
   }
 }

@@ -1,18 +1,17 @@
 import readXlsx from './readXlsx.js'
 
-import mapToObjectsLegacyBehavior from './schema/mapToObjects.legacy.js'
-import mapToObjectsSpreadsheetBehavior from './schema/mapToObjects.spreadsheet.js'
+import mapToObjects from './schema/mapToObjects.js'
 
-import convertMapToSchema from './schema/convertMapToSchema.js'
-
-export default function readXlsxFileContents(entries, xml, { schema, map, ...options}) {
-	if (!schema && map) {
-		schema = convertMapToSchema(map)
+export default function readXlsxFileContents(entries, xml, { schema, ...options}) {
+	if (options.map) {
+		throw new Error('`map` option was removed. Pass a `schema` option instead.')
 	}
-	// `readXlsx()` adds `options.rowMap`, if not passed.
+	// `readXlsx()` function creates `options.rowIndexSourceMap` property.
+	// It maps parsed data row indexes to spreadsheet row indexes.
+	// That's because empty rows are ignored (discarded) when parsing using `schema`.
 	const result = readXlsx(entries, xml, { ...options, properties: schema || options.properties })
 	if (schema) {
-		return mapToObjectsSpreadsheetBehavior(mapToObjectsLegacyBehavior, result.data, schema, {
+		return mapToObjects(result.data, schema, {
 			...options,
 			properties: result.properties
 		})

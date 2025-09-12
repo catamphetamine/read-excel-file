@@ -5,17 +5,17 @@ import readXlsx from '../source/read/readXlsxFileNode.js'
 describe('read-excel-file', () => {
 	it('should support custom `parseNumber` function', () => {
 		const schema = {
-			'START DATE': {
-				prop: 'date',
+			date: {
+				column: 'START DATE',
 				type: Date
 			},
-			'NUMBER OF STUDENTS': {
-				prop: 'numberOfStudents',
+			numberOfStudents: {
+				column: 'NUMBER OF STUDENTS',
 				type: Number,
 				required: true
 			},
-			'COST': {
-				prop: 'cost',
+			cost: {
+				column: 'COST',
 				type: (any) => any
 			}
 		}

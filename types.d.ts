@@ -17,40 +17,30 @@ type BasicType =
 // A cell "type" is a function that receives a "raw" value and returns a "parsed" value or `undefined`.
 export type Type<ParsedValue> = (value: CellValue) => ParsedValue | undefined;
 
-type SchemaEntryRequiredProperty<Object> = boolean | ((row: Object) => boolean);
+type SchemaEntryType<ParsedValue> = BasicType | Type<ParsedValue>;
 
-interface SchemaEntryForValue<Key extends keyof Object, Object, TopLevelObject> {
-	prop: Key;
-	type?: BasicType | Type<Object[Key]>;
-	oneOf?: Object[Key][];
-	required?: SchemaEntryRequiredProperty<TopLevelObject>;
-	validate?(value: Object[Key]): void;
-}
+type SchemaEntryRequired<Object> = boolean | ((row: Object) => boolean);
 
-// Legacy versions of this library supported supplying a custom `parse()` function.
-// Since then, the `parse()` function has been renamed to `type()` function.
-interface SchemaEntryForValueLegacy<Key extends keyof Object, Object, TopLevelObject> {
-	prop: Key;
-	parse: (value: CellValue) => Object[Key] | undefined;
+interface SchemaEntryForValue<Key extends keyof Object, Object, TopLevelObject, ColumnTitle extends string> {
+	column: ColumnTitle;
+	type?: SchemaEntryType<Object[Key]>;
 	oneOf?: Object[Key][];
-	required?: SchemaEntryRequiredProperty<TopLevelObject>;
+	required?: SchemaEntryRequired<TopLevelObject>;
 	validate?(value: Object[Key]): void;
 }
 
 // Implementing recursive types in TypeScript:
 // https://dev.to/busypeoples/notes-on-typescript-recursive-types-and-immutability-5ck1
 interface SchemaEntryRecursive<Key extends keyof Object, Object, TopLevelObject, ColumnTitle extends string> {
-	prop: Key;
-	type: Record<ColumnTitle, SchemaEntry<keyof Object[Key], Object[Key], TopLevelObject, ColumnTitle>>;
-	required?: SchemaEntryRequiredProperty<TopLevelObject>;
+	schema: Record<keyof Object[Key], SchemaEntry<keyof Object[Key], Object[Key], TopLevelObject, ColumnTitle>>;
+	required?: SchemaEntryRequired<TopLevelObject>;
 }
 
 type SchemaEntry<Key extends keyof Object, Object, TopLevelObject, ColumnTitle extends string> =
-	SchemaEntryForValue<Key, Object, TopLevelObject> |
-	SchemaEntryForValueLegacy<Key, Object, TopLevelObject> |
+	SchemaEntryForValue<Key, Object, TopLevelObject, ColumnTitle> |
 	SchemaEntryRecursive<Key, Object, TopLevelObject, ColumnTitle>
 
-export type Schema<Object = Record<string, any>, ColumnTitle extends string = string> = Record<ColumnTitle, SchemaEntry<keyof Object, Object, Object, ColumnTitle>>
+export type Schema<Object = Record<string, any>, ColumnTitle extends string = string> = Record<keyof Object, SchemaEntry<keyof Object, Object, Object, ColumnTitle>>
 
 export interface Error<CellValue_ = CellValue, ParsedValue = any> {
 	error: string;
@@ -58,7 +48,7 @@ export interface Error<CellValue_ = CellValue, ParsedValue = any> {
 	row: number;
 	column: string;
 	value?: CellValue_;
-	type?: Type<ParsedValue>;
+	type?: SchemaEntryType<ParsedValue>;
 }
 
 export interface ParsedObjectsResult<Object> {
@@ -75,13 +65,7 @@ interface ParseCommonOptions {
 export interface ParseWithSchemaOptions<Object> extends ParseCommonOptions, MappingParametersReadExcelFile {
 	schema: Schema<Object>;
 	transformData?: (rows: Row[]) => Row[];
-	ignoreEmptyRows?: boolean;
-	// `includeNullValues: true` parameter is deprecated.
-	// It could be replaced with the following combination of parameters:
-	// * `schemaPropertyValueForMissingColumn: null`
-	// * `schemaPropertyValueForEmptyCell: null`
-	// * `getEmptyObjectValue = () => null`
-	includeNullValues?: boolean;
+	// ignoreEmptyRows?: boolean;
 }
 
 type MapProperty = string;
@@ -90,30 +74,32 @@ type MapObject = {
 };
 type Map = MapObject;
 
-export interface ParseWithMapOptions extends ParseCommonOptions {
-	map: Map;
-	transformData?: (rows: Row[]) => Row[];
-	dateFormat?: string;
-}
-
 export interface ParseWithoutSchemaOptions extends ParseCommonOptions {
 	dateFormat?: string;
 }
 
+interface SpreadsheetProperties {
+	epoch1904?: true;
+	sheets: [{
+		id: string,
+		name: string,
+		relationId: string
+	}]
+}
+
 interface MappingParametersCommon {
 	schemaPropertyValueForMissingColumn?: any;
+	schemaPropertyValueForMissingValue?: any;
 	schemaPropertyShouldSkipRequiredValidationForMissingColumn?(column: string, parameters: { object: Record<string, any> }): boolean;
 	getEmptyObjectValue?(object: Record<string, any>, parameters: { path?: string }): any;
 	getEmptyArrayValue?(array: any[], parameters: { path: string }): any;
 }
 
-interface MappingParametersReadExcelFile extends MappingParametersCommon {
-	schemaPropertyValueForEmptyCell?: null | undefined;
-}
+interface MappingParametersReadExcelFile extends MappingParametersCommon {}
 
 export interface MappingParameters extends MappingParametersCommon {
-	schemaPropertyValueForUndefinedCellValue?: any;
-	schemaPropertyValueForNullCellValue?: any;
 	isColumnOriented?: boolean;
-	rowIndexMap?: Record<string, number>;
+	arrayValueSeparator?: string;
+	rowIndexSourceMap?: Record<string, number>;
+	properties?: SpreadsheetProperties;
 }

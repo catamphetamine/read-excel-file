@@ -11,7 +11,8 @@ export default function getData(sheet, options) {
 
   const [leftTop, rightBottom] = dimensions
 
-  // Don't discard empty rows or columns at the start.
+  // Don't discard empty rows or columns at the start of the spreadsheet,
+  // even when the `*.xlsx` file itself tells that the content starts at an offset.
   // https://github.com/catamphetamine/read-excel-file/issues/102
   // const colsCount = (rightBottom.column - leftTop.column) + 1
   // const rowsCount = (rightBottom.row - leftTop.row) + 1
@@ -37,7 +38,8 @@ export default function getData(sheet, options) {
   //  maybe that's not correct, this piece code was initially copy-pasted
   //  from some other library that used `XPath`)
   for (const cell of cells) {
-    // Don't discard empty rows or columns at the start.
+    // Don't discard empty rows or columns at the start of the spreadsheet,
+    // even when the `*.xlsx` file itself tells that the content starts at an offset.
     // https://github.com/catamphetamine/read-excel-file/issues/102
     // const rowIndex = cell.row - leftTop.row
     // const columnIndex = cell.column - leftTop.column
@@ -50,19 +52,27 @@ export default function getData(sheet, options) {
   }
 
   // Fill in the row map.
-  const { rowMap: rowIndexMap } = options
-  if (rowIndexMap) {
+  const { rowIndexSourceMap } = options
+  if (rowIndexSourceMap) {
     let i = 0
     while (i < data.length) {
-      rowIndexMap[i] = i
+      rowIndexSourceMap[i] = i
       i++
     }
   }
 
-  // Drop empty columns or rows.
+  // Drop (discard) empty columns or rows.
+  //
+  // Don't discard empty rows or columns at the start or in the middle.
+  // Only discard empty rows at the bottom or empty columns on the right side.
+  // The rationale is that the data should be output in the same shape or form
+  // as it can be seen in the actual spreadsheet.
+  // If the user decides to discard empty rows or columns, they could do it manually
+  // by passing `transformData()` function as an option.
+  //
   data = dropEmptyRows(
     dropEmptyColumns(data, { onlyTrimAtTheEnd: true }),
-    { onlyTrimAtTheEnd: true, rowIndexMap }
+    { onlyTrimAtTheEnd: true, rowIndexSourceMap }
   )
 
   // Optionally transform data before applying `schema`.
@@ -70,7 +80,7 @@ export default function getData(sheet, options) {
     data = options.transformData(data)
     // data = options.transformData(data, {
     //   dropEmptyRowsAndColumns(data) {
-    //     return dropEmptyRows(dropEmptyColumns(data), { rowIndexMap })
+    //     return dropEmptyRows(dropEmptyColumns(data), { rowIndexSourceMap })
     //   }
     // })
   }

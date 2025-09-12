@@ -17,9 +17,9 @@ describe('1904', () => {
 	it('should parse 1904 macOS dates', async () => {
 		const data = await readXlsx('./test/spreadsheets/1904.xlsx', {
 			schema: {
-				Date: {
-					type: Date,
-					prop: 'date'
+				date: {
+					column: 'Date',
+					type: Date
 				}
 			}
 		})

@@ -5,12 +5,12 @@ import readXlsx from '../source/read/readXlsxFileNode.js'
 describe('read-excel-file', () => {
 	it('should support `required` function (returns `true`)', () => {
 		const schema = {
-			'COURSE TITLE': {
-				prop: 'courseTitle',
+			courseTitle: {
+				column: 'COURSE TITLE',
 				type: String
 			},
-			'NOT EXISTS': {
-				prop: 'notExists',
+			notExists: {
+				column: 'NOT EXISTS',
 				type: Number,
 				required: (row) => row.courseTitle === 'Chemistry'
 			}
@@ -35,12 +35,12 @@ describe('read-excel-file', () => {
 
 	it('should support `required` function (returns `false`)', () => {
 		const schema = {
-			'COURSE TITLE': {
-				prop: 'courseTitle',
+			courseTitle: {
+				column: 'COURSE TITLE',
 				type: String
 			},
-			'NOT EXISTS': {
-				prop: 'notExists',
+			notExists: {
+				column: 'NOT EXISTS',
 				type: Number,
 				required: (row) => row.courseTitle !== 'Chemistry'
 			}

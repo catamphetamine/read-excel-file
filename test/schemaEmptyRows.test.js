@@ -3,9 +3,9 @@ import path from 'path'
 import readXlsx from '../source/read/readXlsxFileNode.js'
 
 describe('read-excel-file', function() {
-	it('should ignore empty rows by default', async function() {
-		const rowMap = []
-		const { rows, errors } = await readXlsx(path.resolve('./test/spreadsheets/schemaEmptyRows.xlsx'), { schema, rowMap })
+	it('should ignore empty rows by default when parsing data with a `schema`', async function() {
+		const rowIndexSourceMap = []
+		const { rows, errors } = await readXlsx(path.resolve('./test/spreadsheets/schemaEmptyRows.xlsx'), { schema, rowIndexSourceMap })
 		rows.should.deep.equal([{
 			date: new Date(Date.UTC(2018, 2, 24)),
 			numberOfStudents: 123,
@@ -26,12 +26,12 @@ describe('read-excel-file', function() {
 			contact: '+11234567890'
 		}])
 		errors.should.deep.equal([])
-		rowMap.should.deep.equal([0, 1, 2, 3])
+		rowIndexSourceMap.should.deep.equal([0, 1, 2, 3])
 	})
 
 	it('should ignore empty rows by default (throws error)', async function() {
-		const rowMap = []
-		const { rows, errors } = await readXlsx(path.resolve('./test/spreadsheets/schemaEmptyRows.xlsx'), { schema: schemaThrowsError, rowMap })
+		const rowIndexSourceMap = []
+		const { rows, errors } = await readXlsx(path.resolve('./test/spreadsheets/schemaEmptyRows.xlsx'), { schema: schemaWithIncorrectContactColumnType, rowIndexSourceMap })
 		errors.should.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_boolean',
@@ -47,12 +47,13 @@ describe('read-excel-file', function() {
 			column: 'CONTACT',
 			type: Boolean
 		}])
-		rowMap.should.deep.equal([0, 1, 2, 3])
+		rowIndexSourceMap.should.deep.equal([0, 1, 2, 3])
 	})
 
-	it('should not ignore empty rows when `ignoreEmptyRows: false` flag is passed', async function() {
-		const rowMap = []
-		const { rows, errors } = await readXlsx(path.resolve('./test/spreadsheets/schemaEmptyRows.xlsx'), { schema, rowMap, ignoreEmptyRows: false })
+	/*
+	it('should not ignore empty rows when `ignoreEmptyRows: false` flag is passed (validates `rows` output property)', async function() {
+		const rowIndexSourceMap = []
+		const { rows, errors } = await readXlsx(path.resolve('./test/spreadsheets/schemaEmptyRows.xlsx'), { schema, rowIndexSourceMap, ignoreEmptyRows: false })
 		rows.should.deep.equal([{
 			date: new Date(Date.UTC(2018, 2, 24)),
 			numberOfStudents: 123,
@@ -73,12 +74,12 @@ describe('read-excel-file', function() {
 			contact: '+11234567890'
 		}])
 		errors.should.deep.equal([])
-		rowMap.should.deep.equal([0, 1, 2, 3])
+		rowIndexSourceMap.should.deep.equal([0, 1, 2, 3])
 	})
 
-	it('should not ignore empty rows when `ignoreEmptyRows: false` flag is passed (throws error)', async function() {
-		const rowMap = []
-		const { rows, errors } = await readXlsx(path.resolve('./test/spreadsheets/schemaEmptyRows.xlsx'), { schema: schemaThrowsError, rowMap })
+	it('should not ignore empty rows when `ignoreEmptyRows: false` flag is passed (validates `errors` output property)', async function() {
+		const rowIndexSourceMap = []
+		const { rows, errors } = await readXlsx(path.resolve('./test/spreadsheets/schemaEmptyRows.xlsx'), { schema: schemaWithIncorrectContactColumnType, rowIndexSourceMap })
 		errors.should.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_boolean',
@@ -94,62 +95,51 @@ describe('read-excel-file', function() {
 			column: 'CONTACT',
 			type: Boolean
 		}])
-		rowMap.should.deep.equal([0, 1, 2, 3])
+		rowIndexSourceMap.should.deep.equal([0, 1, 2, 3])
 	})
+	*/
 })
 
 const schema = {
-	'START DATE': {
-		prop: 'date',
+	date: {
+		column: 'START DATE',
 		type: Date
 	},
-	'NUMBER OF STUDENTS': {
-		prop: 'numberOfStudents',
+	numberOfStudents: {
+		column: 'NUMBER OF STUDENTS',
 		type: Number
 	},
-	'COURSE': {
-		prop: 'course',
-		type: {
-			'IS FREE': {
-				prop: 'isFree',
+	course: {
+		schema: {
+			isFree: {
+				column: 'IS FREE',
 				type: Boolean
 				// Excel stored booleans as numbers:
 				// `1` is `true` and `0` is `false`.
 				// Such numbers are parsed to booleans.
 			},
-			'COST': {
-				prop: 'cost',
+			cost: {
+				column: 'COST',
 				type: Number
 			},
-			'COURSE TITLE': {
-				prop: 'title',
+			title: {
+				column: 'COURSE TITLE',
 				type: String
 			}
 		}
 	},
-	'CONTACT': {
-		prop: 'contact',
+	contact: {
+		column: 'CONTACT',
 		type(value) {
 			return '+11234567890'
 		}
 	}
 }
 
-const schemaThrowsError = {
+const schemaWithIncorrectContactColumnType = {
 	...schema,
-	'CONTACT': {
-		prop: 'contact',
+	contact: {
+		column: 'CONTACT',
 		type: Boolean
 	}
-}
-
-// Converts timezone to UTC while preserving the same time
-function convertToUTCTimezone(date) {
-	// Doesn't account for leap seconds but I guess that's ok
-	// given that javascript's own `Date()` does not either.
-	// https://www.timeanddate.com/time/leap-seconds-background.html
-	//
-	// https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset
-	//
-	return new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000)
 }
