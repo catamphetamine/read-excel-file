@@ -14,7 +14,7 @@ Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-fi
 npm install read-excel-file --save
 ```
 
-Alternatively, one could [include it on a web page directly via a `<script/>` tag](#cdn).
+Alternatively, one could include it on a web page [directly](#cdn) via a `<script/>` tag.
 
 ## Use
 
@@ -470,7 +470,7 @@ readXlsxFile(file, {
 
 ## CDN
 
-To include this library directly via a `<script/>` tag on a page, one can use any npm CDN service, e.g. [unpkg.com](https://unpkg.com) or [jsdelivr.net](https://jsdelivr.net)
+To include this library directly via a `<script/>` tag on a page, one can use any npm CDN service, e.g. [unpkg.com](https://unpkg.com) or [jsdelivr.com](https://jsdelivr.com)
 
 ```html
 <script src="https://unpkg.com/read-excel-file@5.x/bundle/read-excel-file.min.js"></script>
