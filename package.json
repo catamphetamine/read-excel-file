@@ -1,6 +1,6 @@
 {
   "name": "read-excel-file",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "description": "Read `*.xlsx` files of moderate size in a web browser or on a server.",
   "module": "index.js",
   "main": "index.cjs",

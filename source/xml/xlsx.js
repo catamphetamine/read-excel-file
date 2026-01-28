@@ -1,4 +1,4 @@
-import { findChild, findChildren, forEach, map, getTagName } from './dom.js'
+import { findChild, findChildren, forEach, map, isElement, getTagName } from './dom.js'
 
 // Returns an array of cells,
 // each element being an XML DOM element representing a cell.
@@ -34,8 +34,10 @@ export function getCellValue(document, node) {
 export function getCellInlineStringValue(document, node) {
   if (
     node.firstChild &&
+    isElement(node.firstChild) &&
     getTagName(node.firstChild) === 'is' &&
     node.firstChild.firstChild &&
+    isElement(node.firstChild.firstChild) &&
     getTagName(node.firstChild.firstChild) === 't'
   ) {
     return node.firstChild.firstChild.textContent

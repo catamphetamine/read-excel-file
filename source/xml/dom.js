@@ -67,6 +67,12 @@ export function getTagName(element) {
 	return element.tagName.replace(NAMESPACE_REG_EXP, '')
 }
 
+export function isElement(node) {
+	// `nodeType: 1` means "Element".
+	// https://www.w3schools.com/xml/prop_element_nodetype.asp
+	return node.nodeType === 1
+}
+
 // This function is only used for occasional debug messages.
 export function getOuterXml(node) {
 	// `nodeType: 1` means "Element".
