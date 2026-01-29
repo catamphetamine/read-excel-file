@@ -73,6 +73,16 @@ export function isElement(node) {
 	return node.nodeType === 1
 }
 
+export function getFirstElementChild(element) {
+  let i = 0
+  while (i < element.childNodes.length) {
+  	if (isElement(element.childNodes[i])) {
+			return element.childNodes[i]
+		}
+    i++
+  }
+}
+
 // This function is only used for occasional debug messages.
 export function getOuterXml(node) {
 	// `nodeType: 1` means "Element".

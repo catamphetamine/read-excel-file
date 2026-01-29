@@ -1,4 +1,4 @@
-import { findChild, findChildren, forEach, map, isElement, getTagName } from './dom.js'
+import { findChild, findChildren, forEach, map, getFirstElementChild, getTagName } from './dom.js'
 
 // Returns an array of cells,
 // each element being an XML DOM element representing a cell.
@@ -32,15 +32,16 @@ export function getCellValue(document, node) {
 }
 
 export function getCellInlineStringValue(document, node) {
-  if (
-    node.firstChild &&
-    isElement(node.firstChild) &&
-    getTagName(node.firstChild) === 'is' &&
-    node.firstChild.firstChild &&
-    isElement(node.firstChild.firstChild) &&
-    getTagName(node.firstChild.firstChild) === 't'
-  ) {
-    return node.firstChild.firstChild.textContent
+  // It seems as if in some weirdly-output "*.xlsx" files
+  // there're non-element nodes of some weird nature.
+  // https://gitlab.com/catamphetamine/read-excel-file/-/issues/109
+  // This code filters out such weird non-element nodes.
+  const firstElementChild = getFirstElementChild(node)
+  if (firstElementChild && getTagName(firstElementChild) === 'is') {
+    const firstElementChildFirstElementChild = getFirstElementChild(firstElementChild)
+    if (firstElementChildFirstElementChild && getTagName(firstElementChildFirstElementChild) === 't') {
+      return firstElementChildFirstElementChild.textContent
+    }
   }
 }
 
