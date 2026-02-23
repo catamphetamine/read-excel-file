@@ -25,8 +25,39 @@
 				margin-bottom : 10px;
 			}
 
+			#sheet-tabs
+			{
 
-			#result-table table
+			}
+
+			.sheet-tab
+			{
+				padding: 8px 16px;
+				border: 1px solid transparent;
+				outline: 0;
+				cursor: pointer;
+				color: white;
+				background-color: transparent;
+			}
+
+			.sheet-tab--selected
+			{
+				color: black;
+				background-color: #fd8900;
+				border: 1px solid #fd8900;
+			}
+
+			.sheet-tab--loading
+			{
+				cursor: wait;
+			}
+
+			.selected-sheet-tab-content--loading
+			{
+				cursor: wait;
+			}
+
+			#selected-sheet-data-visual table
 			{
 				width : 100%;
 				border-collapse : collapse;
@@ -35,7 +66,7 @@
 				font-size     : 12px;
   		}
 
-			#result-table table td
+			#selected-sheet-data-visual table td
 			{
 				border : 1px solid black;
 				padding : 0.5em;
@@ -194,68 +225,151 @@
 			</h2>
 
 			<div style="margin-top: 1rem">
-				Also supports parsing file data to an array of JSON objects using a schema. <a target="_blank" href="https://gitlab.com/catamphetamine/read-excel-file#json" style="text-decoration: none">Read more</a>
+				Also supports parsing file data to an array of JSON objects using a schema. <a target="_blank" href="https://www.npmjs.com/package/read-excel-file#schema" style="text-decoration: none">Read more</a>
 			</div>
 
 			<br/>
 
-			<div id="result-table"></div>
+			<div id="sheet-tabs"></div>
 
-			<pre><code class="language-js" id="result-data"></code></pre>
+			<div id="selected-sheet-tab-content">
+				<!-- <div id="selected-sheet-data-visual"></div> -->
+				<pre><code class="language-js" id="selected-sheet-data"></code></pre>
+			</div>
 		</div>
 
 		<script>
 			var input = document.getElementById('input')
 
-			input.addEventListener('change', function() {
-		    document.getElementById('result').style.display = 'none'
+			function onLoading() {
+				document.getElementById('result').style.display = 'none'
 		    document.getElementById('error').style.display = 'none'
 		    document.getElementById('loading').style.display = 'block'
+			}
+
+			function onCancelLoading() {
+		    document.getElementById('loading').style.display = 'none'
+			}
+
+			function onError(error) {
+				console.error(error)
+				// alert("Error while parsing Excel file. See console output for the error stack trace.")
+				document.getElementById('loading').style.display = 'none'
+				document.getElementById('error').style.display = 'block'
+				document.getElementById('error').innerText = error.message
+			}
+
+			function onSheetsList(sheets) {
+				var sheetTabsHtml = sheets.map(function (sheet) {
+					return `<button onclick="selectSheetTab('${sheet.name.replaceAll('\'', '\\\'')}')" class="sheet-tab">${sheet.name}</button>`
+				}).join('')
+				document.getElementById('sheet-tabs').innerHTML = sheetTabsHtml
+				selectSheetTab(sheets[0].name)
+			}
+
+			function onSheetData(data) {
+				document.getElementById('loading').style.display = 'none'
+				document.getElementById('result').style.display = 'block'
+				// `data` is an array of rows
+				// each row being an array of cells.
+				// document.getElementById('result').innerText = JSON.stringify(data, null, 2)
+				document.getElementById('selected-sheet-data').innerHTML = Prism.highlight(
+					JSON.stringify(data, null, 2),
+					Prism.languages.javascript,
+					'javascript'
+				)
+
+				// Applying `innerHTML` hangs the browser when there're a lot of rows/columns.
+				// For example, for a file having 2000 rows and 20 columns on a modern
+				// mid-tier CPU it parses the file (using a "schema") for 3 seconds
+				// (blocking) with 100% single CPU core usage.
+				// Then applying `innerHTML` hangs the browser.
+
+				// document.getElementById('selected-sheet-data-visual').innerHTML =
+				// 	'<table>' +
+				// 	'<tbody>' +
+				// 	data.map(function (row) {
+				// 		return '<tr>' +
+				// 			row.map(function (cell) {
+				// 				return '<td>' +
+				//  				(cell === null ? '' : cell) +
+				//  				'</td>'
+				// 			}).join('') +
+				// 			'</tr>'
+				// 	}).join('') +
+				// 	'</tbody>' +
+				// 	'</table>'
+			}
+
+			function onStartLoadingSheetData() {
+				var tabs = document.querySelectorAll('#sheet-tabs .sheet-tab')
+				var i = 0
+				while (i < tabs.length) {
+					tabs[i].classList.add('sheet-tab--loading')
+					i++
+				}
+
+				document.querySelector('#selected-sheet-tab-content').classList.add('.selected-sheet-tab-content--loading')
+			}
+
+			function onEndLoadingSheetData() {
+				var tabs = document.querySelectorAll('#sheet-tabs .sheet-tab')
+				var i = 0
+				while (i < tabs.length) {
+					tabs[i].classList.remove('sheet-tab--loading')
+					i++
+				}
+
+				document.querySelector('#selected-sheet-tab-content').classList.remove('.selected-sheet-tab-content--loading')
+			}
+
+			function onFileSelected(file) {
+			  return readXlsxFile(file, { getSheets: true }).then(
+					onSheetsList,
+					onError
+				)
+			}
+
+			function readSheet(sheetName) {
+				return readXlsxFile(input.files[0], { sheet: sheetName }).then(
+					onSheetData,
+					onError
+				)
+			}
+
+			input.addEventListener('change', function() {
+		    onLoading()
 
 		    if (!input.files[0]) {
-		    	return document.getElementById('loading').style.display = 'none'
+					onCancelLoading()
+		    	return
 		    }
 
-			  readXlsxFile(input.files[0]).then(function(data) {
-			    // `data` is an array of rows
-			    // each row being an array of cells.
-			    // document.getElementById('result').innerText = JSON.stringify(data, null, 2)
-		    	document.getElementById('loading').style.display = 'none'
-			    document.getElementById('result').style.display = 'block'
-			    document.getElementById('result-data').innerHTML = Prism.highlight(
-						JSON.stringify(data, null, 2),
-						Prism.languages.javascript,
-						'javascript'
-					)
-
-			    // Applying `innerHTML` hangs the browser when there're a lot of rows/columns.
-			    // For example, for a file having 2000 rows and 20 columns on a modern
-			    // mid-tier CPU it parses the file (using a "schema") for 3 seconds
-			    // (blocking) with 100% single CPU core usage.
-			    // Then applying `innerHTML` hangs the browser.
-
-			    // document.getElementById('result-table').innerHTML =
-			    // 	'<table>' +
-			    // 	'<tbody>' +
-			    // 	data.map(function (row) {
-			    // 		return '<tr>' +
-			    // 			row.map(function (cell) {
-			    // 				return '<td>' +
-				   //  				(cell === null ? '' : cell) +
-				   //  				'</td>'
-			    // 			}).join('') +
-			    // 			'</tr>'
-			    // 	}).join('') +
-			    // 	'</tbody>' +
-			    // 	'</table>'
-			  }, function (error) {
-			  	console.error(error)
-			  	// alert("Error while parsing Excel file. See console output for the error stack trace.")
-		    	document.getElementById('loading').style.display = 'none'
-			    document.getElementById('error').style.display = 'block'
-			    document.getElementById('error').innerText = error.message
-			  })
+				onFileSelected(input.files[0])
 			})
+
+			function selectSheetTab(sheetName) {
+				// If the sheet is already selected, don't do anything.
+				var selectedTab = document.querySelector('#sheet-tabs .sheet-tab--selected')
+				if (selectedTab && selectedTab.textContent === sheetName) {
+					return
+				}
+
+				// Select the sheet's tab.
+				var tabs = document.querySelectorAll('#sheet-tabs .sheet-tab')
+				var i = 0
+				while (i < tabs.length) {
+					if (tabs[i].textContent === sheetName) {
+						tabs[i].classList.add('sheet-tab--selected')
+					} else {
+						tabs[i].classList.remove('sheet-tab--selected')
+					}
+					i++
+				}
+				// Load sheet data.
+				onStartLoadingSheetData()
+				readSheet(sheetName).finally(onEndLoadingSheetData)
+			}
 		</script>
 	</body>
 </html>

@@ -7,7 +7,7 @@ export default [
   {
     // `index.js` didn't work because it "mixes named and default exports".
     // input: './index',
-    input: './modules/read/readXlsxFileBrowser',
+    input: './modules/export/readXlsxFileBrowser',
     plugins: [
       json(),
       terser(),

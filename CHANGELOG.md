@@ -1,3 +1,16 @@
+7.0.0 / 23.02.2026
+==================
+
+* Refactored the code.
+* (breaking change) The minimum required Node.js version is now >= 18.
+  * Nothing really changed in that regard, it's just that the minimum required Node.js version wasn't specified previously, and I just randomly assumed that now it's gonna be >= 18.
+* (breaking change) The default export has been removed in order to not confuse people.
+* (breaking change) `/browser` export uses [Web Workers](https://developer.mozilla.org/docs/Web/API/Web_Workers_API/Using_web_workers) now to avoid blocking the main thread. I dunno if Internet Explorer is supported now.
+* Added new exports: `/browser` and `/universal`.
+	* `/universal` works both in a web browser and Node.js. Only accepts a [`Blob`](https://developer.mozilla.org/docs/Web/API/Blob) as an input.
+  * `/browser` works in a web browser. It replaced what used to be the default export.
+* `/node` export now accepts a [`Blob`](https://developer.mozilla.org/docs/Web/API/Blob) as an input.
+
 6.0.0 / 12.09.2025
 ==================
 

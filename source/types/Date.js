@@ -1,4 +1,4 @@
-import parseDate from '../read/parseDate.js'
+import parseDate from '../xlsx/parseDate.js'
 import InvalidError from './InvalidError.js'
 
 export default function DateType(value, { properties }) {

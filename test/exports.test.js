@@ -1,13 +1,15 @@
-import readXlsxFileBrowser, { parseExcelDate, readSheetNames } from '../index.js'
-import readXlsxFileNode, { parseExcelDate as parseExcelDateNode, readSheetNames as readSheetNamesNode } from '../node/index.js'
+import readXlsxFileBrowser, { parseExcelDate, readSheetNames } from '../browser/index.js'
 import readXlsxFileWebWorker, { parseExcelDate as parseExcelDateWebWorker, readSheetNames as readSheetNamesWebWorker } from '../web-worker/index.js'
+import readXlsxFileNode, { parseExcelDate as parseExcelDateNode, readSheetNames as readSheetNamesNode } from '../node/index.js'
+import readXlsxFileUniversal, { parseExcelDate as parseExcelDateUniversal, readSheetNames as readSheetNamesUniversal } from '../universal/index.js'
 
-import Read from '../index.cjs'
-import WebWorker from '../web-worker/index.cjs'
-import Node from '../node/index.cjs'
+import BrowserCommonJs from '../browser/index.cjs'
+import WebWorkerCommonJs from '../web-worker/index.cjs'
+import NodeCommonJs from '../node/index.cjs'
+import UniversalCommonJs from '../universal/index.cjs'
 
 describe(`exports`, () => {
-	it(`should export ES6`, () => {
+	it(`should export ESM`, () => {
 		// Browser
 		readXlsxFileBrowser.should.be.a('function')
 		parseExcelDate.should.be.a('function')
@@ -22,28 +24,40 @@ describe(`exports`, () => {
 		readXlsxFileNode.should.be.a('function')
 		parseExcelDateNode.should.be.a('function')
 		readSheetNamesNode.should.be.a('function')
+
+		// Universal
+		readXlsxFileUniversal.should.be.a('function')
+		parseExcelDateUniversal.should.be.a('function')
+		readSheetNamesUniversal.should.be.a('function')
 	})
 
 	it(`should export CommonJS`, () => {
 		// Browser
 
-		Read.should.be.a('function')
-		Read.default.should.be.a('function')
-		Read.parseExcelDate.should.be.a('function')
-		Read.readSheetNames.should.be.a('function')
+		BrowserCommonJs.should.be.a('function')
+		BrowserCommonJs.default.should.be.a('function')
+		BrowserCommonJs.parseExcelDate.should.be.a('function')
+		BrowserCommonJs.readSheetNames.should.be.a('function')
 
 		// Web Worker.
 
-		WebWorker.should.be.a('function')
-		WebWorker.default.should.be.a('function')
-		WebWorker.parseExcelDate.should.be.a('function')
-		WebWorker.readSheetNames.should.be.a('function')
+		WebWorkerCommonJs.should.be.a('function')
+		WebWorkerCommonJs.default.should.be.a('function')
+		WebWorkerCommonJs.parseExcelDate.should.be.a('function')
+		WebWorkerCommonJs.readSheetNames.should.be.a('function')
 
 		// Node.js
 
-		Node.should.be.a('function')
-		Node.default.should.be.a('function')
-		Node.parseExcelDate.should.be.a('function')
-		Node.readSheetNames.should.be.a('function')
+		NodeCommonJs.should.be.a('function')
+		NodeCommonJs.default.should.be.a('function')
+		NodeCommonJs.parseExcelDate.should.be.a('function')
+		NodeCommonJs.readSheetNames.should.be.a('function')
+
+		// Universal
+
+		UniversalCommonJs.should.be.a('function')
+		UniversalCommonJs.default.should.be.a('function')
+		UniversalCommonJs.parseExcelDate.should.be.a('function')
+		UniversalCommonJs.readSheetNames.should.be.a('function')
 	})
 })

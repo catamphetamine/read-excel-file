@@ -27,7 +27,7 @@ Example 1: User chooses a file and the web application reads it.
 ```
 
 ```js
-import readXlsxFile from 'read-excel-file'
+import readXlsxFile from 'read-excel-file/browser'
 
 const input = document.getElementById('input')
 
@@ -63,7 +63,7 @@ Example 1: Read data from a file at file path.
 
 ```js
 // Import from '/node' subpackage.
-const readXlsxFile = require('read-excel-file/node')
+import readXlsxFile from 'read-excel-file/node'
 
 // Read data from a file by file path.
 readXlsxFile('/path/to/file').then((rows) => {
@@ -84,18 +84,25 @@ readXlsxFile(fs.createReadStream('/path/to/file')).then((rows) => {
 })
 ```
 
-Example 3: Read data from a [`Buffer`](https://nodejs.org/api/buffer.html).
+It could also read data from a [`Buffer`](https://nodejs.org/api/buffer.html) or a [`Blob`](https://developer.mozilla.org/docs/Web/API/Blob).
+
+In summary, it can read data from a file path, a [`Stream`](https://nodejs.org/api/stream.html), a [`Buffer`](https://nodejs.org/api/buffer.html) or a [`Blob`](https://developer.mozilla.org/docs/Web/API/Blob).
+
+### Universal
+
+The one that works both in a web browser and Node.js. Only supports a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) for input, which could be a bit less convenient for some.
 
 ```js
-// Read data from a `Buffer`.
-readXlsxFile(Buffer.from(fs.readFileSync('/path/to/file'))).then((rows) => {
+// Import from '/universal' subpackage.
+import readXlsxFile from 'read-excel-file/universal'
+
+// Read data from a `Blob` with `*.xlsx` file contents.
+readXlsxFile(blob).then((rows) => {
   // `rows` is an array of "rows".
   // Each "row" is an array of "cells".
   // Each "cell" is a value: string, number, Date, boolean.
 })
 ```
-
-In summary, it can read data from a file path, a [`Stream`](https://nodejs.org/api/stream.html) or a [`Buffer`](https://nodejs.org/api/buffer.html).
 
 ### Web Worker
 
@@ -163,9 +170,9 @@ readXlsxFile(file, { sheet: 'Sheet1' }).then((data) => {
 To get the names of all available sheets, use `readSheetNames()` function:
 
 ```js
-// Depending on where your code runs, import it from
-// 'read-excel-file' or 'read-exel-file/node' or 'read-excel-file/web-worker'.
-import { readSheetNames } from 'read-excel-file'
+// The function could be imported from any sub-package:
+// 'read-excel-file/browser', 'read-exel-file/node', 'read-excel-file/web-worker', etc.
+import { readSheetNames } from 'read-excel-file/browser'
 
 readSheetNames(file).then((sheetNames) => {
   // sheetNames === ['Sheet1', 'Sheet2']
@@ -407,7 +414,7 @@ readXlsxFile(file, {
 #####
 
 ```js
-import { parseExcelDate } from 'read-excel-file'
+import { parseExcelDate } from 'read-excel-file/browser'
 
 function ParseExcelFileErrors({ errors }) {
   return (
@@ -467,6 +474,10 @@ readXlsxFile(file, {
 })
 ```
 </details>
+
+## Browser Support
+
+An `*.xlsx` file is just a `*.zip` archive with an `*.xslx` file extension. This package uses [`fflate`](https://www.npmjs.com/package/fflate) for `*.zip` decompression. See `fflate`'s [browser support](https://www.npmjs.com/package/fflate#browser-support) for further details.
 
 ## CDN
 

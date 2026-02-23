@@ -3,6 +3,7 @@
 
 import { PathLike } from 'fs';
 import { Stream } from 'stream';
+import { Blob } from 'buffer'
 
 import {
 	ParseWithSchemaOptions,
@@ -24,7 +25,7 @@ export {
 
 export function parseExcelDate(excelSerialDate: number) : typeof Date;
 
-type Input = Stream | Buffer | PathLike;
+type Input = Stream | Buffer | PathLike | Blob;
 
 export function readXlsxFile<T extends object>(input: Input, options: ParseWithSchemaOptions<T>) : Promise<ParsedObjectsResult<T>>;
 export function readXlsxFile(input: Input, options?: ParseWithoutSchemaOptions) : Promise<Row[]>;
