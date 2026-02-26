@@ -1,3 +1,6 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+
 import path from 'path'
 
 import readXlsxFile from '../../source/export/readXlsxFileNode.js'
@@ -25,12 +28,12 @@ describe('read-excel-file', () => {
 			parseNumber: (string) => string
 		}).then(({ rows, errors }) => {
 			rows[0].date = rows[0].date.getTime()
-			rows.should.deep.equal([{
+			expect(rows).to.deep.equal([{
 				date: convertToUTCTimezone(new Date(2018, 2, 24)).getTime(),
 				numberOfStudents: 123,
 				cost: '210.45'
 			}])
-			errors.should.deep.equal([])
+			expect(errors).to.deep.equal([])
 		})
 	})
 })

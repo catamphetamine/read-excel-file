@@ -1,18 +1,22 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+
 import dropEmptyRows from './dropEmptyRows.js'
 
 describe('dropEmptyRows', () => {
 	it('should drop empty rows (only at the end)', () => {
-		dropEmptyRows([
-			[null, null, null],
-			['A', 'B', 'C'],
-			[null, 'D', null],
-			[null, null, null],
-			['E', 'F', 'G'],
-			[null, null, null]
-		], {
-			onlyTrimAtTheEnd: true
-		})
-		.should.deep.equal([
+		expect(
+			dropEmptyRows([
+				[null, null, null],
+				['A', 'B', 'C'],
+				[null, 'D', null],
+				[null, null, null],
+				['E', 'F', 'G'],
+				[null, null, null]
+			], {
+				onlyTrimAtTheEnd: true
+			})
+		).to.deep.equal([
 			[null, null, null],
 			['A', 'B', 'C'],
 			[null, 'D', null],
@@ -22,15 +26,16 @@ describe('dropEmptyRows', () => {
 	})
 
 	it('should drop empty rows', () => {
-		dropEmptyRows([
-			[null, null, null],
-			['A', 'B', 'C'],
-			[null, 'D', null],
-			[null, null, null],
-			['E', 'F', 'G'],
-			[null, null, null]
-		])
-		.should.deep.equal([
+		expect(
+			dropEmptyRows([
+				[null, null, null],
+				['A', 'B', 'C'],
+				[null, 'D', null],
+				[null, null, null],
+				['E', 'F', 'G'],
+				[null, null, null]
+			])
+		).to.deep.equal([
 			['A', 'B', 'C'],
 			[null, 'D', null],
 			['E', 'F', 'G']
@@ -40,20 +45,21 @@ describe('dropEmptyRows', () => {
 	it('should generate row map when dropping empty rows', () => {
 		const rowIndexSourceMap = [0, 1, 2, 3, 4]
 
-		dropEmptyRows([
-			[null, null, null],
-			['A', 'B', 'C'],
-			[null, 'D', null],
-			[null, null, null],
-			['E', 'F', 'G']
-		],
-		{ rowIndexSourceMap })
-		.should.deep.equal([
+		expect(
+			dropEmptyRows([
+				[null, null, null],
+				['A', 'B', 'C'],
+				[null, 'D', null],
+				[null, null, null],
+				['E', 'F', 'G']
+			],
+			{ rowIndexSourceMap }
+		)).to.deep.equal([
 			['A', 'B', 'C'],
 			[null, 'D', null],
 			['E', 'F', 'G']
 		])
 
-		rowIndexSourceMap.should.deep.equal([1, 2, 4])
+		expect(rowIndexSourceMap).to.deep.equal([1, 2, 4])
 	})
 })

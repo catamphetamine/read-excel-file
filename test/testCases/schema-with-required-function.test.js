@@ -1,3 +1,6 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+
 import path from 'path'
 
 import readXlsxFile from '../../source/export/readXlsxFileNode.js'
@@ -19,10 +22,10 @@ describe('read-excel-file', () => {
 		return readXlsxFile(path.resolve('./test/testCases/schema-with-required-function.xlsx'), {
 			schema
 		}).then(({ rows, errors }) => {
-			rows.should.deep.equal([{
+			expect(rows).to.deep.equal([{
 				courseTitle: 'Chemistry'
 			}])
-			errors.should.deep.equal([{
+			expect(errors).to.deep.equal([{
 				error: 'required',
 				row: 2,
 				column: 'NOT EXISTS',
@@ -49,10 +52,10 @@ describe('read-excel-file', () => {
 		return readXlsxFile(path.resolve('./test/testCases/schema-with-required-function.xlsx'), {
 			schema
 		}).then(({ rows, errors }) => {
-			rows.should.deep.equal([{
+			expect(rows).to.deep.equal([{
 				courseTitle: 'Chemistry'
 			}])
-			errors.should.deep.equal([])
+			expect(errors).to.deep.equal([])
 		})
 	})
 })

@@ -1,3 +1,6 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+
 import readXlsxFile from '../../source/export/readXlsxFileNode.js'
 
 // https://gitlab.com/catamphetamine/read-excel-file/-/issues/25

@@ -1,3 +1,6 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+
 import readXlsxFile from '../../source/export/readXlsxFileNode.js'
 
 describe('1904', () => {
@@ -6,12 +9,12 @@ describe('1904', () => {
 
 		expect(data.length).to.equal(6)
 
-		data[0][0].should.equal('Date')
-		data[1][0].toISOString().should.equal('2018-05-05T00:00:00.000Z')
-		data[2][0].toISOString().should.equal('2018-05-05T00:00:00.000Z')
-		data[3][0].toISOString().should.equal('2018-05-05T00:00:00.000Z')
-		data[4][0].toISOString().should.equal('2018-05-05T00:00:00.000Z')
-		data[5][0].toISOString().should.equal('2018-05-05T00:00:00.000Z')
+		expect(data[0][0]).to.equal('Date')
+		expect(data[1][0].toISOString()).to.equal('2018-05-05T00:00:00.000Z')
+		expect(data[2][0].toISOString()).to.equal('2018-05-05T00:00:00.000Z')
+		expect(data[3][0].toISOString()).to.equal('2018-05-05T00:00:00.000Z')
+		expect(data[4][0].toISOString()).to.equal('2018-05-05T00:00:00.000Z')
+		expect(data[5][0].toISOString()).to.equal('2018-05-05T00:00:00.000Z')
 	})
 
 	it('should parse 1904 macOS dates', async () => {
@@ -24,13 +27,13 @@ describe('1904', () => {
 			}
 		})
 
-		data.errors.length.should.equal(0)
-		data.rows.length.should.equal(5)
-		data.rows[0].date.toISOString().should.equal('2018-05-05T00:00:00.000Z')
-		data.rows[1].date.toISOString().should.equal('2018-05-05T00:00:00.000Z')
-		data.rows[2].date.toISOString().should.equal('2018-05-05T00:00:00.000Z')
-		data.rows[3].date.toISOString().should.equal('2018-05-05T00:00:00.000Z')
-		data.rows[4].date.toISOString().should.equal('2018-05-05T00:00:00.000Z')
+		expect(data.errors.length).to.equal(0)
+		expect(data.rows.length).to.equal(5)
+		expect(data.rows[0].date.toISOString()).to.equal('2018-05-05T00:00:00.000Z')
+		expect(data.rows[1].date.toISOString()).to.equal('2018-05-05T00:00:00.000Z')
+		expect(data.rows[2].date.toISOString()).to.equal('2018-05-05T00:00:00.000Z')
+		expect(data.rows[3].date.toISOString()).to.equal('2018-05-05T00:00:00.000Z')
+		expect(data.rows[4].date.toISOString()).to.equal('2018-05-05T00:00:00.000Z')
 	})
 
 	it('should list sheet names in sheet not found error', async () => {
@@ -38,13 +41,13 @@ describe('1904', () => {
 		try {
 			await readXlsxFile('./test/testCases/1904.xlsx', { sheet: 2 })
 		} catch (error) {
-			error.message.should.equal('Sheet #2 not found in the *.xlsx file. Available sheets: "sheet 1" (#1).')
+			expect(error.message).to.equal('Sheet #2 not found in the *.xlsx file. Available sheets: "sheet 1" (#1).')
 		}
 		// By name.
 		try {
 			await readXlsxFile('./test/testCases/1904.xlsx', { sheet: 'sheet 2' })
 		} catch (error) {
-			error.message.should.equal('Sheet "sheet 2" not found in the *.xlsx file. Available sheets: "sheet 1" (#1).')
+			expect(error.message).to.equal('Sheet "sheet 2" not found in the *.xlsx file. Available sheets: "sheet 1" (#1).')
 		}
 	})
 })

@@ -1,3 +1,6 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+
 import mapToObjects, { parseArray, getBlock } from './mapToObjects.js'
 
 import Integer from '../../types/Integer.js'
@@ -8,8 +11,8 @@ const date = convertToUTCTimezone(new Date(2018, 3 - 1, 24))
 
 describe('mapToObjects', () => {
 	it('should parse arrays', () => {
-		getBlock('abc"de,f"g,h', ',', 0).should.deep.equal(['abcde,fg', 10])
-		parseArray(' abc"de,f"g  , h ', ',').should.deep.equal(['abcde,fg', 'h'])
+		expect(getBlock('abc"de,f"g,h', ',', 0)).to.deep.equal(['abcde,fg', 10])
+		expect(parseArray(' abc"de,f"g  , h ', ',')).to.deep.equal(['abcde,fg', 'h'])
 	})
 
 	it('should convert to json', () => {
@@ -60,12 +63,12 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
 		// Convert `Date` to `String` for equality check.
 		rows[0].date = rows[0].date.toISOString()
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			date: date.toISOString(),
 			number: 123,
 			phone: '+11234567890',
@@ -103,12 +106,12 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
 		// Convert `Date` to `String` for equality check.
 		rows[0].date = rows[0].date.toISOString()
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			date: date.toISOString(),
 			number: 123,
 			boolean: true,
@@ -139,7 +142,7 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([{
+		expect(errors).to.deep.equal([{
 			error: 'required',
 			row: 2,
 			column: 'NUMBER',
@@ -147,7 +150,7 @@ describe('mapToObjects', () => {
 			value: null
 		}])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			number: null,
 			string: 'abc'
 		}])
@@ -171,7 +174,7 @@ describe('mapToObjects', () => {
 			ignoreEmptyRows: false
 		})
 
-		rows.should.deep.equal([null])
+		expect(rows).to.deep.equal([null])
 	})
 
 	it('shouldn\'t require fields when cell value is empty and object is empty too (`ignoreEmptyRows` not specified)', () => {
@@ -190,7 +193,7 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		rows.should.deep.equal([])
+		expect(rows).to.deep.equal([])
 	})
 
 	it('should parse arrays (`ignoreEmptyRows: false`)', () => {
@@ -211,9 +214,9 @@ describe('mapToObjects', () => {
 			ignoreEmptyRows: false
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			names: ['Barack Obama', 'String, with, colons', 'Donald Trump']
 		}, null])
 	})
@@ -234,9 +237,9 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			names: ['Barack Obama', 'String, with, colons', 'Donald Trump']
 		}])
 	})
@@ -258,8 +261,8 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.length.should.equal(1)
-		errors[0].should.deep.equal({
+		expect(errors.length).to.equal(1)
+		expect(errors[0]).to.deep.equal({
 			error: 'invalid',
 			reason: 'not_an_integer',
 			row: 3,
@@ -268,7 +271,7 @@ describe('mapToObjects', () => {
 			value: '1.2'
 		})
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			value: 1
 		}, null])
 	})
@@ -290,12 +293,12 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.length.should.equal(1)
-		errors[0].row.should.equal(3)
-		errors[0].column.should.equal('URL')
-		errors[0].error.should.equal('invalid')
+		expect(errors.length).to.equal(1)
+		expect(errors[0].row).to.equal(3)
+		expect(errors[0].column).to.equal('URL')
+		expect(errors[0].error).to.equal('invalid')
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			value: 'https://kremlin.ru'
 		}, null])
 	})
@@ -317,12 +320,12 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.length.should.equal(1)
-		errors[0].row.should.equal(3)
-		errors[0].column.should.equal('EMAIL')
-		errors[0].error.should.equal('invalid')
+		expect(errors.length).to.equal(1)
+		expect(errors[0].row).to.equal(3)
+		expect(errors[0].column).to.equal('EMAIL')
+		expect(errors[0].error).to.equal('invalid')
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			value: 'vladimir.putin@kremlin.ru'
 		}, null])
 	})
@@ -347,7 +350,7 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([{
+		expect(errors).to.deep.equal([{
 			error: 'custom-error',
 			row: 2,
 			column: 'NAME',
@@ -355,7 +358,7 @@ describe('mapToObjects', () => {
 			value: 'George Bush'
 		}])
 
-		rows.should.deep.equal([null])
+		expect(rows).to.deep.equal([null])
 	})
 
 	it('should validate numbers', () => {
@@ -373,7 +376,7 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([{
+		expect(errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_number',
 			row: 2,
@@ -382,7 +385,7 @@ describe('mapToObjects', () => {
 			value: '123abc'
 		}])
 
-		rows.should.deep.equal([null])
+		expect(rows).to.deep.equal([null])
 	})
 
 	it('should validate booleans', () => {
@@ -414,7 +417,7 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([{
+		expect(errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_boolean',
 			row: 2,
@@ -423,7 +426,7 @@ describe('mapToObjects', () => {
 			value: 'TRUE'
 		}])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			true: true,
 			false: false
 		}])
@@ -454,7 +457,7 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([{
+		expect(errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_date',
 			row: 2,
@@ -470,7 +473,7 @@ describe('mapToObjects', () => {
 			value: '-'
 		}])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			date
 		}, {
 			date
@@ -501,7 +504,7 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([{
+		expect(errors).to.deep.equal([{
 			error: 'invalid',
 			row: 2,
 			column: 'PHONE',
@@ -515,7 +518,7 @@ describe('mapToObjects', () => {
 			type
 		}])
 
-		rows.should.deep.equal([null])
+		expect(rows).to.deep.equal([null])
 	})
 
 	it('should map row numbers', () => {
@@ -534,7 +537,7 @@ describe('mapToObjects', () => {
 			rowIndexSourceMap: [2, 5]
 		})
 
-		errors.should.deep.equal([{
+		expect(errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_number',
 			row: 6,
@@ -563,7 +566,7 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.length.should.equal(0)
+		expect(errors.length).to.equal(0)
 	})
 
 	it('should validate "oneOf" (not valid)', () => {
@@ -585,7 +588,7 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([{
+		expect(errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'unknown',
 			row: 2,
@@ -627,7 +630,7 @@ describe('mapToObjects', () => {
 			}
 		)
 
-		rows.should.deep.equal([
+		expect(rows).to.deep.equal([
 			{ a: 'a', b: 'b', c: { a: 'ca', b: null } },
 			{ a: 'a', b: null, c: null },
 		])
@@ -671,10 +674,10 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
 		// Legacy behavior.
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			column2: '12',
 			column4: '14'
 		}, {
@@ -723,9 +726,9 @@ describe('mapToObjects', () => {
 			schemaPropertyValueForMissingColumn: null
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			column1: null,
 			column2: '12',
 			column4: '14',
@@ -776,9 +779,9 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			// column1: undefined,
 			column2: '12',
 			column4: '14',
@@ -831,9 +834,9 @@ describe('mapToObjects', () => {
 			schemaPropertyValueForMissingValue: undefined
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			// column1: undefined,
 			column2: '12',
 			column4: '14',
@@ -884,9 +887,9 @@ describe('mapToObjects', () => {
 			}
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			// column1: undefined,
 			column2: '12',
 			column4: '14',
@@ -939,9 +942,9 @@ describe('mapToObjects', () => {
 			schemaPropertyValueForNullCellValue: null
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			// column1: undefined,
 			column2: '12',
 			column4: '14',
@@ -995,9 +998,9 @@ describe('mapToObjects', () => {
 			schemaPropertyValueForNullCellValue: null
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			column1: null,
 			column2: '12',
 			column4: '14',
@@ -1051,7 +1054,7 @@ describe('mapToObjects', () => {
 			schemaPropertyValueForNullCellValue: null
 		})
 
-		errors.should.deep.equal([{
+		expect(errors).to.deep.equal([{
 			column: 'COLUMN_5',
 			error: 'required',
 			row: 2,
@@ -1065,7 +1068,7 @@ describe('mapToObjects', () => {
 			value: null
 		}])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			column1: null,
 			column2: '12',
 			column4: '14',
@@ -1120,7 +1123,7 @@ describe('mapToObjects', () => {
 			schemaPropertyShouldSkipRequiredValidationForMissingColumn: () => false
 		})
 
-		errors.should.deep.equal([{
+		expect(errors).to.deep.equal([{
 			column: 'COLUMN_5',
 			error: 'required',
 			row: 2,
@@ -1134,7 +1137,7 @@ describe('mapToObjects', () => {
 			value: null
 		}])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			column1: null,
 			column2: '12',
 			column4: '14',
@@ -1189,9 +1192,9 @@ describe('mapToObjects', () => {
 			schemaPropertyShouldSkipRequiredValidationForMissingColumn: () => true
 		})
 
-		errors.should.deep.equal([])
+		expect(errors).to.deep.equal([])
 
-		rows.should.deep.equal([{
+		expect(rows).to.deep.equal([{
 			column1: null,
 			column2: '12',
 			column4: '14',

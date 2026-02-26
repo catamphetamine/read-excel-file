@@ -28,7 +28,8 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "mocha --colors --bail --reporter spec --require ./test/globals.js \"./{,!(node_modules|commonjs|modules)/**/}*.test.js\" --recursive",
+    "test": "mocha --bail \"source/**/*.test.js\" \"test/*.test.js\" \"test/!(exports)/**/*.test.js\"",
+    "test:exports": "mocha --bail \"test/exports/**/*.test.js\"",
     "clean-for-build": "rimraf ./commonjs/**/* ./modules/**/*",
     "build-commonjs-modules": "better-npm-run build-commonjs-modules",
     "build-commonjs-package.json": "node build-scripts/create-commonjs-package-json.js",
@@ -36,7 +37,7 @@
     "build-es6-modules": "better-npm-run build-es6-modules",
     "browser-build": "rollup --config rollup.config.mjs",
     "build": "npm-run-all clean-for-build build-commonjs build-es6-modules browser-build",
-    "prepublishOnly": "npm-run-all build test browser-build"
+    "prepublishOnly": "npm-run-all build test test:exports browser-build"
   },
   "engines": {
     "node": ">=18"

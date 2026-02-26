@@ -1,8 +1,11 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+
 import { isEmail } from './Email.js'
 
 describe('Email', () => {
 	it('should validate an Email', () => {
-		isEmail('123').should.equal(false)
-		isEmail('vladimir.putin@kremlin.ru').should.equal(true)
+		expect(isEmail('123')).to.equal(false)
+		expect(isEmail('vladimir.putin@kremlin.ru')).to.equal(true)
 	})
 })

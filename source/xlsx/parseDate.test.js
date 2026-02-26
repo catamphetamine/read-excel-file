@@ -1,3 +1,6 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+
 import parseDate from './parseDate.js'
 
 describe('parseDate', () => {
@@ -5,7 +8,7 @@ describe('parseDate', () => {
 		const date = convertToUTCTimezone(new Date(2018, 3 - 1, 24))
     // Excel stores dates as integers.
     // E.g. '24/03/2018' === 43183
-		parseDate(43183).getTime().should.equal(date.getTime())
+		expect(parseDate(43183).getTime()).to.equal(date.getTime())
 	})
 })
 

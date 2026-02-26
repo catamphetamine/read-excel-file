@@ -1,3 +1,6 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+
 import fs from 'fs'
 
 import readXlsxFile from '../../source/export/readXlsxFileNode.js'

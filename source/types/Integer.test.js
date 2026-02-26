@@ -1,10 +1,11 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+
 import { isInteger } from './Integer.js'
 
 describe('Integer', () => {
 	it('should validate an Integer', () => {
-		// isInteger('1.2').should.equal(false)
-		// isInteger('1').should.equal(true)
-		isInteger(1.2).should.equal(false)
-		isInteger(1).should.equal(true)
+		expect(isInteger(1.2)).to.equal(false)
+		expect(isInteger(1)).to.equal(true)
 	})
 })

@@ -1,34 +1,37 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+
 import readXlsxFile from '../../source/export/readXlsxFileNode.js'
 
 describe('sheet', () => {
 	it('should read sheet by name (first)', async () => {
 		const data = await readXlsxFile('./test/testCases/multiple-sheets.xlsx', { sheet: 'sheet 1' })
 		expect(data.length).to.equal(1)
-		data[0][0].should.equal('First sheet')
+		expect(data[0][0]).to.equal('First sheet')
 	})
 
 	it('should read sheet by name (second)', async () => {
 		const data = await readXlsxFile('./test/testCases/multiple-sheets.xlsx', { sheet: 'sheet 2' })
 		expect(data.length).to.equal(1)
-		data[0][0].should.equal('Second sheet')
+		expect(data[0][0]).to.equal('Second sheet')
 	})
 
 	it('should read sheet by index (first) (default)', async () => {
 		const data = await readXlsxFile('./test/testCases/multiple-sheets.xlsx')
 		expect(data.length).to.equal(1)
-		data[0][0].should.equal('First sheet')
+		expect(data[0][0]).to.equal('First sheet')
 	})
 
 	it('should read sheet by index (first)', async () => {
 		const data = await readXlsxFile('./test/testCases/multiple-sheets.xlsx', { sheet: 1 })
 		expect(data.length).to.equal(1)
-		data[0][0].should.equal('First sheet')
+		expect(data[0][0]).to.equal('First sheet')
 	})
 
 	it('should read sheet by name (second)', async () => {
 		const data = await readXlsxFile('./test/testCases/multiple-sheets.xlsx', { sheet: 2 })
 		expect(data.length).to.equal(1)
-		data[0][0].should.equal('Second sheet')
+		expect(data[0][0]).to.equal('Second sheet')
 	})
 
 	it('should list sheets', async () => {
