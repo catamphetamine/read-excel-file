@@ -251,10 +251,10 @@ A key of a `schema` entry represents the name of the property. The value of the 
     * `required: (object) => boolean` — A function returning `true` or `false` depending on the other properties of the object.
   * It could be configured to skip `required` validation for missing columns by passing `schemaPropertyShouldSkipRequiredValidationForMissingColumn` function as an option. By default it's `(column, { object }) => false` meaning that when `column` is missing from the spreadsheet, it will not skip `required` validation for it.
 * `validate(value)` — (optional) Validates the value. Is only called for non-empty cells. If the value is invalid, this function should throw an error.
-* `schema` — (optional) If the value is an object, `schema` should describe its properties.
-  * If all of its property values happen to be empty (`undefined` or `null`), the object itself will be `null` too.
+* `schema` — (optional) If the value is going to be a nested object, `schema` should describe all of its properties.
+  * If all of its property values happen to be empty (`undefined` or `null`), the nested object will be replaced with `null`.
     * This can be overridden by passing `getEmptyObjectValue(object, { path? })` function as an option. By default, it returns `null`.
-* `type` — (optional) If the value is not an object, `type` should describe the type of the value. It defines how the cell value will be converted to the property value. If no `type` is specified then the cell value is returned "as is": as a string, number, date or boolean.
+* `type` — (optional) If the value is not going to be a nested object, `type` should define the type of the value. It will determine how the cell value will be converted to the property value. If no `type` is specified then the cell value is returned "as is": as a string, number, date or boolean.
   * Valid `type`s:
     * Standard types:
       * `String`
@@ -266,7 +266,7 @@ A key of a `schema` entry represents the name of the property. The value of the 
       * `Email`
       * `URL`
     * Custom type:
-      * A function that receives a cell value and returns a parsed value. If the value is invalid, it should throw an error.
+      * A function that receives a cell value and returns a parsed value. Returning `undefined` will have same effect as returning `null`. If the value is invalid, it should throw an error.
   * If the cell value consists of comma-separated values (example: `"a, b, c"`) then `type` could be specified as `[type]` for any of the valid `type`s described above.
     * Example: `{ type: [String] }` or `{ type: [(value) => parseValue(value)] }`
     * If the cell value is empty, or if every element of the array is `null` or `undefined`, then the array property value is gonna be `null` by default.

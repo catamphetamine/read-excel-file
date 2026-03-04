@@ -15,7 +15,8 @@ import {
 export {
 	Schema,
 	ParsedObjectsResult,
-	Error,
+	SchemaParseCellValueError,
+	CellValueRequiredError,
 	CellValue,
 	Row,
 	Integer,

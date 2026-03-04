@@ -1,23 +1,30 @@
-export function Integer(): void;
-export function URL(): void;
-export function Email(): void;
-
 export type CellValue = string | number | boolean | typeof Date
-export type Row = CellValue[]
+export type Row = (CellValue | null)[]
 
-type BasicType =
+// Schema entry `type` (foundational ones).
+type BaseType =
 	| string
 	| number
 	| boolean
-	| typeof Date
+	| typeof Date;
+
+// Schema entry custom `type`.
+// A function that receives a cell value and returns a "parsed" one.
+// Returning `undefined` will have same effect as returning `null`.
+export type Type<ParsedValue> = (value: CellValue) => ParsedValue | undefined | null;
+
+export function Integer(value: CellValue): number;
+export function URL(value: CellValue): string;
+export function Email(value: CellValue): string;
+
+// Schema entry `type` (additional ones).
+type AdditionalType =
 	| typeof Integer
 	| typeof URL
 	| typeof Email;
 
-// A cell "type" is a function that receives a "raw" value and returns a "parsed" value or `undefined`.
-export type Type<ParsedValue> = (value: CellValue) => ParsedValue | undefined;
-
-type SchemaEntryType<ParsedValue> = BasicType | Type<ParsedValue>;
+// Schema entry `type`: foundational ones, additional ones, custom ones.
+type SchemaEntryType<ParsedValue> = BaseType | AdditionalType | Type<ParsedValue>;
 
 type SchemaEntryRequired<Object> = boolean | ((row: Object) => boolean);
 
@@ -42,13 +49,22 @@ type SchemaEntry<Key extends keyof Object, Object, TopLevelObject, ColumnTitle e
 
 export type Schema<Object = Record<string, any>, ColumnTitle extends string = string> = Record<keyof Object, SchemaEntry<keyof Object, Object, Object, ColumnTitle>>
 
-export interface Error<CellValue_ = CellValue, ParsedValue = any> {
-	error: string;
-	reason?: string;
+interface SchemaParseCellValueErrorGeneralProperties<CustomType = never> {
 	row: number;
 	column: string;
-	value?: CellValue_;
-	type?: SchemaEntryType<ParsedValue>;
+	type?: BasicType | CustomType;
+}
+
+export interface SchemaParseCellValueError<ParsedValue = any> extends SchemaParseCellValueErrorGeneralProperties<ParsedValue> {
+	error: string;
+	reason?: string;
+	value: CellValue;
+}
+
+export interface CellValueRequiredError<ParsedValue = any> extends SchemaParseCellValueErrorGeneralProperties<ParsedValue> {
+	error: 'required';
+	reason?: undefined;
+	value: null;
 }
 
 export interface ParsedObjectsResult<Object> {

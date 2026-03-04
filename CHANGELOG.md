@@ -1,3 +1,10 @@
+7.0.1 / 04.03.2026
+==================
+
+* [Fixed](https://github.com/catamphetamine/read-excel-file/issues/120) `CellValue` TypeScript type (it didn't include `null` value).
+
+* (TypeScript minor breaking change) Renamed exported `Error` TypeScript interface to `SchemaParseCellValueError`, and removed `CellValue` generic from it.
+
 7.0.0 / 23.02.2026
 ==================
 
