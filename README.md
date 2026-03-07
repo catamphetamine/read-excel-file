@@ -1,12 +1,22 @@
 # `read-excel-file`
 
-Read `*.xlsx` files of moderate size in a web browser or on a server.
+Read `.xlsx` files in a web browser or in Node.js.
 
 It also supports parsing spreadsheet rows into JSON objects using a [schema](#schema).
 
 [Demo](https://catamphetamine.gitlab.io/read-excel-file/)
 
-Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-file) for writing `*.xlsx` files.
+Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-file) for writing `.xlsx` files.
+
+## Performance
+
+Here're the results of reading [sample `.xlsx` files](https://examplefile.com/document/xlsx) of different sizes:
+
+|File Size| Browser |  Node.js  |
+|---------|---------|-----------|
+|   1 MB  | 0.2 sec.| 0.25 sec. |
+|  10 MB  | 1.5 sec.|    2 sec. |
+|  50 MB  | 8.5 sec.|   14 sec. |
 
 ## Install
 
@@ -96,7 +106,7 @@ The one that works both in a web browser and Node.js. Only supports a [`Blob`](h
 // Import from '/universal' subpackage.
 import readXlsxFile from 'read-excel-file/universal'
 
-// Read data from a `Blob` with `*.xlsx` file contents.
+// Read data from a `Blob` with `.xlsx` file contents.
 readXlsxFile(blob).then((rows) => {
   // `rows` is an array of "rows".
   // Each "row" is an array of "cells".
@@ -181,13 +191,13 @@ readSheetNames(file).then((sheetNames) => {
 
 ## Dates
 
-`*.xlsx` file format originally had no dedicated "date" type, so dates are in almost all cases stored simply as numbers, equal to the count of days since `01/01/1900`. To correctly interpret such numbers as dates, each date cell has a special ["format"](https://xlsxwriter.readthedocs.io/format.html#format-set-num-format) (example: `"d mmm yyyy"`) that instructs the spreadsheet viewer application to format the number in the cell as a date in a given format.
+`.xlsx` file format originally had no dedicated "date" type, so dates are in almost all cases stored simply as numbers, equal to the count of days since `01/01/1900`. To correctly interpret such numbers as dates, each date cell has a special ["format"](https://xlsxwriter.readthedocs.io/format.html#format-set-num-format) (example: `"d mmm yyyy"`) that instructs the spreadsheet viewer application to format the number in the cell as a date in a given format.
 
 When using `readXlsxFile()` with a [`schema`](#schema) parameter, all columns having `type: Date` are automatically parsed as dates.
 
 When using `readXlsxFile()` without a `schema` parameter, it attempts to guess whether the cell value is a date or a number by looking at the cell's "format" — if the "format" is one of the [standard date formats](https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.numberingformat?view=openxml-2.8.1) then the cell value is interpreted as a date. So usually there's no need to configure anything and it usually works out-of-the-box.
 
-Sometimes though, an `*.xlsx` file might use a non-standard date format like `"mm/dd/yyyy"`. To read such files correctly, pass a `dateFormat` parameter to tell it to parse cells having such "format" as date cells.
+Sometimes though, an `.xlsx` file might use a non-standard date format like `"mm/dd/yyyy"`. To read such files correctly, pass a `dateFormat` parameter to tell it to parse cells having such "format" as date cells.
 
 ```js
 readXlsxFile(file, { dateFormat: 'mm/dd/yyyy' })
@@ -195,7 +205,7 @@ readXlsxFile(file, { dateFormat: 'mm/dd/yyyy' })
 
 ## Numbers
 
-In `*.xlsx` files, numbers are stored as strings. `read-excel-file` manually parses such numeric cell values from strings to numbers. But there's an inherent issue with javascript numbers in general: their [floating-point precision](https://www.youtube.com/watch?v=2gIxbTn7GSc) might not be enough for applications that require 100% precision. An example would be finance and banking. To support such demanding use-cases, this library supports passing a custom `parseNumber(string)` function as an option.
+In `.xlsx` files, numbers are stored as strings. `read-excel-file` manually parses such numeric cell values from strings to numbers. But there's an inherent issue with javascript numbers in general: their [floating-point precision](https://www.youtube.com/watch?v=2gIxbTn7GSc) might not be enough for applications that require 100% precision. An example would be finance and banking. To support such demanding use-cases, this library supports passing a custom `parseNumber(string)` function as an option.
 
 Example: Use "decimals" to represent numbers with 100% precision in banking applications.
 
@@ -221,7 +231,7 @@ Dynamically calculated cells using formulas (`SUM`, etc) are not supported.
 
 ## Performance
 
-There have been some reports about performance issues when reading extremely large `*.xlsx` spreadsheets using this library. It's true that this library's main point have been usability and convenience, and not performance when handling huge datasets. For example, the time of parsing a file with 100,000 rows could be up to 10 seconds. If your application has to quickly read huge datasets, perhaps consider using something like [`xlsx`](https://github.com/catamphetamine/read-excel-file/issues/38#issuecomment-544286628) package instead. There're no comparative benchmarks between the two packages, so we don't know how much the difference would be. If you'll be making any benchmarks, share those in the "Issues" so that we could include them in this readme.
+There have been some reports about performance issues when reading extremely large `.xlsx` spreadsheets using this library. It's true that this library's main point have been usability and convenience, and not performance when handling huge datasets. For example, the time of parsing a file with 100,000 rows could be up to 10 seconds. If your application has to quickly read huge datasets, perhaps consider using something like [`xlsx`](https://github.com/catamphetamine/read-excel-file/issues/38#issuecomment-544286628) package instead. There're no comparative benchmarks between the two packages, so we don't know how much the difference would be. If you'll be making any benchmarks, share those in the "Issues" so that we could include them in this readme.
 
 ## Schema
 
@@ -287,7 +297,7 @@ If there're any errors during the conversion of spreadsheet data to JSON objects
 Below is an example of using a `schema`.
 
 ```js
-// An example *.xlsx document:
+// An example .xlsx document:
 // -----------------------------------------------------------------------------------------
 // | START DATE | NUMBER OF STUDENTS | IS FREE | COURSE TITLE |    CONTACT     |  STATUS   |
 // -----------------------------------------------------------------------------------------
@@ -458,9 +468,9 @@ function stringifyValue(value) {
 ```
 </details>
 
-## Fix Spreadsheet Before Parsing With Schema
+## Fix Spreadsheet Structure When Using Schema
 
-Sometimes, a spreadsheet doesn't have the required structure to parse it with `schema`. For example, header row might be missing, or there could be some purely presentational / empty / "garbage" rows that should be removed before parsing. To fix that, pass a `transformData(data)` function as an option. It will modify spreadsheet content before it is parsed with `schema`.
+Sometimes, a spreadsheet doesn't have the required structure to read it using a `schema`. For example, header row might be missing, or there could be some purely presentational / empty / "garbage" rows that should be skipped. To fix that, pass a `transformData(data)` function as an option. It will transform spreadsheet content before it is parsed with `schema`. The `data` argument is an array of rows, each row being an array of cell values.
 
 ```js
 readXlsxFile(file, {
@@ -477,7 +487,7 @@ readXlsxFile(file, {
 
 ## Browser Support
 
-An `*.xlsx` file is just a `*.zip` archive with an `*.xslx` file extension. This package uses [`fflate`](https://www.npmjs.com/package/fflate) for `*.zip` decompression. See `fflate`'s [browser support](https://www.npmjs.com/package/fflate#browser-support) for further details.
+An `.xlsx` file is just a `*.zip` archive with an `*.xslx` file extension. This package uses [`fflate`](https://www.npmjs.com/package/fflate) for `*.zip` decompression. See `fflate`'s [browser support](https://www.npmjs.com/package/fflate#browser-support) for further details.
 
 ## CDN
 

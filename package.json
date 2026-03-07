@@ -1,7 +1,7 @@
 {
   "name": "read-excel-file",
-  "version": "7.0.1",
-  "description": "Read `*.xlsx` files of moderate size in a web browser or on a server.",
+  "version": "7.0.2",
+  "description": "Read `.xlsx` files in a web browser or in Node.js",
   "type": "module",
   "exports": {
     "./universal": {
@@ -28,8 +28,9 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "mocha --bail \"source/**/*.test.js\" \"test/*.test.js\" \"test/!(exports)/**/*.test.js\"",
+    "test": "mocha --bail \"source/**/*.test.js\" \"test/*.test.js\" \"test/!(exports|benchmark)/**/*.test.js\"",
     "test:exports": "mocha --bail \"test/exports/**/*.test.js\"",
+    "test:benchmark": "mocha --bail \"test/benchmark/**/*.test.js\"",
     "clean-for-build": "rimraf ./commonjs/**/* ./modules/**/*",
     "build-commonjs-modules": "better-npm-run build-commonjs-modules",
     "build-commonjs-package.json": "node build-scripts/create-commonjs-package-json.js",

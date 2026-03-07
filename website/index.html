@@ -6,6 +6,8 @@
 
 		<script src="./read-excel-file.min.js"></script>
 
+		<script src="./lib/virtual-scroller-dom.js"></script>
+
 		<script src="./lib/promise-polyfill.min.js"></script>
 
 		<script src="./lib/prism.js"></script>
@@ -27,24 +29,30 @@
 
 			#sheet-tabs
 			{
-
+				margin-top: -0.25rem;
+				margin-bottom: -0.25rem;
 			}
 
 			.sheet-tab
 			{
 				padding: 8px 16px;
+				margin-left: 0.25rem;
+				margin-right: 0.25rem;
+				margin-top: 0.25rem;
+				margin-bottom: 0.25rem;
 				border: 1px solid transparent;
 				outline: 0;
 				cursor: pointer;
 				color: white;
-				background-color: transparent;
+				background-color: #3c3c3c;
+				border-radius: 0.25rem;
 			}
 
 			.sheet-tab--selected
 			{
 				color: black;
-				background-color: #fd8900;
-				border: 1px solid #fd8900;
+				background-color: #f98700;
+				border: 1px solid #f98700;
 			}
 
 			.sheet-tab--loading
@@ -64,7 +72,7 @@
 				margin-top    : 2.5em;
 				margin-bottom : 2.5em;
 				font-size     : 12px;
-  		}
+			}
 
 			#selected-sheet-data-visual table td
 			{
@@ -75,6 +83,70 @@
 				overflow      : hidden;
 				max-width     : 10em;
 				white-space   : nowrap;
+			}
+
+			#selected-sheet-data-capped-warning
+			{
+				opacity: 0.75;
+			}
+
+			#json-data-container-title
+			{
+				margin-top: 3rem;
+				margin-bottom: 1rem;
+			}
+
+			.json-data-hint
+			{
+				margin-top: 1rem;
+			}
+
+			.json-data-hint-text
+			{
+				opacity: 0.75;
+			}
+
+			.json-data-hint a
+			{
+				color: #f98700;
+			}
+
+			#json-data-container
+			{
+				max-height: 80vh;
+				border-radius: 0.25rem;
+				scrollbar-color: #777777 #2d2d2d;
+			}
+
+			#table-container
+			{
+				margin-top: 1rem;
+				margin-bottom: 1rem;
+				/* padding-top: 1rem; */
+				/* padding-bottom: 1rem; */
+
+				max-height: 40vh;
+				overflow: auto;
+
+				scrollbar-color: #777777 #2d2d2d;
+
+				border-radius: 0.25rem;
+
+				background-color: #3c3c3c;
+			}
+
+			#table-container table
+			{
+				width: 100%;
+				table-layout: fixed;
+			}
+
+			#table-container th, #table-container td
+			{
+				padding-left: 1em;
+				padding-right: 1em;
+				padding-top: 1em;
+				padding-bottom: 1em;
 			}
 
 			#main-link
@@ -121,7 +193,17 @@
 			#loading
 			{
 				display: none;
-				margin-top: 2.5rem;
+			}
+
+			#error,
+			#loading
+			{
+				margin-top: 1rem;
+			}
+
+			#result
+			{
+				margin-top: 3rem;
 			}
 
 			#error
@@ -143,7 +225,7 @@
 				width: 7px;
 				height: 7px;
 				border-radius: 50%;
-				background: #fff;
+				background: #cccccc;
 				animation-timing-function: cubic-bezier(0, 1, 1, 0);
 			}
 			.lds-ellipsis div:nth-child(1) {
@@ -224,31 +306,57 @@
 				File Data
 			</h2>
 
-			<div style="margin-top: 1rem">
-				Also supports parsing file data to an array of JSON objects using a schema. <a target="_blank" href="https://www.npmjs.com/package/read-excel-file#schema" style="text-decoration: none">Read more</a>
-			</div>
-
-			<br/>
-
 			<div id="sheet-tabs"></div>
 
 			<div id="selected-sheet-tab-content">
+				<div id="table-container">
+					<table>
+						<tbody id="table-rows-container">
+						</tbody>
+					</table>
+				</div>
 				<!-- <div id="selected-sheet-data-visual"></div> -->
-				<pre><code class="language-js" id="selected-sheet-data"></code></pre>
+				<h2 id="json-data-container-title">JSON data</h2>
+
+				<div class="json-data-hint">
+					<span class="json-data-hint-text">
+						It also supports parsing file data to an array of JSON objects using a schema.
+					</span>
+					<a target="_blank" href="https://www.npmjs.com/package/read-excel-file#schema" style="text-decoration: none">Read more</a>
+				</div>
+
+				<p id="selected-sheet-data-capped-warning"></p>
+				<pre id="json-data-container"><code class="language-js" id="selected-sheet-data"></code></pre>
 			</div>
 		</div>
 
 		<script>
 			var input = document.getElementById('input')
 
+			var virtualScroller
+			var readSheetsListStartedAt
+			var readSheetDataStartedAt
+
 			function onLoading() {
+				// Reset previously-selected file.
+				if (virtualScroller) {
+					document.getElementById('sheet-tabs').innerHTML = ''
+					document.getElementById('selected-sheet-data').scrollTo(0, 0)
+					document.getElementById('selected-sheet-data').innerHTML = ''
+
+					virtualScroller.stop()
+					virtualScroller = undefined
+					document.getElementById('table-container').scrollTo(0, 0)
+					document.getElementById('table-rows-container').innerHTML = ''
+				}
+
 				document.getElementById('result').style.display = 'none'
-		    document.getElementById('error').style.display = 'none'
-		    document.getElementById('loading').style.display = 'block'
+				document.getElementById('error').style.display = 'none'
+				document.getElementById('loading').style.display = 'block'
 			}
 
 			function onCancelLoading() {
-		    document.getElementById('loading').style.display = 'none'
+				document.getElementById('loading').style.display = 'none'
 			}
 
 			function onError(error) {
@@ -260,6 +368,9 @@
 			}
 
 			function onSheetsList(sheets) {
+				console.log('Finished reading sheets list in', (Date.now() - readSheetsListStartedAt), 'ms')
+				console.log('Sheets:', sheets.map(sheet => sheet.name).join(', '))
+
 				var sheetTabsHtml = sheets.map(function (sheet) {
 					return `<button onclick="selectSheetTab('${sheet.name.replaceAll('\'', '\\\'')}')" class="sheet-tab">${sheet.name}</button>`
 				}).join('')
@@ -268,23 +379,60 @@
 			}
 
 			function onSheetData(data) {
+				console.log('Finished reading sheets data in', (Date.now() - readSheetDataStartedAt), 'ms')
+				console.log('Sheet data:', data)
+
 				document.getElementById('loading').style.display = 'none'
 				document.getElementById('result').style.display = 'block'
+
+				console.log('Displaying sheet data…')
+
 				// `data` is an array of rows
 				// each row being an array of cells.
-				// document.getElementById('result').innerText = JSON.stringify(data, null, 2)
+
+				// Output sheet data in JSON format with syntax highlighting.
+				// Doesn't work for large spreadsheets because it hangs the browser,
+				// so `data` has to be capped when it's too large.
+				//
+				var MAX_ROWS_IN_CAPPED_DATA = 50
+				var MAX_CELLS_IN_CAPPED_DATA = MAX_ROWS_IN_CAPPED_DATA * 100
+				var dataCappedRowCounter = 0
+				var dataCappedCellCounter = 0
+				var dataWasCappedForJsonOutput = false
+				var dataWasCappedForJsonOutputSomewhereInFirstRow = false
+				var dataCapped = []
+				for (var row of data) {
+					if (dataCappedRowCounter + 1 > MAX_ROWS_IN_CAPPED_DATA) {
+						dataWasCappedForJsonOutput = true
+						break
+					}
+					if (dataCappedCellCounter + row.length > MAX_CELLS_IN_CAPPED_DATA) {
+						if (dataCapped.length === 0) {
+							dataCapped.push(row.slice(0, MAX_CELLS_IN_CAPPED_DATA - dataCappedCellCounter))
+						}
+						dataWasCappedForJsonOutput = true
+						dataWasCappedForJsonOutputSomewhereInFirstRow = true
+						break
+					}
+					dataCapped.push(row)
+					dataCappedRowCounter++
+					dataCappedCellCounter += row.length
+				}
+				// Display the capped data warning, if required.
+				document.getElementById('selected-sheet-data-capped-warning').display =
+					dataWasCappedForJsonOutput ? 'block' : 'none'
+				document.getElementById('selected-sheet-data-capped-warning').innerText =
+					dataWasCappedForJsonOutput ? `Only the first ${dataWasCappedForJsonOutputSomewhereInFirstRow ? dataCapped[0].length + ' column' + (dataCapped[0].length === 1 ? '' : 's') + ' of the first row' + (dataCapped[0].length === 1 ? ' is' : ' are'): dataCapped.length + ' row' + (dataCapped.length === 1 ? '' : 's') + ' of the total ' + data.length + ' row' + (data.length === 1 ? '' : 's') +  (dataCapped.length === 1 ? ' is' : ' are')} being shown.` : ''
+				// Display the capped data (as JSON).
 				document.getElementById('selected-sheet-data').innerHTML = Prism.highlight(
-					JSON.stringify(data, null, 2),
+					JSON.stringify(dataCapped, null, 2),
 					Prism.languages.javascript,
 					'javascript'
 				)
 
-				// Applying `innerHTML` hangs the browser when there're a lot of rows/columns.
-				// For example, for a file having 2000 rows and 20 columns on a modern
-				// mid-tier CPU it parses the file (using a "schema") for 3 seconds
-				// (blocking) with 100% single CPU core usage.
-				// Then applying `innerHTML` hangs the browser.
-
+				// Output sheet data in a form of an HTML `<table/>`.
+				// Doesn't work for large spreadsheets because it hangs the browser.
+				//
 				// document.getElementById('selected-sheet-data-visual').innerHTML =
 				// 	'<table>' +
 				// 	'<tbody>' +
@@ -299,9 +447,57 @@
 				// 	}).join('') +
 				// 	'</tbody>' +
 				// 	'</table>'
+
+				// Output sheet data in a form of an HTML `<table/>` through `virtual-scroller`.
+				// Doesn't hang the browser in case of large spreadsheets.
+
+				function renderRow(row) {
+					var tr = document.createElement('tr')
+
+					for (var cell of row) {
+						var td = document.createElement('td')
+
+						// When using a <table/> as an items container, all column widths
+						// must be strictly defined. Otherwise, the <table/> will automatically
+						// adjust column widths based on the content. This "intelligent" approach
+						// would've worked in classic HTML when all data is output at once,
+						// but it won't work with virtual-scroller when only a small subset of data
+						// is output at a given moment, and that subset constantly changes, resulting in
+						// column widths constantly changing, which not only looks weird but it also makes
+						// all row heights contantly change, causing a warning:
+						// "Item index N height changed unexpectedly".
+						td.style.width = (100 / row.length) + '%'
+						td.style.overflow = 'hidden'
+						td.style.textOverflow = 'ellipsis'
+
+						td.innerText = cell
+						tr.appendChild(td)
+					}
+
+					return tr
+				}
+
+				function getScrollableContainer() {
+					return document.getElementById('table-container')
+				}
+
+				virtualScroller = new VirtualScroller(
+					document.getElementById('table-rows-container'),
+					data,
+					renderRow,
+					{ getScrollableContainer }
+				)
+
+				console.log('Done')
 			}
 
 			function onStartLoadingSheetData() {
+				// Stop the virtual scroller.
+				if (virtualScroller) {
+					virtualScroller.stop()
+					virtualScroller = undefined
+				}
+
 				var tabs = document.querySelectorAll('#sheet-tabs .sheet-tab')
 				var i = 0
 				while (i < tabs.length) {
@@ -324,13 +520,17 @@
 			}
 
 			function onFileSelected(file) {
-			  return readXlsxFile(file, { getSheets: true }).then(
+				console.log('Reading a list of sheets…')
+				readSheetsListStartedAt = Date.now()
+				return readXlsxFile(file, { getSheets: true }).then(
 					onSheetsList,
 					onError
 				)
 			}
 
 			function readSheet(sheetName) {
+				console.log(`Reading sheet "${sheetName}" data…`)
+				readSheetDataStartedAt = Date.now()
 				return readXlsxFile(input.files[0], { sheet: sheetName }).then(
 					onSheetData,
 					onError
@@ -338,12 +538,12 @@
 			}
 
 			input.addEventListener('change', function() {
-		    onLoading()
+				onLoading()
 
-		    if (!input.files[0]) {
+				if (!input.files[0]) {
 					onCancelLoading()
-		    	return
-		    }
+					return
+				}
 
 				onFileSelected(input.files[0])
 			})
