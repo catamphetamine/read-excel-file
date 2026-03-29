@@ -1,11 +1,11 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import readXlsxFile from '../../source/export/readXlsxFileNode.js'
+import readSheet from '../../source/export/readSheetNode.js'
 
 describe('date', () => {
 	it('should parse dates', async () => {
-		const data = await readXlsxFile('./test/testCases/date.xlsx')
+		const data = await readSheet('./test/testCases/date.xlsx')
 
 		expect(data).to.deep.equal([
 			// ['Date'],

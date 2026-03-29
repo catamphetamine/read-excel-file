@@ -1,11 +1,11 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import readXlsxFile from '../../source/export/readXlsxFileNode.js'
+import readSheet from '../../source/export/readSheetNode.js'
 
 describe('string formula', () => {
 	it('should return <v/> of string cells having a formula', async () => {
-		const data = await readXlsxFile('./test/testCases/string-formula.xlsx')
+		const data = await readSheet('./test/testCases/string-formula.xlsx')
 		expect(data.length).to.equal(7)
 		expect(data[4][2]).to.equal('Value2')
 		expect(data[4][3]).to.equal('Value3')

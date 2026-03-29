@@ -7,8 +7,10 @@ import unzipFromArrayBuffer from '../zip/unzipFromArrayBuffer.js'
 
 import convertValuesFromUint8ArraysToStrings from './convertValuesFromUint8ArraysToStrings.js'
 import filterZipArchiveEntry from './filterZipArchiveEntry.js'
+
 /**
- * Unpacks `*.xlsx` file contents, because it's just a `*.zip` archive.
+ * Unpacks `*.xlsx` file contents.
+ * An `.xlsx` file is really just a `.zip` archive with `.xml` files inside.
  * @param  {(File|Blob|ArrayBuffer)} input
  * @return {Promise<Record<string,string>} Resolves to an object holding `*.xlsx` file entries.
  */

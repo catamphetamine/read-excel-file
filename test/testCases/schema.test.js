@@ -3,10 +3,11 @@ import { expect } from 'chai'
 
 import path from 'path'
 
-import readXlsxFileNode from '../../source/export/readXlsxFileNode.js'
+import readSheetNode from '../../source/export/readSheetNode.js'
+import parseData from '../../source/parseData/parseData.js'
 
-describe('readXlsxFileNode', () => {
-	it('should read *.xlsx file in Node.js and parse it to JSON', () => {
+describe('readSheetNode', () => {
+	it('should read *.xlsx file in Node.js and parse it to JSON', async () => {
 		const schema = {
 			date: {
 				column: 'START DATE',
@@ -45,32 +46,28 @@ describe('readXlsxFileNode', () => {
 			}
 		}
 
-		const rowIndexSourceMap = []
+		// const rowIndexSourceMap = []
 
-		return readXlsxFileNode(path.resolve('./test/testCases/schema.xlsx'), { schema, rowIndexSourceMap }).then(({ rows }) => {
-			rows[0].date = rows[0].date.getTime()
-			expect(rows).to.deep.equal([{
-				date: convertToUTCTimezone(new Date(2018, 2, 24)).getTime(),
-				numberOfStudents: 123,
-				course: {
-					isFree: false,
-					cost: 210.45,
-					title: 'Chemistry'
-				},
-				contact: '+11234567890'
-			}])
-			expect(rowIndexSourceMap).to.deep.equal([0, 1])
+		const data = await readSheetNode(path.resolve('./test/testCases/schema.xlsx'))
+
+		const result = parseData(data, schema) // { rowIndexSourceMap }
+
+		expect(result.length).to.equal(1)
+
+		expect(result[0].errors).to.be.undefined
+		expect(result[0].object).to.exist
+
+		expect(result[0].object).to.deep.equal({
+			date: new Date(Date.UTC(2018, 3 - 1, 24)),
+			numberOfStudents: 123,
+			course: {
+				isFree: false,
+				cost: 210.45,
+				title: 'Chemistry'
+			},
+			contact: '+11234567890'
 		})
+
+		// expect(rowIndexSourceMap).to.deep.equal([0, 1])
 	})
 })
-
-// Converts timezone to UTC while preserving the same time
-function convertToUTCTimezone(date) {
-	// Doesn't account for leap seconds but I guess that's ok
-	// given that javascript's own `Date()` does not either.
-	// https://www.timeanddate.com/time/leap-seconds-background.html
-	//
-	// https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset
-	//
-	return new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000)
-}

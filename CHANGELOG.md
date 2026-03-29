@@ -1,3 +1,40 @@
+8.0.0 / 11.03.2026
+==================
+
+* Renamed the default exported function to a named exported function `readSheet`.
+  * Old: `import readExcelFile from "read-excel-file/browser"`
+  * New: `import { readSheet } from "read-excel-file/browser"`
+  * And same for other exports like `"read-excel-file/node"`, etc.
+* The default exported function now returns all sheets in a form of an array of objects: `[{ name: "Sheet 1", rows: [['a','b','c'],['d','e','f']] }, ...]`.
+* Removed `getSheets: true` parameter. The default exported function now returns all sheets.
+* Removed exported `readSheetNames()` function. The default exported function now returns all sheets.
+* Removed `schema` parameter. Instead, use exported function `parseData(data, schema)` to map data to an array of objects.
+  * Old: `import readExcelFile from "read-excel-file"` and then `const { rows, errors } = await readExcelFile(..., { schema })`
+  * New: `import { readSheet, parseData } from "read-excel-file/browser"` and then `const result = parseData(await readSheet(...), schema)`
+    * The `result` of the function is an array where each element represents a "data row" and has shape `{ object, errors }`.
+      * Depending on whether there were any errors when parsing a given "data row", either `object` or `errors` property will be `undefined`.
+      * The `errors` don't have a `row` property anymore because it could be derived from "data row" number.
+* Removed `transformData` parameter because `schema` parameter was removed. A developer could transform the `data` themself and then pass it to `parseData()` function.
+* Removed `isColumnOriented` parameter.
+* Removed `ignoreEmptyRows` parameter. Empty rows somewhere in the middle are not ignored now.
+* Renamed some options that're used when parsing using a `schema`:
+	* `schemaPropertyValueForMissingColumn` → `propertyValueWhenColumnIsMissing`
+	* `schemaPropertyValueForMissingValue` → `propertyValueWhenCellIsEmpty`
+	* `schemaPropertyShouldSkipRequiredValidationForMissingColumn` → (removed)
+	* `getEmptyObjectValue` → `transformEmptyObject`
+    * The leading `.` character is now removed from the `path` parameter.
+	* `getEmptyArrayValue` → `transformEmptyArray`
+    * The leading `.` character is now removed from the `path` parameter.
+* Previously, when parsing comma-separated values, it used to ignore any commas that're surrounded by quotes, similar to how it's done in `.csv` files. Now it no longer does that.
+* Previously, when parsing using a schema, it used to force-convert all `type: Date` schema properties from any numeric cell value to a `Date` with a given timestamp. Now it demands the cell values for all such `type: Date` schema properties to already be correctly recognized as `Date`s when they're returned from `readSheet()` or `readExcelFile()` function. And I'd personally assume that in any sane (non-contrived) real-world usage scenario that would be the case, so it doesn't really seem like a "breaking change". And if, for some strange reason, that happens not to be the case, `parseData()` function will throw an error: `not_a_date`.
+* Previously, when parsing using a schema, it used to skip `required` validation for completely-empty rows. It no longer does that.
+* Removed exported function `parseExcelDate()` because there seems to be no need to have it exported.
+* (TypeScript) Renamed exported types:
+  * `Type` → `ParseDataValueType`
+  * `Error` or `SchemaParseCellValueError` → `ParseDataError`
+  * `CellValueRequiredError` → `ParseDataValueRequiredError`
+  * `ParsedObjectsResult` → `ParseDataResult`
+
 7.0.1 / 04.03.2026
 ==================
 

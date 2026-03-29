@@ -1,7 +1,10 @@
 exports = module.exports = require('../commonjs/export/readXlsxFileNode.js').default
 exports['default'] = require('../commonjs/export/readXlsxFileNode.js').default
-exports.readSheetNames = require('../commonjs/export/readSheetNamesNode.js').default
-exports.parseExcelDate = require('../commonjs/xlsx/parseDate.js').default
-exports.Integer = require('../commonjs/types/Integer.js').default
-exports.Email = require('../commonjs/types/Email.js').default
-exports.URL = require('../commonjs/types/URL.js').default
+
+exports.readSheet = require('../commonjs/export/readSheetNode.js').default
+
+// `parseData()`
+exports.parseData = require('../commonjs/parseData/parseData.js').default
+exports.Integer = require('../commonjs/parseData/types/additional/Integer.js').default
+exports.Email = require('../commonjs/parseData/types/additional/Email.js').default
+exports.URL = require('../commonjs/parseData/types/additional/URL.js').default

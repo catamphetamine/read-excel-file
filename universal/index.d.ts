@@ -1,29 +1,71 @@
+// The contents of this file is identical between the different exports:
+// `/node`, `/browser`, etc.
+
+import { Input } from './input.d.js'
+
 import {
-	ParseWithSchemaOptions,
-	ParseWithoutSchemaOptions,
-	ParsedObjectsResult,
-	Row
-} from '../types.d.js';
+	SheetData,
+	ReadOptions,
+	ReadFileResult
+} from '../types/types.d.js';
+
+import {
+	ParseDataOptions,
+	ParseDataResult
+} from '../types/parseData/parseData.d.js';
+
+import {
+	Schema
+} from '../types/parseData/parseDataSchema.d.js';
 
 export {
-	Schema,
-	ParsedObjectsResult,
-	SchemaParseCellValueError,
-	CellValueRequiredError,
 	CellValue,
 	Row,
+	SheetData
+} from '../types/types.d.js';
+
+export {
+	ParseDataValueCustomType as ParseDataValueType,
+	// Additional built-in `type`s when parsing data.
 	Integer,
 	Email,
 	URL
-} from '../types.d.js';
+} from '../types/parseData/parseDataValueType.d.js';
 
-export function parseExcelDate(excelSerialDate: number) : typeof Date;
+export {
+	ParseDataError,
+	ParseDataValueRequiredError
+} from '../types/parseData/parseDataError.d.js';
 
-type Input = Blob;
+export {
+	ParseDataResult
+} from '../types/parseData/parseData.d.js';
 
-export function readXlsxFile<T extends object>(input: Input, options: ParseWithSchemaOptions<T>) : Promise<ParsedObjectsResult<T>>;
-export function readXlsxFile(input: Input, options?: ParseWithoutSchemaOptions) : Promise<Row[]>;
+export {
+	Schema
+} from '../types/parseData/parseDataSchema.d.js';
 
-export function readSheetNames(input: Input) : Promise<string[]>;
+export default function readXlsxFile<ParsedNumber = number>(
+	input: Input,
+	options?: ReadOptions<ParsedNumber>
+): Promise<ReadFileResult<ParsedNumber>>;
 
-export default readXlsxFile;
+export function readSheet<ParsedNumber = number>(
+	input: Input,
+	sheet?: number | string,
+	options?: ReadOptions<ParsedNumber>
+): Promise<SheetData<ParsedNumber>>;
+
+export function readSheet<ParsedNumber = number>(
+	input: Input,
+	options?: ReadOptions<ParsedNumber>
+): Promise<SheetData<ParsedNumber>>;
+
+export function parseData<
+	Object extends object,
+	ColumnTitle extends string
+>(
+	data: SheetData,
+	schema: Schema<Object, ColumnTitle>,
+	options?: ParseDataOptions
+): ParseDataResult<Object>;

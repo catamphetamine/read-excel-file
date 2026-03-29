@@ -1,6 +1,8 @@
 export { default as default } from '../modules/export/readXlsxFileNode.js'
-export { default as readSheetNames } from '../modules/export/readSheetNamesNode.js'
-export { default as parseExcelDate } from '../modules/xlsx/parseDate.js'
-export { default as Integer } from '../modules/types/Integer.js'
-export { default as Email } from '../modules/types/Email.js'
-export { default as URL } from '../modules/types/URL.js'
+export { default as readSheet } from '../modules/export/readSheetNode.js'
+
+// `parseData()`
+export { default as parseData } from '../modules/parseData/parseData.js'
+export { default as Integer } from '../modules/parseData/types/additional/Integer.js'
+export { default as Email } from '../modules/parseData/types/additional/Email.js'
+export { default as URL } from '../modules/parseData/types/additional/URL.js'

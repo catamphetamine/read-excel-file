@@ -3,48 +3,31 @@ import { expect } from 'chai'
 
 import path from 'path'
 
-import readXlsxFile from '../../source/export/readXlsxFileNode.js'
+import readSheet from '../../source/export/readSheetNode.js'
 
 describe('read-excel-file', () => {
-	it('should support custom `parseNumber` function', () => {
-		const schema = {
-			date: {
-				column: 'START DATE',
-				type: Date
-			},
-			numberOfStudents: {
-				column: 'NUMBER OF STUDENTS',
-				type: Number,
-				required: true
-			},
-			cost: {
-				column: 'COST',
-				type: (any) => any
-			}
-		}
-
-		return readXlsxFile(path.resolve('./test/testCases/parseNumber.xlsx'), {
-			schema,
+	it('should support custom `parseNumber` function', async () => {
+		const data = await readSheet(path.resolve('./test/testCases/parseNumber.xlsx'), {
 			parseNumber: (string) => string
-		}).then(({ rows, errors }) => {
-			rows[0].date = rows[0].date.getTime()
-			expect(rows).to.deep.equal([{
-				date: convertToUTCTimezone(new Date(2018, 2, 24)).getTime(),
-				numberOfStudents: 123,
-				cost: '210.45'
-			}])
-			expect(errors).to.deep.equal([])
 		})
+
+		expect(data).to.deep.equal([
+			[
+				'START DATE',
+				'NUMBER OF STUDENTS',
+				'IS FREE',
+				'COST',
+				'COURSE TITLE',
+				'CONTACT'
+			],
+			[
+				new Date(Date.UTC(2018, 3 - 1, 24)),
+				'123',
+				false,
+				'210.45',
+				'Chemistry',
+				'(123) 456-7890'
+			]
+		])
 	})
 })
-
-// Converts timezone to UTC while preserving the same time
-function convertToUTCTimezone(date) {
-	// Doesn't account for leap seconds but I guess that's ok
-	// given that javascript's own `Date()` does not either.
-	// https://www.timeanddate.com/time/leap-seconds-background.html
-	//
-	// https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset
-	//
-	return new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000)
-}

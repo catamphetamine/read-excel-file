@@ -1,11 +1,11 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import readXlsxFile from '../../source/export/readXlsxFileNode.js'
+import readSheet from '../../source/export/readSheetNode.js'
 
 describe('merged cells', () => {
 	it('should parse inline strings', async () => {
-		const data = await readXlsxFile('./test/testCases/merged-cells.xlsx')
+		const data = await readSheet('./test/testCases/merged-cells.xlsx')
 
 		expect(data).to.deep.equal([
 			['A1', 'B1', 'C1', 'D1'],

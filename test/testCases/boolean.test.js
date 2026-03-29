@@ -1,11 +1,11 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import readXlsxFile from '../../source/export/readXlsxFileNode.js'
+import readSheet from '../../source/export/readSheetNode.js'
 
 describe('boolean', () => {
 	it('should parse booleans', async () => {
-		const data = await readXlsxFile('./test/testCases/boolean.xlsx')
+		const data = await readSheet('./test/testCases/boolean.xlsx')
 
 		expect(data).to.deep.equal([
 			['Boolean'],

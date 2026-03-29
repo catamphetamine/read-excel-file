@@ -1,11 +1,11 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import readXlsxFile from '../../source/export/readXlsxFileNode.js'
+import readSheet from '../../source/export/readSheetNode.js'
 
 describe('1904', () => {
 	it('should parse 1904 macOS dates', async () => {
-		const data = await readXlsxFile('./test/testCases/1904.xlsx')
+		const data = await readSheet('./test/testCases/1904.xlsx')
 
 		expect(data.length).to.equal(6)
 
@@ -15,39 +15,5 @@ describe('1904', () => {
 		expect(data[3][0].toISOString()).to.equal('2018-05-05T00:00:00.000Z')
 		expect(data[4][0].toISOString()).to.equal('2018-05-05T00:00:00.000Z')
 		expect(data[5][0].toISOString()).to.equal('2018-05-05T00:00:00.000Z')
-	})
-
-	it('should parse 1904 macOS dates', async () => {
-		const data = await readXlsxFile('./test/testCases/1904.xlsx', {
-			schema: {
-				date: {
-					column: 'Date',
-					type: Date
-				}
-			}
-		})
-
-		expect(data.errors.length).to.equal(0)
-		expect(data.rows.length).to.equal(5)
-		expect(data.rows[0].date.toISOString()).to.equal('2018-05-05T00:00:00.000Z')
-		expect(data.rows[1].date.toISOString()).to.equal('2018-05-05T00:00:00.000Z')
-		expect(data.rows[2].date.toISOString()).to.equal('2018-05-05T00:00:00.000Z')
-		expect(data.rows[3].date.toISOString()).to.equal('2018-05-05T00:00:00.000Z')
-		expect(data.rows[4].date.toISOString()).to.equal('2018-05-05T00:00:00.000Z')
-	})
-
-	it('should list sheet names in sheet not found error', async () => {
-		// By id.
-		try {
-			await readXlsxFile('./test/testCases/1904.xlsx', { sheet: 2 })
-		} catch (error) {
-			expect(error.message).to.equal('Sheet #2 not found in the *.xlsx file. Available sheets: "sheet 1" (#1).')
-		}
-		// By name.
-		try {
-			await readXlsxFile('./test/testCases/1904.xlsx', { sheet: 'sheet 2' })
-		} catch (error) {
-			expect(error.message).to.equal('Sheet "sheet 2" not found in the *.xlsx file. Available sheets: "sheet 1" (#1).')
-		}
 	})
 })

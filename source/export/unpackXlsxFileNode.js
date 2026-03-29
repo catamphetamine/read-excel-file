@@ -4,9 +4,10 @@ import convertValuesFromUint8ArraysToStrings from './convertValuesFromUint8Array
 import filterZipArchiveEntry from './filterZipArchiveEntry.js'
 
 /**
- * Unpacks XLSX file contents, because it's just a `*.zip` archive.
- * @param  {(string|Stream|Buffer|Blob)} input - A Node.js readable stream or a `Buffer` or a `Blob` or a path to a file.
- * @return {Promise} Resolves to an object holding XLSX file entries.
+ * Unpacks `*.xlsx` file contents.
+ * An `.xlsx` file is really just a `.zip` archive with `.xml` files inside.
+ * @param  {(string|Stream|Buffer|Blob)} input
+ * @return {Promise<Record<string,string>} Resolves to an object holding `*.xlsx` file entries.
  */
 export default function unpackXlsxFile(input) {
   const stream = convertInputToNodeStream(input)

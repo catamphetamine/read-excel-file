@@ -1,0 +1,1 @@
+export type Input = File | Blob | ArrayBuffer;

@@ -20,20 +20,20 @@ const namespaces = {
   rr: 'http://schemas.openxmlformats.org/package/2006/relationships'
 }
 
-export function getCells(document) {
+export function getCellElements(document) {
   return xpath(document, null, '/a:worksheet/a:sheetData/a:row/a:c', namespaces)
 }
 
-export function getMergedCells(document) {
+export function getMergedCellCoordinates(document) {
   return xpath(document, null, '/a:worksheet/a:mergedCells/a:mergedCell/@ref', namespaces)
 }
 
-export function getCellValue(document, node) {
-  return xpath(document, node, './a:v', namespaces)[0]
+export function getCellValue(document, element) {
+  return xpath(document, element, './a:v', namespaces)[0]
 }
 
-export function getCellInlineStringValue(document, node) {
-  return xpath(document, node, './a:is/a:t', namespaces)[0].textContent
+export function getCellInlineStringValue(document, element) {
+  return xpath(document, element, './a:is/a:t', namespaces)[0].textContent
 }
 
 export function getDimensions(document) {

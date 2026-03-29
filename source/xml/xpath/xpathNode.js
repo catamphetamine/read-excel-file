@@ -2,7 +2,7 @@
 
 import xpath from 'xpath'
 
-export default function(document, node, path, namespaces = {}) {
+export default function(document, element, path, namespaces = {}) {
 	const select = xpath.useNamespaces(namespaces)
-	return select(path, node || document)
+	return select(path, element || document)
 }

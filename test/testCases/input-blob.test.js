@@ -3,7 +3,7 @@ import { expect } from 'chai'
 
 import fs from 'fs'
 
-import readXlsxFile from '../../source/export/readXlsxFileNode.js'
+import readSheet from '../../source/export/readSheetNode.js'
 
 describe('input: `Blob`', () => {
 	it('should read an excel file from a blob', async () => {
@@ -12,7 +12,7 @@ describe('input: `Blob`', () => {
 		const contentsBuffer = Buffer.from(spreadsheetContents)
 		const contentsBlob = new Blob([contentsBuffer])
 
-		const data = await readXlsxFile(contentsBlob)
+		const data = await readSheet(contentsBlob)
 
 		expect(data).to.deep.equal([
 			// ['String'],
@@ -22,6 +22,6 @@ describe('input: `Blob`', () => {
 
 	it('should handle empty blob input', async () => {
 		const emptyBlob = new Blob()
-		expect(() => readXlsxFile(emptyBlob)).to.throw('No data')
+		expect(() => readSheet(emptyBlob)).to.throw('No data')
 	})
 })

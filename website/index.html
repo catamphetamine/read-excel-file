@@ -281,7 +281,7 @@
 		<br/>
 
 		<div style="line-height: 1.35em">
-			Read small to medium <code>*.xlsx</code> files in a browser or Node.js.
+			Read <code>.xlsx</code> files in a web browser or Node.js.
 		</div>
 		<div style="line-height: 1.35em; margin-top: 0.35em">
 			Parse file data to an array of JSON objects using a schema.
@@ -334,7 +334,8 @@
 			var input = document.getElementById('input')
 
 			var virtualScroller
-			var readSheetsListStartedAt
+			var excelFileData
+			var readXlsxFileStartedAt
 			var readSheetDataStartedAt
 
 			function onLoading() {
@@ -349,6 +350,8 @@
 					document.getElementById('table-container').scrollTo(0, 0)
 					document.getElementById('table-rows-container').innerHTML = ''
 				}
+
+				excelFileData = undefined
 
 				document.getElementById('result').style.display = 'none'
 				document.getElementById('error').style.display = 'none'
@@ -367,26 +370,36 @@
 				document.getElementById('error').innerText = error.message
 			}
 
-			function onSheetsList(sheets) {
-				console.log('Finished reading sheets list in', (Date.now() - readSheetsListStartedAt), 'ms')
-				console.log('Sheets:', sheets.map(sheet => sheet.name).join(', '))
-
-				var sheetTabsHtml = sheets.map(function (sheet) {
-					return `<button onclick="selectSheetTab('${sheet.name.replaceAll('\'', '\\\'')}')" class="sheet-tab">${sheet.name}</button>`
-				}).join('')
-				document.getElementById('sheet-tabs').innerHTML = sheetTabsHtml
-				selectSheetTab(sheets[0].name)
-			}
-
-			function onSheetData(data) {
-				console.log('Finished reading sheets data in', (Date.now() - readSheetDataStartedAt), 'ms')
-				console.log('Sheet data:', data)
+			function onFileData(fileData) {
+				console.log('Finished reading .xlsx file in', (Date.now() - readXlsxFileStartedAt), 'ms')
 
 				document.getElementById('loading').style.display = 'none'
 				document.getElementById('result').style.display = 'block'
 
-				console.log('Displaying sheet data…')
+				excelFileData = fileData
 
+				var sheetTabsHtml = fileData.map(function (sheetInfo, i) {
+					return `<button onclick="selectSheetTab(${i})" class="sheet-tab">${sheetInfo.sheet}</button>`
+				}).join('')
+				document.getElementById('sheet-tabs').innerHTML = sheetTabsHtml
+				selectSheetTab(0)
+			}
+
+			// function onSheetData(data) {
+			// 	console.log('Finished reading sheets data in', (Date.now() - readSheetDataStartedAt), 'ms')
+			// 	console.log('Sheet data:', data)
+			//
+			// 	document.getElementById('loading').style.display = 'none'
+			// 	document.getElementById('result').style.display = 'block'
+			//
+			// 	console.log('Displaying sheet data…')
+			//
+			// 	displaySheetData(data)
+			//
+			// 	console.log('Done')
+			// }
+
+			function displaySheetData(data) {
 				// `data` is an array of rows
 				// each row being an array of cells.
 
@@ -418,6 +431,7 @@
 					dataCappedRowCounter++
 					dataCappedCellCounter += row.length
 				}
+
 				// Display the capped data warning, if required.
 				document.getElementById('selected-sheet-data-capped-warning').display =
 					dataWasCappedForJsonOutput ? 'block' : 'none'
@@ -487,55 +501,53 @@
 					renderRow,
 					{ getScrollableContainer }
 				)
-
-				console.log('Done')
 			}
 
-			function onStartLoadingSheetData() {
-				// Stop the virtual scroller.
-				if (virtualScroller) {
-					virtualScroller.stop()
-					virtualScroller = undefined
-				}
+			// function onStartLoadingSheetData() {
+			// 	// Stop the virtual scroller.
+			// 	if (virtualScroller) {
+			// 		virtualScroller.stop()
+			// 		virtualScroller = undefined
+			// 	}
+			//
+			// 	var tabs = document.querySelectorAll('#sheet-tabs .sheet-tab')
+			// 	var i = 0
+			// 	while (i < tabs.length) {
+			// 		tabs[i].classList.add('sheet-tab--loading')
+			// 		i++
+			// 	}
+			//
+			// 	document.querySelector('#selected-sheet-tab-content').classList.add('.selected-sheet-tab-content--loading')
+			// }
 
-				var tabs = document.querySelectorAll('#sheet-tabs .sheet-tab')
-				var i = 0
-				while (i < tabs.length) {
-					tabs[i].classList.add('sheet-tab--loading')
-					i++
-				}
-
-				document.querySelector('#selected-sheet-tab-content').classList.add('.selected-sheet-tab-content--loading')
-			}
-
-			function onEndLoadingSheetData() {
-				var tabs = document.querySelectorAll('#sheet-tabs .sheet-tab')
-				var i = 0
-				while (i < tabs.length) {
-					tabs[i].classList.remove('sheet-tab--loading')
-					i++
-				}
-
-				document.querySelector('#selected-sheet-tab-content').classList.remove('.selected-sheet-tab-content--loading')
-			}
+			// function onEndLoadingSheetData() {
+			// 	var tabs = document.querySelectorAll('#sheet-tabs .sheet-tab')
+			// 	var i = 0
+			// 	while (i < tabs.length) {
+			// 		tabs[i].classList.remove('sheet-tab--loading')
+			// 		i++
+			// 	}
+			//
+			// 	document.querySelector('#selected-sheet-tab-content').classList.remove('.selected-sheet-tab-content--loading')
+			// }
 
 			function onFileSelected(file) {
-				console.log('Reading a list of sheets…')
-				readSheetsListStartedAt = Date.now()
-				return readXlsxFile(file, { getSheets: true }).then(
-					onSheetsList,
+				console.log('Reading .xlsx file…')
+				readXlsxFileStartedAt = Date.now()
+				return readXlsxFile(file).then(
+					onFileData,
 					onError
 				)
 			}
 
-			function readSheet(sheetName) {
-				console.log(`Reading sheet "${sheetName}" data…`)
-				readSheetDataStartedAt = Date.now()
-				return readXlsxFile(input.files[0], { sheet: sheetName }).then(
-					onSheetData,
-					onError
-				)
-			}
+			// function readSheet(sheetName) {
+			// 	console.log(`Reading sheet "${sheetName}" data…`)
+			// 	readSheetDataStartedAt = Date.now()
+			// 	return readXlsxFile(input.files[0], { sheet: sheetName }).then(
+			// 		onSheetData,
+			// 		onError
+			// 	)
+			// }
 
 			input.addEventListener('change', function() {
 				onLoading()
@@ -548,27 +560,25 @@
 				onFileSelected(input.files[0])
 			})
 
-			function selectSheetTab(sheetName) {
-				// If the sheet is already selected, don't do anything.
-				var selectedTab = document.querySelector('#sheet-tabs .sheet-tab--selected')
-				if (selectedTab && selectedTab.textContent === sheetName) {
-					return
-				}
-
+			function selectSheetTab(sheetIndex) {
 				// Select the sheet's tab.
 				var tabs = document.querySelectorAll('#sheet-tabs .sheet-tab')
+
 				var i = 0
 				while (i < tabs.length) {
-					if (tabs[i].textContent === sheetName) {
+					if (i === sheetIndex) {
 						tabs[i].classList.add('sheet-tab--selected')
 					} else {
 						tabs[i].classList.remove('sheet-tab--selected')
 					}
 					i++
 				}
-				// Load sheet data.
-				onStartLoadingSheetData()
-				readSheet(sheetName).finally(onEndLoadingSheetData)
+
+				// // Load sheet data.
+				// onStartLoadingSheetData()
+				// readSheet(sheetName).finally(onEndLoadingSheetData)
+
+				displaySheetData(excelFileData[sheetIndex].data)
 			}
 		</script>
 	</body>

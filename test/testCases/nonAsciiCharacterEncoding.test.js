@@ -1,11 +1,11 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import readXlsxFile from '../../source/export/readXlsxFileNode.js'
+import readSheet from '../../source/export/readSheetNode.js'
 
 describe('nonAsciiCharacterEncoding', () => {
 	it('should correctly read non-ASCII characters', async () => {
-		const data = await readXlsxFile('./test/testCases/nonAsciiCharacterEncoding.xlsx')
+		const data = await readSheet('./test/testCases/nonAsciiCharacterEncoding.xlsx')
 
 		const row = data.find((row) => {
 			return row[1] === 'Песчано-гравийные породы, строительный камень' &&

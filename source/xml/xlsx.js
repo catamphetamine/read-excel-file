@@ -2,7 +2,7 @@ import { findChild, findChildren, forEach, map, getFirstElementChild, getTagName
 
 // Returns an array of cells,
 // each element being an XML DOM element representing a cell.
-export function getCells(document) {
+export function getCellElements(document) {
   const worksheet = document.documentElement
   const sheetData = findChild(worksheet, 'sheetData')
 
@@ -15,7 +15,7 @@ export function getCells(document) {
   return cells
 }
 
-export function getMergedCells(document) {
+export function getMergedCellCoordinates(document) {
   const worksheet = document.documentElement
   const mergedCells = findChild(worksheet, 'mergeCells')
   const mergedCellsInfo = []
@@ -27,16 +27,16 @@ export function getMergedCells(document) {
   return mergedCellsInfo
 }
 
-export function getCellValue(document, node) {
-  return findChild(node, 'v')
+export function getCellValueElement(document, element) {
+  return findChild(element, 'v')
 }
 
-export function getCellInlineStringValue(document, node) {
+export function getCellInlineStringValue(document, element) {
   // It seems as if in some weirdly-output "*.xlsx" files
   // there're non-element nodes of some weird nature.
   // https://gitlab.com/catamphetamine/read-excel-file/-/issues/109
   // This code filters out such weird non-element nodes.
-  const firstElementChild = getFirstElementChild(node)
+  const firstElementChild = getFirstElementChild(element)
   if (firstElementChild && getTagName(firstElementChild) === 'is') {
     const firstElementChildFirstElementChild = getFirstElementChild(firstElementChild)
     if (firstElementChildFirstElementChild && getTagName(firstElementChildFirstElementChild) === 't') {

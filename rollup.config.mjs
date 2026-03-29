@@ -22,7 +22,7 @@ export default [
     ],
     output: {
       format: 'umd',
-      name: 'readXlsxFile',
+      name: 'readExcelFile',
       file: 'bundle/read-excel-file.min.js',
       sourcemap: true,
       globals: {

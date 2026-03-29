@@ -11,9 +11,10 @@ describe('readXlsxFileUniversal', () => {
 			await readFileAsBlob('./test/testCases/readXlsxFileUniversal.xlsx')
 		)
 
-		expect(data).to.deep.equal([
-			['Test 123']
-		])
+		expect(data).to.deep.equal([{
+			sheet: 'Sheet1',
+			data: [['Test 123']]
+		}])
 	})
 })
 

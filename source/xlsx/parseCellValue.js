@@ -1,5 +1,5 @@
-import parseDate from './parseDate.js'
-import isDateTimestamp from './isDateTimestamp.js'
+import parseExcelDate from './parseExcelDate.js'
+import isDateFormatStyle from './isDateFormatStyle.js'
 
 // Parses a string `value` of a cell.
 export default function parseCellValue(value, type, {
@@ -7,8 +7,8 @@ export default function parseCellValue(value, type, {
   getInlineStringXml,
   getStyleId,
   styles,
-  values,
-  properties,
+  sharedStrings,
+  epoch1904,
   options
 }) {
   if (!type) {
@@ -52,15 +52,15 @@ export default function parseCellValue(value, type, {
       // If a cell has no value then there's no `<c/>` element for it.
       // If a `<c/>` element exists then it's not empty.
       // The `<v/>`alue is a key in the "shared strings" dictionary of the
-      // XLSX file, so look it up in the `values` dictionary by the numeric key.
+      // XLSX file, so look it up in the `sharedStrings` dictionary by the numeric key.
       const sharedStringIndex = Number(value)
       if (isNaN(sharedStringIndex)) {
         throw new Error(`Invalid "shared" string index: ${value}`)
       }
-      if (sharedStringIndex >= values.length) {
+      if (sharedStringIndex >= sharedStrings.length) {
         throw new Error(`An out-of-bounds "shared" string index: ${value}`)
       }
-      value = values[sharedStringIndex]
+      value = sharedStrings[sharedStringIndex]
       value = parseString(value, options)
       break
 
@@ -111,19 +111,20 @@ export default function parseCellValue(value, type, {
       if (value === undefined) {
         break
       }
-      const isDateTimestampNumber = isDateTimestamp(getStyleId(), styles, options)
       // XLSX does have "d" type for dates, but it's not commonly used.
       // Instead, it prefers using "n" type for storing dates as timestamps.
-      if (isDateTimestampNumber) {
+      const styleId = getStyleId()
+      if (styleId && isDateFormatStyle(styleId, styles, options)) {
         // Parse the number from string.
         value = parseNumberDefault(value)
         // Parse the number as a date timestamp.
-        value = parseDate(value, properties)
+        value = parseExcelDate(value, { epoch1904 })
       } else {
         // Parse the number from string.
         // Supports custom parsing function to work around javascript number encoding precision issues.
         // https://gitlab.com/catamphetamine/read-excel-file/-/issues/85
-        value = (options.parseNumber || parseNumberDefault)(value)
+        const parseNumber = options.parseNumber || parseNumberDefault
+        value = parseNumber(value)
       }
       break
 

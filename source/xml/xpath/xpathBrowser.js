@@ -10,20 +10,20 @@
 // for using `./xpathNode` instead of `./xpathBrowser`
 // but this library has been migrated to not using `xpath` anyway.
 // This code is just alternative/historical now, it seems.
-export default function xpath(document, node, path, namespaces = {}) {
-	const nodes = document.evaluate(
+export default function xpath(document, element, path, namespaces = {}) {
+	const elements = document.evaluate(
 		path,
-		node || document,
+		element || document,
 		prefix => namespaces[prefix],
 		XPathResult.ANY_TYPE,
 		null
 	)
 	// Convert iterator to an array.
 	const results = []
-	let result = nodes.iterateNext()
+	let result = elements.iterateNext()
 	while (result) {
 		results.push(result)
-		result = nodes.iterateNext()
+		result = elements.iterateNext()
 	}
 	return results
 }
