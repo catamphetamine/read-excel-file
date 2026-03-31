@@ -31,6 +31,8 @@
 			{
 				margin-top: -0.25rem;
 				margin-bottom: -0.25rem;
+				margin-left: -0.25rem;
+				margin-right: -0.25rem;
 			}
 
 			.sheet-tab
@@ -53,6 +55,7 @@
 				color: black;
 				background-color: #f98700;
 				border: 1px solid #f98700;
+				cursor: auto;
 			}
 
 			.sheet-tab--loading
@@ -88,6 +91,13 @@
 			#selected-sheet-data-capped-warning
 			{
 				opacity: 0.75;
+				margin-top: 1em;
+				margin-bottom: 1em;
+			}
+
+			.selected-sheet-data-capped-warning-count
+			{
+				color: #fd8900;
 			}
 
 			#json-data-container-title
@@ -98,7 +108,8 @@
 
 			.json-data-hint
 			{
-				margin-top: 1rem;
+				margin-top: 1em;
+				margin-bottom: 1em;
 			}
 
 			.json-data-hint-text
@@ -108,7 +119,8 @@
 
 			.json-data-hint a
 			{
-				color: #f98700;
+				/* color: #f98700; */
+				opacity: 0.9;
 			}
 
 			#json-data-container
@@ -147,6 +159,8 @@
 				padding-right: 1em;
 				padding-top: 1em;
 				padding-bottom: 1em;
+
+				line-height: 1.5em;
 			}
 
 			#main-link
@@ -209,6 +223,20 @@
 			#error
 			{
 				color: #ff7979;
+			}
+
+			#file-info-section
+			{
+				display: none;
+			}
+
+			#file-name
+			{
+				display: block;
+				margin-top: 1rem;
+				margin-bottom: 3rem;
+				font-size: 1.25em;
+				color: #f98700;
 			}
 
 			/* Loading Indicator */
@@ -274,7 +302,7 @@
 	</head>
 
 	<body>
-		<a id="main-link" href="https://gitlab.com/catamphetamine/read-excel-file">
+		<a id="main-link" href="https://www.npmjs.com/package/read-excel-file">
 			read-excel-file
 		</a>
 
@@ -283,9 +311,9 @@
 		<div style="line-height: 1.35em">
 			Read <code>.xlsx</code> files in a web browser or Node.js.
 		</div>
-		<div style="line-height: 1.35em; margin-top: 0.35em">
+		<!-- <div style="line-height: 1.35em; margin-top: 0.35em">
 			Parse file data to an array of JSON objects using a schema.
-		</div>
+		</div> -->
 
 		<br/>
 
@@ -302,11 +330,21 @@
 		</div>
 
 		<div id="result">
-			<h2>
-				File Data
-			</h2>
+			<div id="file-info-section">
+				<h2>
+					File
+				</h2>
 
-			<div id="sheet-tabs"></div>
+				<code id="file-name"></code>
+			</div>
+
+			<div id="sheets-section">
+				<h2>
+					Sheets
+				</h2>
+
+				<div id="sheet-tabs"></div>
+			</div>
 
 			<div id="selected-sheet-tab-content">
 				<div id="table-container">
@@ -316,16 +354,17 @@
 					</table>
 				</div>
 				<!-- <div id="selected-sheet-data-visual"></div> -->
-				<h2 id="json-data-container-title">JSON data</h2>
-
-				<div class="json-data-hint">
-					<span class="json-data-hint-text">
-						It also supports parsing file data to an array of JSON objects using a schema.
-					</span>
-					<a target="_blank" href="https://www.npmjs.com/package/read-excel-file#schema" style="text-decoration: none">Read more</a>
-				</div>
+				<h2 id="json-data-container-title">Sheet Data</h2>
 
 				<p id="selected-sheet-data-capped-warning"></p>
+
+				<p class="json-data-hint">
+					<span class="json-data-hint-text">
+						<em>Feature:</em> One could provide a "schema" to parse this data to an array of JSON objects.
+					</span>
+					<a target="_blank" href="https://www.npmjs.com/package/read-excel-file#schema" style="text-decoration: none">Read more</a>
+				</p>
+
 				<pre id="json-data-container"><code class="language-js" id="selected-sheet-data"></code></pre>
 			</div>
 		</div>
@@ -333,10 +372,18 @@
 		<script>
 			var input = document.getElementById('input')
 
+			var SHOW_TABLE = false
+
 			var virtualScroller
+
+			var excelFileName
 			var excelFileData
 			var readXlsxFileStartedAt
 			var readSheetDataStartedAt
+
+			if (!SHOW_TABLE) {
+				document.getElementById('table-container').style.display = 'none'
+			}
 
 			function onLoading() {
 				// Reset previously-selected file.
@@ -351,6 +398,7 @@
 					document.getElementById('table-rows-container').innerHTML = ''
 				}
 
+				excelFileName = undefined
 				excelFileData = undefined
 
 				document.getElementById('result').style.display = 'none'
@@ -435,8 +483,8 @@
 				// Display the capped data warning, if required.
 				document.getElementById('selected-sheet-data-capped-warning').display =
 					dataWasCappedForJsonOutput ? 'block' : 'none'
-				document.getElementById('selected-sheet-data-capped-warning').innerText =
-					dataWasCappedForJsonOutput ? `Only the first ${dataWasCappedForJsonOutputSomewhereInFirstRow ? dataCapped[0].length + ' column' + (dataCapped[0].length === 1 ? '' : 's') + ' of the first row' + (dataCapped[0].length === 1 ? ' is' : ' are'): dataCapped.length + ' row' + (dataCapped.length === 1 ? '' : 's') + ' of the total ' + data.length + ' row' + (data.length === 1 ? '' : 's') +  (dataCapped.length === 1 ? ' is' : ' are')} being shown.` : ''
+				document.getElementById('selected-sheet-data-capped-warning').innerHTML =
+					dataWasCappedForJsonOutput ? `Only the first ${dataWasCappedForJsonOutputSomewhereInFirstRow ? '<span class="selected-sheet-data-capped-warning-count">' + dataCapped[0].length + '</span>' + ' column' + (dataCapped[0].length === 1 ? '' : 's') + ' of the first row' + (dataCapped[0].length === 1 ? ' is' : ' are'): '<span class="selected-sheet-data-capped-warning-count">' + dataCapped.length + '</span>' + ' row' + (dataCapped.length === 1 ? '' : 's') + ' of the total ' + '<span class="selected-sheet-data-capped-warning-count">' + data.length + '</span>' + ' row' + (data.length === 1 ? '' : 's') +  (dataCapped.length === 1 ? ' is' : ' are')} being shown.` : ''
 				// Display the capped data (as JSON).
 				document.getElementById('selected-sheet-data').innerHTML = Prism.highlight(
 					JSON.stringify(dataCapped, null, 2),
@@ -465,42 +513,44 @@
 				// Output sheet data in a form of an HTML `<table/>` through `virtual-scroller`.
 				// Doesn't hang the browser in case of large spreadsheets.
 
-				function renderRow(row) {
-					var tr = document.createElement('tr')
+				if (SHOW_TABLE) {
+					function renderRow(row) {
+						var tr = document.createElement('tr')
 
-					for (var cell of row) {
-						var td = document.createElement('td')
+						for (var cell of row) {
+							var td = document.createElement('td')
 
-						// When using a <table/> as an items container, all column widths
-						// must be strictly defined. Otherwise, the <table/> will automatically
-						// adjust column widths based on the content. This "intelligent" approach
-						// would've worked in classic HTML when all data is output at once,
-						// but it won't work with virtual-scroller when only a small subset of data
-						// is output at a given moment, and that subset constantly changes, resulting in
-						// column widths constantly changing, which not only looks weird but it also makes
-						// all row heights contantly change, causing a warning:
-						// "Item index N height changed unexpectedly".
-						td.style.width = (100 / row.length) + '%'
-						td.style.overflow = 'hidden'
-						td.style.textOverflow = 'ellipsis'
+							// When using a <table/> as an items container, all column widths
+							// must be strictly defined. Otherwise, the <table/> will automatically
+							// adjust column widths based on the content. This "intelligent" approach
+							// would've worked in classic HTML when all data is output at once,
+							// but it won't work with virtual-scroller when only a small subset of data
+							// is output at a given moment, and that subset constantly changes, resulting in
+							// column widths constantly changing, which not only looks weird but it also makes
+							// all row heights contantly change, causing a warning:
+							// "Item index N height changed unexpectedly".
+							td.style.width = (100 / row.length) + '%'
+							td.style.overflow = 'hidden'
+							td.style.textOverflow = 'ellipsis'
 
-						td.innerText = cell
-						tr.appendChild(td)
+							td.innerText = cell
+							tr.appendChild(td)
+						}
+
+						return tr
 					}
 
-					return tr
-				}
+					function getScrollableContainer() {
+						return document.getElementById('table-container')
+					}
 
-				function getScrollableContainer() {
-					return document.getElementById('table-container')
+					virtualScroller = new VirtualScroller(
+						document.getElementById('table-rows-container'),
+						data,
+						renderRow,
+						{ getScrollableContainer }
+					)
 				}
-
-				virtualScroller = new VirtualScroller(
-					document.getElementById('table-rows-container'),
-					data,
-					renderRow,
-					{ getScrollableContainer }
-				)
 			}
 
 			// function onStartLoadingSheetData() {
@@ -533,6 +583,10 @@
 
 			function onFileSelected(file) {
 				console.log('Reading .xlsx file…')
+
+				excelFileName = file.name
+				document.getElementById('file-name').textContent = excelFileName
+
 				readXlsxFileStartedAt = Date.now()
 				return readXlsxFile(file).then(
 					onFileData,

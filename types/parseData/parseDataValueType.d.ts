@@ -15,31 +15,36 @@ export type Constructor<Type> =
 					? BooleanConstructor
 					: never;
 
+export type StringType = Constructor<String>;
+export type DateType = Constructor<Date>;
+export type NumberType = Constructor<Number>;
+export type BooleanType = Constructor<Boolean>;
+
 // Parsed value `type` (foundational ones).
-type BaseType =
+type ParseDataBaseType =
 	Constructor<String> |
 	Constructor<Date> |
 	Constructor<Number> |
 	Constructor<Boolean>;
-
-// Parsed value `type` (custom one).
-// A function that receives a cell `value` and returns a "parsed" value.
-// Returning `undefined` will have same effect as returning `null`.
-// When cell value is `undefined` or `null`, its `type` is completely ignored (skipped).
-export type ParseDataValueCustomType<ParsedValue> = (value: CellValue) => ParsedValue | undefined | null;
 
 // Parsed value `type` (additional built-in ones).
 export function Integer(value: CellValue): number;
 export function URL(value: CellValue): string;
 export function Email(value: CellValue): string;
 
-type AdditionalBuiltInParseDataValueType =
+type ParseDataAdditionalType =
 	| typeof Integer
 	| typeof URL
 	| typeof Email;
 
+// Parsed value `type` (custom one).
+// A function that receives a cell `value` and returns a "parsed" value.
+// Returning `undefined` will have same effect as returning `null`.
+// When cell value is `undefined` or `null`, its `type` is completely ignored (skipped).
+export type ParseDataCustomType<ParsedValue> = (value: CellValue) => ParsedValue | undefined;
+
 // Schema entry `type`: foundational ones, additional ones, custom ones.
-export type ParseDataValueType<ParseDataValueCustomType> =
-	| BaseType
-	| AdditionalBuiltInParseDataValueType
-	| ParseDataValueCustomType;
+export type ParseDataValueType<ParseDataCustomType> =
+	| ParseDataBaseType
+	| ParseDataAdditionalType
+	| ParseDataCustomType;

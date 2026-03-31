@@ -1,4 +1,4 @@
-import { ParseDataValueType, ParseDataValueCustomType } from './parseDataValueType.js'
+import { ParseDataValueType, ParseDataCustomType } from './parseDataValueType.js'
 
 type SchemaEntryRequiredOrNot<Object> = boolean | ((row: Object) => boolean);
 
@@ -9,7 +9,7 @@ interface SchemaEntryForValue<
 	ColumnTitle extends string
 > {
 	column: ColumnTitle;
-	type?: ParseDataValueType<ParseDataValueCustomType<Object[Key]>>;
+	type?: ParseDataValueType<ParseDataCustomType<Object[Key]>>;
 	oneOf?: Object[Key][];
 	required?: SchemaEntryRequiredOrNot<TopLevelObject>;
 	validate?(value: Object[Key]): void;

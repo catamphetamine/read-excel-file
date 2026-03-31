@@ -1,6 +1,6 @@
 # `read-excel-file`
 
-Read `.xlsx` files in a browser or in Node.js.
+Read `.xlsx` files in a browser or Node.js.
 
 It also supports parsing spreadsheet rows into JSON objects using a [schema](#schema).
 
@@ -49,25 +49,16 @@ Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-fi
 	* `getEmptyArrayValue` → `transformEmptyArray`
     * The leading `.` character is now removed from the `path` parameter.
 * Previously, when parsing comma-separated values, it used to ignore any commas that're surrounded by quotes, similar to how it's done in `.csv` files. Now it no longer does that.
+* Previously, when parsing comma-separated values, it used to allow empty-string elements. Now it no longer does that and such empty-string elements will now result in an error with properties: `{ error: "invalid", reason: "syntax" }`.
 * Previously, when parsing using a schema, it used to force-convert all `type: Date` schema properties from any numeric cell value to a `Date` with a given timestamp. Now it demands the cell values for all such `type: Date` schema properties to already be correctly recognized as `Date`s when they're returned from `readSheet()` or `readExcelFile()` function. And I'd personally assume that in any sane (non-contrived) real-world usage scenario that would be the case, so it doesn't really seem like a "breaking change". And if, for some strange reason, that happens not to be the case, `parseData()` function will throw an error: `not_a_date`.
 * Previously, when parsing using a schema, it used to skip `required` validation for completely-empty rows. It no longer does that.
 * Removed exported function `parseExcelDate()` because there seems to be no need to have it exported.
 * (TypeScript) Renamed exported types:
-  * `Type` → `ParseDataValueType`
+  * `Type` → `ParseDataCustomType`
   * `Error` or `SchemaParseCellValueError` → `ParseDataError`
   * `CellValueRequiredError` → `ParseDataValueRequiredError`
   * `ParsedObjectsResult` → `ParseDataResult`
 </details>
-
-## Performance
-
-Here're the results of reading [sample `.xlsx` files](https://examplefile.com/document/xlsx) of different size:
-
-|File Size| Browser |  Node.js  |
-|---------|---------|-----------|
-|   1 MB  | 0.2 sec.| 0.25 sec. |
-|  10 MB  | 1.5 sec.|    2 sec. |
-|  50 MB  | 8.5 sec.|   14 sec. |
 
 ## Install
 
@@ -75,26 +66,50 @@ Here're the results of reading [sample `.xlsx` files](https://examplefile.com/do
 npm install read-excel-file --save
 ```
 
-Alternatively, one could include it on a web page [directly](#cdn) via a `<script/>` tag.
+Alternatively, it could be included on a web page [directly](#cdn) via a `<script/>` tag.
 
 ## Use
 
-The default exported function — let's call it `readExcelFile()` — reads an `.xslx` file and returns a `Promise` that resolves to an array of "sheets". At least one "sheet" always exists. Each "sheet" is an object with properties:
-* `sheet` — Sheet name.
-  * Example: `"Sheet1"`
-* `data` — Sheet data. An array of rows. Each row is an array of values — `string`, `number`, `boolean` or `Date`.
-  * Example: `[ ['John Smith',35,true,...], ['Kate Brown',28,false,...], ... ]`
+If your `.xlsx` file only has a single "sheet", or if you only care for a single "sheet", or if you don't know or care what a "sheet" is, use `readSheet()` function.
+
+| Name       | Date of Birth | Married | Kids |
+| ---------- | ------------- | ------- | ---- |
+| John Smith | 1/1/1995      | TRUE    | 3    |
+| Kate Brown | 3/1/2010      | FALSE   | 0    |
 
 ```js
+import { readSheet } from 'read-excel-file/node'
+
+await readSheet(file)
+
+// Returns
+[
+  ['Name', 'Date of Birth', 'Married', 'Kids'],
+  ['John Smith', 1995-01-01T00:00:00.000Z, true, 3],
+  ['Kate Brown', 2010-03-01T00:00:00.000Z, false, 0]
+]
+```
+
+It resolves to an array of rows. Each row is an array of values — `string`, `number`, `boolean` or `Date`.
+
+<!-- It's same as the default exported function shown above with the only difference that it returns just `data` instead of `[{ name: 'Sheet1', data }]`, so it's just a bit simpler to use. It has an optional second argument — `sheet` — which could be a sheet number (starting from `1`) or a sheet name. By default, it reads the first sheet. -->
+
+And it has an optional second argument — `sheet` — which could be a sheet number (starting from `1`) or a sheet name. By default, it reads the first sheet.
+
+But if you need to read all "sheets" for some reason, use the default exported function which resolves to an array of "sheets".
+
+```js
+import readExcelFile from 'read-excel-file/node'
+
 await readExcelFile(file)
 
 // Returns
 [{
   sheet: 'Sheet1',
   data: [
-    ['John Smith',35,true,...],
-    ['Kate Brown',28,false,...],
-    ...
+    ['Name', 'Age'],
+    ['John Smith', 30],
+    ['Kate Brown', 15]
   ]
 }, {
   sheet: 'Sheet2',
@@ -102,20 +117,15 @@ await readExcelFile(file)
 }]
 ```
 
-In simple cases when there're no multiple sheets in an `.xlsx` file, or if only one sheet in an `.xlsx` file is of any interest, use a named exported function `readSheet()`. It's same as the default exported function shown above with the only difference that it returns just `data` instead of `[{ name: 'Sheet1', data }]`, so it's just a bit simpler to use. It has an optional second argument — `sheet` — which could be a sheet number (starting from `1`) or a sheet name. By default, it reads the first sheet.
+At least one "sheet" always exists. Each "sheet" is an object with properties:
+* `sheet` — Sheet name.
+  * Example: `"Sheet1"`
+* `data` — Sheet data. An array of rows. Each row is an array of values — `string`, `number`, `boolean` or `Date`.
+  * Example: `[ ['Name','Age'], ['John Smith',30], ['Kate Brown',15] ]`
 
-```js
-await readSheet(file)
+## API
 
-// Returns
-[
-  ['John Smith',35,true,...],
-  ['Kate Brown',28,false,...],
-  ...
-]
-```
-
-As for where to `import` those two functions from, the package provides a separate `import` path for each different environment, as described below.
+This package provides a separate `import` path for each different environment, as described below.
 
 ### Browser
 
@@ -259,6 +269,16 @@ readExcelFile(file, {
 
 This package doesn't support reading cells that use formulas to calculate the value: `SUM`, `AVERAGE`, etc.
 
+## Performance
+
+Here're the results of reading [sample `.xlsx` files](https://examplefile.com/document/xlsx) of different size:
+
+|File Size| Browser |  Node.js  |
+|---------|---------|-----------|
+|   1 MB  | 0.2 sec.| 0.25 sec. |
+|  10 MB  | 1.5 sec.|    2 sec. |
+|  50 MB  | 8.5 sec.|   14 sec. |
+
 ## Schema
 
 Oftentimes, the task is not just to read the "raw" spreadsheet data but also to convert each row of that data to a JSON object having a certain structure. Because it's such a common task, this package exports a named function `parseData(data, schema)` which does exactly that. It parses sheet data into an array of JSON objects according to a pre-defined `schema` which describes how should a row of data be converted to a JSON object.
@@ -339,105 +359,222 @@ Example:
 
 ```js
 // An example .xlsx document:
-// -----------------------------------------------------------------------------------------
-// | START DATE | NUMBER OF STUDENTS | IS FREE | COURSE TITLE |    CONTACT     |  STATUS   |
-// -----------------------------------------------------------------------------------------
-// | 03/24/2018 |         10         |   true  |  Chemistry   | (123) 456-7890 | SCHEDULED |
-// -----------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------
+// | START DATE | SEATS |   STATUS  |    CONTACT     | COURSE TITLE  | COURSE CATEGORY   | COURSE IS FREE |
+// --------------------------------------------------------------------------------------------------------
+// | 03/24/2018 |   10  | SCHEDULED | (123) 456-7890 | Basic Algebra | Math, Arithmetic  |     TRUE       |
+// --------------------------------------------------------------------------------------------------------
 
 const schema = {
-  date: {
+  startDate: {
     column: 'START DATE',
     type: Date
   },
-  numberOfStudents: {
-    column: 'NUMBER OF STUDENTS',
+  seats: {
+    column: 'SEATS',
     type: Number,
     required: true
-  },
-  // Nested object example.
-  course: {
-    schema: {
-      isFree: {
-        column: 'IS FREE',
-        type: Boolean
-      },
-      title: {
-        column: 'COURSE TITLE',
-        type: String
-      }
-    }
-    // required: true/false
-  },
-  contact: {
-    column: 'CONTACT',
-    required: true,
-    // A custom `type` transformation function can be specified.
-    // It will transform the cell value if it's not empty.
-    type: (value) => {
-      const number = parsePhoneNumber(value)
-      if (!number) {
-        throw new Error('invalid')
-      }
-      return number
-    }
   },
   status: {
     column: 'STATUS',
     type: String,
+    // An example of using `oneOf`
     oneOf: [
       'SCHEDULED',
       'STARTED',
       'FINISHED'
     ]
-  }
-}
-
-const data = await readSheet(file)
-
-const { rows, errors } = parseData(data, schema)
-
-// `errors` list items have shape: `{ row, column, error, reason?, value?, type? }`.
-errors.length === 0
-
-rows === [{
-  date: new Date(2018, 3 - 1, 24),
-  numberOfStudents: 10,
-  course: {
-    isFree: true,
-    title: 'Chemistry'
   },
-  contact: '+11234567890',
-  status: 'SCHEDULED'
-}]
-```
-
-<!-- #### Schema: Tips and Features -->
-
-<!-- If no `type` is specified then the cell value is returned "as is": as a string, number, date or boolean. -->
-
-<!-- There are also some additional exported `type`s available: -->
-
-<details>
-<summary>An example of a <strong>custom <code>type</code></strong></summary>
-
-#####
-
-Here's an example of a basic custom `type`. It calls a custom `parseValue()` function to parse a cell value, and produces an `"invalid"` error if the value couldn't be parsed. If a cell is empty, it will not be parsed.
-
-```js
-{
-  property: {
-    column: 'COLUMN TITLE',
-    type: (value) => {
-      try {
-        return parseValue(value)
-      } catch (error) {
-        console.error(error)
-        throw new Error('invalid')
+  contact: {
+    column: 'CONTACT',
+    required: true,
+    // An example of using a custom `type`
+    type: PhoneNumber
+  },
+  // Nested object example
+  course: {
+    // required: true/false,
+    schema: {
+      title: {
+        column: 'COURSE TITLE',
+        type: String
+      },
+      categories: {
+        column: 'COURSE CATEGORY',
+        // An example of parsing comma-separated values
+        type: [String]
+      },
+      isFree: {
+        column: 'COURSE IS FREE',
+        type: Boolean
       }
     }
   }
+}
+
+// If this code was written in TypeScript, `schema` would've been declared as:
+// const schema: Schema<Object, ColumnTitle> = { ... }
+
+// Read `data` from an `.xlsx` file
+const data = await readSheet(file)
+
+// Parse `data` using the `schema`
+const results = parseData(data, schema)
+
+// There's one data row in the `.xlsx` file.
+results.length === 1
+
+// There have been no errors when parsing the first data row, so `errors` is `undefined`.
+// Should there have been any errors when parsing the row, `errors` would've been an array
+// with items having shape: `{ column, error, reason?, value?, type? }`.
+results[0].errors === undefined
+
+results[0].object === {
+  startDate: new Date(Date.UTC(2018, 3 - 1, 24)),
+  seats: 10,
+  status: 'SCHEDULED',
+  contact: '+11234567890',
+  course: {
+    title: 'Basic Algebra',
+    categories: ['Math', 'Arithmetic']
+    isFree: true
+  }
+}
+
+// An example of a custom `type` parser function.
+// It will parse the cell value when it's not empty.
+function PhoneNumber(value) {
+  const number = parsePhoneNumber(value)
+  if (!number) {
+    throw new Error('invalid')
+  }
+  return number
+}
+```
+
+An example of how an application could handle the `results`:
+
+```js
+const errors = []
+const objects = []
+
+// If this code was written in TypeScript, `errors` and `objects` would've been declared as:
+// const errors: { error: ParseDataError, row: number }[] = []
+// const objects: Object[] = []
+
+let row = 1
+for (const { errors: errorsInRow, object } of results) {
+  if (errorsInRow) {
+    for (const error of errorsInRow) {
+      errors.push({ error, row })
+    }
+  } else {
+    objects.push(object)
+  }
+  row++
+}
+
+if (errors.length > 0) {
+  for (const { error, row } of errors) {
+    console.error('Error in data row', row, 'column', error.column, ':', error.error, error.reason || '')
+  }
+} else {
+  console.log('Objects', objects)
+}
+```
+
+<details>
+<summary>An example of defining a <strong>custom <code>type</code></strong> in <strong>TypeScript</strong></summary>
+
+#####
+
+```ts
+import type {
+  Schema,
+  CellValue,
+  ParseDataError,
+  ParseDataCustomType,
+  ParseDataCustomTypeErrorMessage
+} from 'read-excel-file/node'
+
+type ColumnTitle = 'COLUMN TITLE 1' | 'COLUMN TITLE 2'
+
+type CustomTypeValue = string
+
+function CustomType(value: CellValue): CustomTypeValue {
+  if (typeof value !== 'string') {
+    throw new Error('not_a_string')
+  }
+  return '~' + value + '~'
+}
+
+type CustomTypeErrorMessage<Type extends ParseDataCustomType<unknown>> =
+  Type extends typeof CustomType
+    ? 'not_a_string'
+    : never
+
+// type CustomTypeErrorReason<
+//   Type extends ParseDataCustomType<unknown>,
+//   ErrorMessage extends ParseDataCustomTypeErrorMessage<Type>
+// > =
+//   Type extends typeof CustomType
+//     ? (ErrorMessage extends 'not_a_string' ? undefined : never)
+//     : never
+
+type PossibleError = ParseDataError<
+  ColumnTitle,
+  typeof CustomType,
+  CustomTypeErrorMessage<typeof CustomType>
+  // CustomTypeErrorReason<typeof CustomType, CustomTypeErrorMessage<typeof CustomType>>
+>
+
+interface Object {
+  property1: CustomTypeValue;
+  property2?: string;
+}
+
+const schema: Schema<Object, ColumnTitle> = {
+  property1: {
+    column: 'COLUMN TITLE 1',
+    type: CustomType,
+    required: true
+  },
+  property2: {
+    column: 'COLUMN TITLE 2',
+    type: String
+  }
+}
+
+const results = parseData<Object, ColumnTitle, PossibleError>([
+  ['COLUMN TITLE 1', 'COLUMN TITLE 2'],
+  ['Value 1', 'Value 2']
+], schema)
+
+const errors: {
+  error: PossibleError,
+  row: number
+}[] = []
+
+const objects: Object[] = []
+
+let row = 1
+for (const { errors: errorsInRow, object } of results) {
+  if (errorsInRow) {
+    for (const error of errorsInRow) {
+      errors.push({ error, row })
+    }
+  } else {
+    objects.push(object)
+  }
+  row++
+}
+
+if (errors.length > 0) {
+  for (const { error, row } of errors) {
+    console.error('Error in data row', row, 'column', error.column, ':', error.error, error.reason || '')
+  }
+} else {
+  console.log('Objects', objects)
 }
 ```
 </details>

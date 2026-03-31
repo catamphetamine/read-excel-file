@@ -1,20 +1,19 @@
-import { ParseDataPossibleError } from './parseDataError.d.js'
-import { ParseDataValueCustomType } from './parseDataValueType.d.js'
+import { ParseDataError } from './parseDataError.d.js'
 
 export type ParseDataResult<
 	Object,
-	ParseDataValueCustomType_ extends ParseDataValueCustomType<unknown> = never
+	Error extends ParseDataError = ParseDataError
 > = ParseDataResultItem<
 	Object,
-	ParseDataValueCustomType_
+	Error
 >[]
 
 type ParseDataResultItem<
 	Object,
-	ParseDataValueCustomType_ extends ParseDataValueCustomType<unknown> = never
+	Error extends ParseDataError
 > =
 	| ParseDataResultItemSuccess<Object>
-	| ParseDataResultItemError<ParseDataValueCustomType_>
+	| ParseDataResultItemError<Error>
 
 interface ParseDataResultItemSuccess<Object> {
 	object: Object;
@@ -22,10 +21,10 @@ interface ParseDataResultItemSuccess<Object> {
 }
 
 interface ParseDataResultItemError<
-	ParseDataValueCustomType_ extends ParseDataValueCustomType<unknown> = never
+	Error extends ParseDataError
 > {
 	object: undefined;
-	errors: ParseDataPossibleError<ParseDataValueCustomType_>[];
+	errors: Error[];
 }
 
 export interface ParseDataOptions {

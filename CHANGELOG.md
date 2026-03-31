@@ -26,11 +26,12 @@
 	* `getEmptyArrayValue` → `transformEmptyArray`
     * The leading `.` character is now removed from the `path` parameter.
 * Previously, when parsing comma-separated values, it used to ignore any commas that're surrounded by quotes, similar to how it's done in `.csv` files. Now it no longer does that.
+* Previously, when parsing comma-separated values, it used to allow empty-string elements. Now it no longer does that and such empty-string elements will now result in an error with properties: `{ error: "invalid", reason: "syntax" }`.
 * Previously, when parsing using a schema, it used to force-convert all `type: Date` schema properties from any numeric cell value to a `Date` with a given timestamp. Now it demands the cell values for all such `type: Date` schema properties to already be correctly recognized as `Date`s when they're returned from `readSheet()` or `readExcelFile()` function. And I'd personally assume that in any sane (non-contrived) real-world usage scenario that would be the case, so it doesn't really seem like a "breaking change". And if, for some strange reason, that happens not to be the case, `parseData()` function will throw an error: `not_a_date`.
 * Previously, when parsing using a schema, it used to skip `required` validation for completely-empty rows. It no longer does that.
 * Removed exported function `parseExcelDate()` because there seems to be no need to have it exported.
 * (TypeScript) Renamed exported types:
-  * `Type` → `ParseDataValueType`
+  * `Type` → `ParseDataCustomType`
   * `Error` or `SchemaParseCellValueError` → `ParseDataError`
   * `CellValueRequiredError` → `ParseDataValueRequiredError`
   * `ParsedObjectsResult` → `ParseDataResult`

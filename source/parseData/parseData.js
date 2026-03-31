@@ -225,6 +225,12 @@ function parseDataCellValue_(cellValue, schemaEntry, propertyPath, options) {
       if (errors.length > 0) {
         return
       }
+      // If an empty substring was extracted, it means that there was an out-of-place separator.
+      if (!substring) {
+        errors.push('invalid')
+        reasons.push('syntax')
+        return
+      }
       const { value, error, reason } = parseValue(substring, schemaEntry, options)
       if (error) {
         errors.push(error)

@@ -250,6 +250,8 @@ describe('parseData', () => {
 				// 'Barack Obama, "String, with, colons", Donald Trump'
 				'Barack Obama, String, Donald Trump'
 			], [
+				', String'
+			], [
 				null
 			]
 		], {
@@ -259,7 +261,7 @@ describe('parseData', () => {
 			}
 		})
 
-		expect(results.length).to.equal(2)
+		expect(results.length).to.equal(3)
 
 		expect(results[0].object).to.exist
 		expect(results[0].errors).to.be.undefined
@@ -269,8 +271,19 @@ describe('parseData', () => {
 			names: ['Barack Obama', 'String', 'Donald Trump']
 		})
 
-		expect(results[1].object).to.deep.equal(null)
-		expect(results[1].errors).to.be.undefined
+		expect(results[1].object).to.be.undefined
+		expect(results[1].errors).to.exist
+
+		expect(results[1].errors).to.deep.equal([{
+			error: 'invalid',
+			reason: 'syntax',
+			column: 'NAMES',
+			value: ', String',
+			type: [String]
+		}])
+
+		expect(results[2].object).to.deep.equal(null)
+		expect(results[2].errors).to.be.undefined
 	})
 
 	it('should parse integers', () => {

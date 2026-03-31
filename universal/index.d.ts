@@ -18,6 +18,10 @@ import {
 	Schema
 } from '../types/parseData/parseDataSchema.d.js';
 
+import {
+	ParseDataError
+} from '../types/parseData/parseDataError.d.js';
+
 export {
 	CellValue,
 	Row,
@@ -25,7 +29,12 @@ export {
 } from '../types/types.d.js';
 
 export {
-	ParseDataValueCustomType as ParseDataValueType,
+	ParseDataCustomType,
+	// Base `type`s when parsing data.
+	StringType as String,
+	DateType as Date,
+	NumberType as Number,
+	BooleanType as Boolean,
 	// Additional built-in `type`s when parsing data.
 	Integer,
 	Email,
@@ -33,6 +42,8 @@ export {
 } from '../types/parseData/parseDataValueType.d.js';
 
 export {
+	ParseDataCustomTypeErrorMessage,
+	ParseDataCustomTypeErrorReason,
 	ParseDataError,
 	ParseDataValueRequiredError
 } from '../types/parseData/parseDataError.d.js';
@@ -63,9 +74,10 @@ export function readSheet<ParsedNumber = number>(
 
 export function parseData<
 	Object extends object,
-	ColumnTitle extends string
+	ColumnTitle extends string,
+	Error extends ParseDataError
 >(
 	data: SheetData,
 	schema: Schema<Object, ColumnTitle>,
 	options?: ParseDataOptions
-): ParseDataResult<Object>;
+): ParseDataResult<Object, Error>;
