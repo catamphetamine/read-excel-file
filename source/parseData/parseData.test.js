@@ -11,21 +11,7 @@ import Email from './types/additional/Email.js'
 const date = new Date(Date.UTC(2018, 3 - 1, 24))
 
 describe('parseData', () => {
-	it('should parse arrays', () => {
-		expect(getNextSubstring('abcde,fg,h', ',', 0)).to.deep.equal(['abcde', 5])
-
-		// Custom separator and trimming.
-		expect(parseSeparatedSubstrings(' abcde,fg  , h ', ',')).to.deep.equal(['abcde', 'fg', 'h'])
-
-		// Should ignore commas inside quotes.
-		// expect(getNextSubstring('abc"de,f"g,h', ',', 0)).to.deep.equal(['abcde,fg', 10])
-
-		// Custom separator and trimming.
-		// Should ignore commas inside quotes.
-		// expect(parseSeparatedSubstrings(' abc"de,f"g  , h ', ',')).to.deep.equal(['abcde,fg', 'h'])
-	})
-
-	it('should convert to json', () => {
+	it('should parse object from sheet data', () => {
 		const results = parseData([
 			[
 				'DATE',
@@ -129,7 +115,7 @@ describe('parseData', () => {
 		})
 	})
 
-	it('should require fields when cell value is empty', () => {
+	it('should return an error when a propertry is required and the cell value is empty', () => {
 		const results = parseData([
 			[
 				'NUMBER',
@@ -165,82 +151,78 @@ describe('parseData', () => {
 		}])
 	})
 
-	// it('shouldn\'t require fields when cell value is empty and object is empty too (`ignoreEmptyRows: false`', () => {
-	// 	const results = parseData([
-	// 		[
-	// 			'NUMBER'
-	// 		],
-	// 		[
-	// 			null
-	// 		]
-	// 	], {
-	// 		number: {
-	// 			column: 'NUMBER',
-	// 			type: Number,
-	// 			required: true
-	// 		}
-	// 	}, {
-	// 		ignoreEmptyRows: false
-	// 	})
-	//
-	// 	expect(results.length).to.equal(1)
-	//
-	// 	expect(results[0].object).to.exist
-	// 	expect(results[0].errors).to.be.undefined
-	//
-	// 	expect(results[0].object).to.deep.equal(null)
-	// })
+	it('should not skip empty rows', () => {
+		const results = parseData([
+			['NAME'],
+			// Non-empty row
+			['Barack Obama'],
+			// Empty row
+			[null]
+		], {
+			name: {
+				column: 'NAME',
+				type: String
+			}
+		})
 
-	// it('shouldn\'t require fields when cell value is empty but the top-level object itself is empty too', () => {
-	// 	const results = parseData([
-	// 		[
-	// 			'NUMBER'
-	// 		],
-	// 		[
-	// 			null
-	// 		]
-	// 	], {
-	// 		number: {
-	// 			column: 'NUMBER',
-	// 			type: Number,
-	// 			required: true
-	// 		}
-	// 	})
-	//
-	// 	expect(results.length).to.equal(1)
-	//
-	// 	console.log(results[0])
-	//
-	// 	expect(results[0].object).to.exist
-	// 	expect(results[0].errors).to.be.undefined
-	//
-	// 	expect(results[0].object).to.deep.equal(null)
-	// })
+		expect(results.length).to.equal(2)
 
-	// it('should parse arrays (`ignoreEmptyRows: false`)', () => {
-	// 	const { rows, errors } = parseData([
-	// 		[
-	// 			'NAMES'
-	// 		], [
-	// 			'Barack Obama, "String, with, colons", Donald Trump'
-	// 		], [
-	// 			null
-	// 		]
-	// 	], {
-	// 		names: {
-	// 			column: 'NAMES',
-	// 			type: [String]
-	// 		}
-	// 	}, {
-	// 		ignoreEmptyRows: false
-	// 	})
-	//
-	// 	expect(errors).to.deep.equal([])
-	//
-	// 	expect(rows).to.deep.equal([{
-	// 		names: ['Barack Obama', 'String, with, colons', 'Donald Trump']
-	// 	}, null])
-	// })
+		expect(results[0].object).to.exist
+		expect(results[0].errors).to.be.undefined
+
+		expect(results[0].object).to.deep.equal({
+			name: 'Barack Obama'
+		})
+
+		expect(results[1].object).to.equal(null)
+		expect(results[1].errors).to.be.undefined
+	})
+
+	it('should support `required` function', () => {
+		const schema = {
+			courseTitle: {
+				column: 'COURSE TITLE',
+				type: String
+			},
+			notExists: {
+				column: 'NOT EXISTS',
+				type: Number,
+				required: (parsedObject) => parsedObject.courseTitle === 'Chemistry'
+			}
+		}
+
+		const data = [
+			['COURSE TITLE'],
+			// `required: true`.
+			['Chemistry'],
+			// `required: false`.
+			['Math']
+		]
+
+		const results = parseData(data, schema)
+
+		expect(results.length).to.equal(2)
+
+		expect(results[0].object).to.be.undefined
+		expect(results[0].errors).to.not.be.undefined
+
+		expect(results[0].errors).to.deep.equal([{
+			error: 'required',
+			// row: 2,
+			column: 'NOT EXISTS',
+			value: undefined,
+			// value: null,
+			type: Number
+		}])
+
+		expect(results[1].object).to.not.be.undefined
+		expect(results[1].errors).to.be.undefined
+
+		expect(results[1].object).to.deep.equal({
+			courseTitle: 'Math',
+			notExists: undefined
+		})
+	})
 
 	it('should parse arrays', () => {
 		const results = parseData([
@@ -683,7 +665,178 @@ describe('parseData', () => {
 		}])
 	})
 
-	it('should reduce empty objects to `null` by default', function() {
+	it('should support `required: undefined` on nested objects (nested object properties are not required)', function() {
+		const results = parseData(
+			[
+				['A', 'B', 'CA', 'CB'],
+				['a', 'b', null, null]
+			],
+			{
+				a: {
+					column: 'A',
+					type: String
+				},
+				b: {
+					column: 'B',
+					type: String
+				},
+				c: {
+    			schema: {
+						a: {
+							column: 'CA',
+							type: String
+						},
+						b: {
+							column: 'CB',
+							type: String
+						}
+					}
+				}
+			}
+		)
+
+		expect(results.length).to.equal(1)
+
+		expect(results[0].object).to.exist
+		expect(results[0].errors).to.not.exist
+
+		expect(results[0].object).to.deep.equal(
+			{ a: 'a', b: 'b', c: null }
+		)
+	})
+
+	it('should support `required: undefined` on nested objects (some of nested object properties are required)', function() {
+		const results = parseData(
+			[
+				['A', 'B', 'CA', 'CB'],
+				['a', 'b', null, null]
+			],
+			{
+				a: {
+					column: 'A',
+					type: String
+				},
+				b: {
+					column: 'B',
+					type: String
+				},
+				c: {
+    			schema: {
+						a: {
+							column: 'CA',
+							type: String
+						},
+						b: {
+							column: 'CB',
+							type: String,
+							required: true
+						}
+					}
+				}
+			}
+		)
+
+		expect(results.length).to.equal(1)
+
+		expect(results[0].object).to.not.exist
+		expect(results[0].errors).to.exist
+
+		expect(results[0].errors).to.deep.equal([{
+			error: 'required',
+			column: 'CB',
+			type: String,
+			value: null
+		}])
+	})
+
+	it('should support `required: false` on nested objects (nested object is completely absent)', function() {
+		const results = parseData(
+			[
+				['A', 'B', 'CA', 'CB'],
+				['a', 'b', null, null]
+			],
+			{
+				a: {
+					column: 'A',
+					type: String
+				},
+				b: {
+					column: 'B',
+					type: String
+				},
+				c: {
+					required: false,
+    			schema: {
+						a: {
+							column: 'CA',
+							type: String
+						},
+						b: {
+							column: 'CB',
+							type: String,
+							required: true
+						}
+					}
+				}
+			}
+		)
+
+		expect(results.length).to.equal(1)
+
+		expect(results[0].object).to.exist
+		expect(results[0].errors).to.be.undefined
+
+		expect(results[0].object).to.deep.equal(
+			{ a: 'a', b: 'b', c: null }
+		)
+	})
+
+	it('should support `required: false` on nested objects (nested object is not absent)', function() {
+		const results = parseData(
+			[
+				['A', 'B', 'CA', 'CB'],
+				['a', 'b', 'ca', null]
+			],
+			{
+				a: {
+					column: 'A',
+					type: String
+				},
+				b: {
+					column: 'B',
+					type: String
+				},
+				c: {
+					required: false,
+    			schema: {
+						a: {
+							column: 'CA',
+							type: String
+						},
+						b: {
+							column: 'CB',
+							type: String,
+							required: true
+						}
+					}
+				}
+			}
+		)
+
+		expect(results.length).to.equal(1)
+
+		expect(results[0].object).to.not.exist
+		expect(results[0].errors).to.exist
+
+		expect(results[0].errors).to.deep.equal([{
+			error: 'required',
+			column: 'CB',
+			type: String,
+			value: null
+		}])
+	})
+
+	it('should reduce empty nested objects to `null` by default', function() {
 		const results = parseData(
 			[
 				['A', 'B', 'CA', 'CB'],
@@ -1173,4 +1326,20 @@ describe('parseData', () => {
 	// 		column5: null
 	// 	}])
 	// })
+})
+
+describe('getNextSubstring', () => {
+	it('should parse substrings from a string with a given separator character', () => {
+		expect(getNextSubstring('abcde,fg,h', ',', 0)).to.deep.equal(['abcde', 5])
+
+		// Custom separator and trimming.
+		expect(parseSeparatedSubstrings(' abcde,fg  , h ', ',')).to.deep.equal(['abcde', 'fg', 'h'])
+
+		// Should ignore commas inside quotes.
+		// expect(getNextSubstring('abc"de,f"g,h', ',', 0)).to.deep.equal(['abcde,fg', 10])
+
+		// Custom separator and trimming.
+		// Should ignore commas inside quotes.
+		// expect(parseSeparatedSubstrings(' abc"de,f"g  , h ', ',')).to.deep.equal(['abcde,fg', 'h'])
+	})
 })
