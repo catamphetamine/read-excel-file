@@ -50,14 +50,12 @@ describe('readSheetNode', () => {
 
 		const data = await readSheetNode(path.resolve('./test/testCases/schema.xlsx'))
 
-		const result = parseData(data, schema) // { rowIndexSourceMap }
+		const { objects, errors } = parseData(data, schema) // { rowIndexSourceMap }
 
-		expect(result.length).to.equal(1)
+		expect(errors).to.be.undefined
+		expect(objects).to.not.be.undefined
 
-		expect(result[0].errors).to.be.undefined
-		expect(result[0].object).to.exist
-
-		expect(result[0].object).to.deep.equal({
+		expect(objects).to.deep.equal([{
 			date: new Date(Date.UTC(2018, 3 - 1, 24)),
 			numberOfStudents: 123,
 			course: {
@@ -66,7 +64,7 @@ describe('readSheetNode', () => {
 				title: 'Chemistry'
 			},
 			contact: '+11234567890'
-		})
+		}])
 
 		// expect(rowIndexSourceMap).to.deep.equal([0, 1])
 	})

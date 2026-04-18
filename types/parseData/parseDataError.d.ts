@@ -254,6 +254,16 @@ type ParseDataBuiltInValueTypeError<ColumnTitle extends string = string> =
 	| ParseDataBaseValueTypeError<ColumnTitle>
 	| ParseDataAdditionalValueTypeError<ColumnTitle>;
 
+interface ParseDataArrayValueNotAStringError<
+	ColumnTitle extends string = string,
+	ParseDataCustomType_ extends ParseDataCustomType<unknown> = ParseDataCustomType<unknown>
+> extends ParseDataError_<
+	ColumnTitle,
+	ParseDataValueType<ParseDataCustomType_>,
+	'not_a_string',
+	undefined
+> {}
+
 interface ParseDataArrayValueSyntaxError<
 	ColumnTitle extends string = string,
 	ParseDataCustomType_ extends ParseDataCustomType<unknown> = ParseDataCustomType<unknown>
@@ -272,6 +282,7 @@ export type ParseDataError<
 > =
 	| ParseDataBuiltInValueTypeError<ColumnTitle>
 	| ParseDataValueRequiredError<ColumnTitle, ParseDataValueType<CustomType>>
+	| ParseDataArrayValueNotAStringError<ColumnTitle, ParseDataValueType<CustomType>>
 	| ParseDataArrayValueSyntaxError<ColumnTitle, ParseDataValueType<CustomType>>
 	| ParseDataErrorCustomType<
 		ColumnTitle,

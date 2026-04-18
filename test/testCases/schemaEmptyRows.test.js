@@ -12,20 +12,14 @@ describe('read-excel-file', function() {
 
 		const data = await readSheet(path.resolve('./test/testCases/schemaEmptyRows.xlsx'))
 
-		const result = parseData(data, schema) // { rowIndexSourceMap }
+		const { objects, errors } = parseData(data, schema) // { rowIndexSourceMap }
 
-		expect(result.length).to.equal(3)
+		expect(objects).to.not.be.undefined
+		expect(errors).to.be.undefined
 
-		expect(result[0].errors).to.be.undefined
-		expect(result[0].object).to.exist
+		expect(objects.length).to.equal(3)
 
-		expect(result[1].errors).to.be.undefined
-		expect(result[1].object).to.equal(null)
-
-		expect(result[2].errors).to.be.undefined
-		expect(result[2].object).to.exist
-
-		expect(result[0].object).to.deep.equal({
+		expect(objects[0]).to.deep.equal({
 			date: new Date(Date.UTC(2018, 3 - 1, 24)),
 			numberOfStudents: 123,
 			course: {
@@ -36,9 +30,9 @@ describe('read-excel-file', function() {
 			contact: '+11234567890'
 		})
 
-		expect(result[1].object).to.equal(null)
+		expect(objects[1]).to.equal(null)
 
-		expect(result[2].object).to.deep.equal({
+		expect(objects[2]).to.deep.equal({
 			date: new Date(Date.UTC(2018, 3 - 1, 24)),
 			numberOfStudents: 123,
 			course: {
@@ -57,40 +51,29 @@ describe('read-excel-file', function() {
 
 		const data = await readSheet(path.resolve('./test/testCases/schemaEmptyRows.xlsx'))
 
-		const result = parseData(data, schemaWithIncorrectContactColumnType) // { rowIndexSourceMap }
+		const { objects, errors } = parseData(data, schemaWithIncorrectContactColumnType) // { rowIndexSourceMap }
 
-		expect(result.length).to.equal(3)
+		expect(objects).to.be.undefined
 
-		expect(result[0].errors).to.exist
-		expect(result[0].errors.length).to.equal(1)
-		expect(result[0].object).to.be.undefined
+		expect(errors.length).to.equal(2)
 
-		expect(result[1].errors).to.be.undefined
-		expect(result[1].object).to.equal(null)
-
-		expect(result[2].errors).to.exist
-		expect(result[2].errors.length).to.equal(1)
-		expect(result[2].object).to.be.undefined
-
-		expect(result[0].errors).to.deep.equal([{
+		expect(errors[0]).to.deep.equal({
 			error: 'invalid',
 			reason: 'not_a_boolean',
 			value: '(123) 456-7890',
 			// row: 2,
 			column: 'CONTACT',
 			type: Boolean
-		}])
+		})
 
-		expect(result[1].object).to.equal(null)
-
-		expect(result[2].errors).to.deep.equal([{
+		expect(errors[1]).to.deep.equal({
 			error: 'invalid',
 			reason: 'not_a_boolean',
 			value: '(123) 456-7890',
 			// row: 4,
 			column: 'CONTACT',
 			type: Boolean
-		}])
+		})
 
 		// expect(rowIndexSourceMap).to.deep.equal([0, 1, 2, 3])
 	})

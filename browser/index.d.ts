@@ -25,7 +25,8 @@ import {
 export {
 	CellValue,
 	Row,
-	SheetData
+	SheetData,
+	Sheet
 } from '../types/types.d.js';
 
 export {

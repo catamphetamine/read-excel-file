@@ -1,7 +1,7 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import parseData, { parseSeparatedSubstrings, getNextSubstring } from './parseData.js'
+import { parseDataWithPerRowErrors as parseData, parseSeparatedSubstrings, getNextSubstring } from './parseData.js'
 
 // Additional included types.
 import Integer from './types/additional/Integer.js'
@@ -244,16 +244,13 @@ describe('parseData', () => {
 
 	it('should parse arrays', () => {
 		const results = parseData([
-			[
-				'NAMES'
-			], [
-				// 'Barack Obama, "String, with, colons", Donald Trump'
-				'Barack Obama, String, Donald Trump'
-			], [
-				', String'
-			], [
-				null
-			]
+			['NAMES'],
+			// 'Barack Obama, "String, with, colons", Donald Trump'
+			['Barack Obama, String, Donald Trump'],
+			// Invalid syntax
+			[', String'],
+			// Empty row
+			[null]
 		], {
 			names: {
 				column: 'NAMES',
@@ -703,7 +700,6 @@ describe('parseData', () => {
 					type: String
 				},
 				c: {
-					column: 'C',
     			schema: {
 						a: {
 							column: 'CA',

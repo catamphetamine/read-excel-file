@@ -16,20 +16,20 @@ describe('read-excel-file', () => {
 			notExists: {
 				column: 'NOT EXISTS',
 				type: Number,
-				required: (row) => row.courseTitle === 'Chemistry'
+				required: (parsedObject) => parsedObject.courseTitle === 'Chemistry'
 			}
 		}
 
 		const data = await readSheet(path.resolve('./test/testCases/schema-with-required-function.xlsx'))
 
-		const results = parseData(data, schema)
+		const { objects, errors } = parseData(data, schema)
 
-		expect(results.length).to.equal(1)
+		expect(objects).to.be.undefined
+		expect(errors).to.not.be.undefined
 
-		expect(results[0].object).to.be.undefined
-		expect(results[0].errors).to.exist
+		expect(errors.length).to.equal(1)
 
-		expect(results[0].errors).to.deep.equal([{
+		expect(errors).to.deep.equal([{
 			error: 'required',
 			// row: 2,
 			column: 'NOT EXISTS',
@@ -54,16 +54,14 @@ describe('read-excel-file', () => {
 
 		const data = await readSheet(path.resolve('./test/testCases/schema-with-required-function.xlsx'))
 
-		const results = parseData(data, schema)
+		const { objects, errors } = parseData(data, schema)
 
-		expect(results.length).to.equal(1)
+		expect(errors).to.be.undefined
+		expect(objects).to.not.be.undefined
 
-		expect(results[0].object).to.exist
-		expect(results[0].errors).to.be.undefined
-
-		expect(results[0].object).to.deep.equal({
+		expect(objects).to.deep.equal([{
 			courseTitle: 'Chemistry',
 			notExists: undefined
-		})
+		}])
 	})
 })

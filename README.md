@@ -37,6 +37,7 @@ Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-fi
     * The `result` of the function is an array where each element represents a "data row" and has shape `{ object, errors }`.
       * Depending on whether there were any errors when parsing a given "data row", either `object` or `errors` property will be `undefined`.
       * The `errors` don't have a `row` property anymore because it could be derived from "data row" number.
+      * In version `9.x`, the returned result of `parseData()` has been changed back to `{ errors, objects }`, so consider migrating straight to `9.x`. In that case, if there're no errors, `errors` will be `undefined`; otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
 * Removed `transformData` parameter because `schema` parameter was removed. A developer could transform the `data` themself and then pass it to `parseData()` function.
 * Removed `isColumnOriented` parameter.
 * Removed `ignoreEmptyRows` parameter. Empty rows somewhere in the middle are not ignored now.
@@ -58,6 +59,17 @@ Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-fi
   * `Error` or `SchemaParseCellValueError` → `ParseDataError`
   * `CellValueRequiredError` → `ParseDataValueRequiredError`
   * `ParsedObjectsResult` → `ParseDataResult`
+</details>
+
+<details>
+<summary>Migrating from <code>8.x</code> to <code>9.x</code></summary>
+
+######
+
+* Refactored `parseData()` function.
+* The result of `parseData()` function is now `{ errors, objects }`. If there're no errors, `errors` will be `undefined`. Otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
+  * Previously the result of `parseData()` function was `[{ errors, object }, ...]`, i.e. the `errors` were split between each particular data row. Now the `errors` are combined for all data rows. The rationale is that it's simpler to handle the result of the function this way.
+* In a schema, a nested object is now not allowed to be `required: true`. Otherwise, if a nested object was allowed to be `required: true`, a corresponding `"required"` error  would have to include a specific `column` title but a nested object simply doesn't have one.
 </details>
 
 ## Install
@@ -288,16 +300,15 @@ import { readSheet, parseData } from "read-excel-file/browser"
 
 const data = await readSheet(file)
 const schema = { ... }
-for (const { object, errors } of parseData(data, schema)) {
-  if (errors) {
-    console.error(errors)
-  } else {
-    console.log(object)
-  }
+const { objects, errors } = parseData(data, schema)
+if (errors) {
+  console.error(errors)
+} else {
+  console.log(objects)
 }
 ```
 
-The `parseData()` function returns an array where each element represents a "data row" and has shape `{ object, errors }`. Depending on whether there were any errors when parsing a given "data row", either `object` or `errors` property will be `undefined`.
+The `parseData()` function returns an object — `{ objects, errors }`. Depending on whether there were any errors when parsing the data, either `objects` or `errors` property will be `undefined`.
 
 The sheet data that is being parsed should adhere to a simple structure: the first row should be a header row with just column titles, and each following row should specify the values for those columns.
 
@@ -393,15 +404,20 @@ const schema = {
   },
   // Nested object example
   course: {
-    // required: true/false,
+    // A nested object could be declared as completely optional by specifying `required: false`.
+    // In that case, when all of its properties are missing from the input data, it wouldn't throw any error
+    // regardless of whether some of its properties are declared as `required: true` or not.
+    required: false,
     schema: {
       title: {
         column: 'COURSE TITLE',
-        type: String
+        type: String,
+        // When course data is present, the course title must be specified.
+        required: true
       },
       categories: {
         column: 'COURSE CATEGORY',
-        // An example of parsing comma-separated values
+        // An example of parsing comma-separated values.
         type: [String]
       },
       isFree: {
