@@ -1,7 +1,7 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import { parseDataWithPerRowErrors as parseData, parseSeparatedSubstrings, getNextSubstring } from './parseData.js'
+import parseData, { parseDataWithPerRowErrors, parseSeparatedSubstrings, getNextSubstring } from './parseData.js'
 
 // Additional included types.
 import Integer from './types/additional/Integer.js'
@@ -11,8 +11,34 @@ import Email from './types/additional/Email.js'
 const date = new Date(Date.UTC(2018, 3 - 1, 24))
 
 describe('parseData', () => {
+	it('should include data row number in error objects', () => {
+		const { errors, objects } = parseData([
+			['NUMBER'],
+			[null]
+		], {
+			number: {
+				column: 'NUMBER',
+				type: Number,
+				required: true
+			}
+		})
+
+		expect(objects).to.be.undefined
+		expect(errors).to.not.be.undefined
+
+		expect(errors).to.deep.equal([{
+			error: 'required',
+			row: 1,
+			column: 'NUMBER',
+			type: Number,
+			value: null
+		}])
+	})
+})
+
+describe('parseDataWithPerRowErrors', () => {
 	it('should parse object from sheet data', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'DATE',
 				'NUMBER',
@@ -75,7 +101,7 @@ describe('parseData', () => {
 	})
 
 	it('should support schema entries with no `type`s', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'DATE',
 				'NUMBER',
@@ -116,7 +142,7 @@ describe('parseData', () => {
 	})
 
 	it('should return an error when a propertry is required and the cell value is empty', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'NUMBER',
 				'STRING'
@@ -144,7 +170,7 @@ describe('parseData', () => {
 
 		expect(results[0].errors).to.deep.equal([{
 			error: 'required',
-			// row: 2,
+			// row: 1,
 			column: 'NUMBER',
 			type: Number,
 			value: null
@@ -152,7 +178,7 @@ describe('parseData', () => {
 	})
 
 	it('should not skip empty rows', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			['NAME'],
 			// Non-empty row
 			['Barack Obama'],
@@ -199,7 +225,7 @@ describe('parseData', () => {
 			['Math']
 		]
 
-		const results = parseData(data, schema)
+		const results = parseDataWithPerRowErrors(data, schema)
 
 		expect(results.length).to.equal(2)
 
@@ -208,7 +234,7 @@ describe('parseData', () => {
 
 		expect(results[0].errors).to.deep.equal([{
 			error: 'required',
-			// row: 2,
+			// row: 1,
 			column: 'NOT EXISTS',
 			value: undefined,
 			// value: null,
@@ -225,7 +251,7 @@ describe('parseData', () => {
 	})
 
 	it('should parse arrays', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			['NAMES'],
 			// 'Barack Obama, "String, with, colons", Donald Trump'
 			['Barack Obama, String, Donald Trump'],
@@ -266,7 +292,7 @@ describe('parseData', () => {
 	})
 
 	it('should parse integers', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'INTEGER'
 			], [
@@ -297,7 +323,7 @@ describe('parseData', () => {
 		expect(results[1].errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'not_an_integer',
-			// row: 3,
+			// row: 2,
 			column: 'INTEGER',
 			type: Integer,
 			value: '1.2'
@@ -305,7 +331,7 @@ describe('parseData', () => {
 	})
 
 	it('should parse URLs', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'URL'
 			], [
@@ -336,7 +362,7 @@ describe('parseData', () => {
 		expect(results[1].errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_url',
-			// row: 3,
+			// row: 2,
 			column: 'URL',
 			type: URL,
 			value: 'kremlin.ru'
@@ -344,7 +370,7 @@ describe('parseData', () => {
 	})
 
 	it('should parse Emails', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'EMAIL'
 			], [
@@ -375,7 +401,7 @@ describe('parseData', () => {
 		expect(results[1].errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'not_an_email',
-			// row: 3,
+			// row: 2,
 			column: 'EMAIL',
 			type: Email,
 			value: '123'
@@ -383,7 +409,7 @@ describe('parseData', () => {
 	})
 
 	it('should call .validate()', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'NAME'
 			], [
@@ -409,7 +435,7 @@ describe('parseData', () => {
 
 		expect(results[0].errors).to.deep.equal([{
 			error: 'custom-error',
-			// row: 2,
+			// row: 1,
 			column: 'NAME',
 			type: String,
 			value: 'George Bush'
@@ -417,7 +443,7 @@ describe('parseData', () => {
 	})
 
 	it('should validate numbers', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'NUMBER'
 			], [
@@ -439,7 +465,7 @@ describe('parseData', () => {
 		expect(results[0].errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_number',
-			// row: 2,
+			// row: 1,
 			column: 'NUMBER',
 			type: Number,
 			value: '123abc'
@@ -447,7 +473,7 @@ describe('parseData', () => {
 	})
 
 	it('should validate booleans', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'TRUE',
 				'FALSE',
@@ -483,7 +509,7 @@ describe('parseData', () => {
 		expect(results[0].errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_boolean',
-			// row: 2,
+			// row: 1,
 			column: 'INVALID',
 			type: Boolean,
 			value: 'TRUE'
@@ -491,7 +517,7 @@ describe('parseData', () => {
 	})
 
 	it('should validate dates', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'DATE',
 				'INVALID'
@@ -520,7 +546,7 @@ describe('parseData', () => {
 		expect(results[0].errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_date',
-			// row: 2,
+			// row: 1,
 			column: 'INVALID',
 			type: Date,
 			value: '-'
@@ -532,7 +558,7 @@ describe('parseData', () => {
 			throw new Error('invalid')
 		}
 
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'PHONE',
 				'PHONE_TYPE'
@@ -558,13 +584,13 @@ describe('parseData', () => {
 
 		expect(results[0].errors).to.deep.equal([{
 			error: 'invalid',
-			// row: 2,
+			// row: 1,
 			column: 'PHONE',
 			value: '123',
 			type
 		}, {
 			error: 'invalid',
-			// row: 2,
+			// row: 1,
 			column: 'PHONE_TYPE',
 			value: '123',
 			type
@@ -572,7 +598,7 @@ describe('parseData', () => {
 	})
 
 	it('should map row numbers', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'NUMBER'
 			], [
@@ -595,7 +621,7 @@ describe('parseData', () => {
 		expect(results[0].errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'not_a_number',
-			// row: 6,
+			// row: 1,
 			column: 'NUMBER',
 			type: Number,
 			value: '123abc'
@@ -603,7 +629,7 @@ describe('parseData', () => {
 	})
 
 	it('should validate "oneOf" (valid)', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'STATUS'
 			],
@@ -632,7 +658,7 @@ describe('parseData', () => {
 	})
 
 	it('should validate "oneOf" (not valid)', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'STATUS'
 			],
@@ -658,7 +684,7 @@ describe('parseData', () => {
 		expect(results[0].errors).to.deep.equal([{
 			error: 'invalid',
 			reason: 'unknown',
-			// row: 2,
+			// row: 1,
 			column: 'STATUS',
 			type: String,
 			value: 'SCHEDULED'
@@ -666,7 +692,7 @@ describe('parseData', () => {
 	})
 
 	it('should support `required: undefined` on nested objects (nested object properties are not required)', function() {
-		const results = parseData(
+		const results = parseDataWithPerRowErrors(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', null, null]
@@ -706,7 +732,7 @@ describe('parseData', () => {
 	})
 
 	it('should support `required: undefined` on nested objects (some of nested object properties are required)', function() {
-		const results = parseData(
+		const results = parseDataWithPerRowErrors(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', null, null]
@@ -750,7 +776,7 @@ describe('parseData', () => {
 	})
 
 	it('should support `required: false` on nested objects (nested object is completely absent)', function() {
-		const results = parseData(
+		const results = parseDataWithPerRowErrors(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', null, null]
@@ -792,7 +818,7 @@ describe('parseData', () => {
 	})
 
 	it('should support `required: false` on nested objects (nested object is not absent)', function() {
-		const results = parseData(
+		const results = parseDataWithPerRowErrors(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', 'ca', null]
@@ -837,7 +863,7 @@ describe('parseData', () => {
 	})
 
 	it('should reduce empty nested objects to `null` by default', function() {
-		const results = parseData(
+		const results = parseDataWithPerRowErrors(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', 'ca', null],
@@ -885,7 +911,7 @@ describe('parseData', () => {
 	})
 
 	it('should parse missing columns (`undefined` by default) and empty cells (`null` by default) (`required: false`)', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -946,7 +972,7 @@ describe('parseData', () => {
 	})
 
 	it('should parse missing columns (`undefined` by default) and empty cells (`null` by default) (`propertyValueWhenColumnIsMissing: null`) (`required: false`)', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -1009,7 +1035,7 @@ describe('parseData', () => {
 	})
 
 	it('should parse missing columns (`undefined` by default) and empty cells (`null` by default) (`propertyValueWhenCellIsEmpty: undefined`) (`required: false`)', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -1072,7 +1098,7 @@ describe('parseData', () => {
 	})
 
 	it('should parse missing columns (`undefined` by default) and empty cells (`null` by default) (`propertyValueWhenColumnIsMissing: null` and `propertyValueWhenCellIsEmpty: null`) (`required: false`)', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -1136,7 +1162,7 @@ describe('parseData', () => {
 	})
 
 	it('should parse missing columns (`undefined` by default) and empty cells (`null` by default) (`propertyValueWhenColumnIsMissing: null` and `propertyValueWhenCellIsEmpty: null`) (`required: true`)', () => {
-		const results = parseData([
+		const results = parseDataWithPerRowErrors([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -1184,7 +1210,7 @@ describe('parseData', () => {
 		expect(results[0].errors).to.deep.equal([{
 			column: 'COLUMN_5',
 			error: 'required',
-			// row: 2,
+			// row: 1,
 			type: String,
 			value: null
 		}])
@@ -1195,137 +1221,11 @@ describe('parseData', () => {
 		expect(results[1].errors).to.deep.equal([{
 			column: 'COLUMN_5',
 			error: 'required',
-			// row: 3,
+			// row: 2,
 			type: String,
 			value: null
 		}])
 	})
-
-	// it('should handle missing columns / empty cells (`propertyValueWhenColumnIsMissing: null` and `propertyValueWhenCellIsEmpty: null` and `shouldSkipRequiredValidationWhenColumnIsMissing: () => false`) (`required: true`)', () => {
-	// 	const { rows, errors } = parseData([
-	// 		[
-	// 			'COLUMN_2',
-	// 			'COLUMN_3',
-	// 			'COLUMN_4'
-	// 		], [
-	// 			'12',
-	// 			'13',
-	// 			'14'
-	// 		], [
-	// 			'22',
-	// 			'23',
-	// 			null
-	// 		]
-	// 	], {
-	// 		column1: {
-	// 			column: 'COLUMN_1',
-	// 			type: String,
-	// 			required: false
-	// 		},
-	// 		column2: {
-	// 			column: 'COLUMN_2',
-	// 			type: String,
-	// 			required: false
-	// 		},
-	// 		column4: {
-	// 			column: 'COLUMN_4',
-	// 			type: String,
-	// 			required: false
-	// 		},
-	// 		column5: {
-	// 			column: 'COLUMN_5',
-	// 			type: String,
-	// 			required: true
-	// 		}
-	// 	}, {
-	// 		propertyValueWhenColumnIsMissing: null,
-	// 		propertyValueWhenCellIsEmpty: null,
-	// 		shouldSkipRequiredValidationWhenColumnIsMissing: () => false
-	// 	})
-	//
-	// 	expect(errors).to.deep.equal([{
-	// 		column: 'COLUMN_5',
-	// 		error: 'required',
-	// 		row: 2,
-	// 		type: String,
-	// 		value: null
-	// 	}, {
-	// 		column: 'COLUMN_5',
-	// 		error: 'required',
-	// 		row: 3,
-	// 		type: String,
-	// 		value: null
-	// 	}])
-	//
-	// 	expect(rows).to.deep.equal([{
-	// 		column1: null,
-	// 		column2: '12',
-	// 		column4: '14',
-	// 		column5: null
-	// 	}, {
-	// 		column1: null,
-	// 		column2: '22',
-	// 		column4: null,
-	// 		column5: null
-	// 	}])
-	// })
-
-	// it('should handle missing columns / empty cells (`propertyValueWhenColumnIsMissing: null` and `propertyValueWhenCellIsEmpty: null` and `shouldSkipRequiredValidationWhenColumnIsMissing: () => true`) (`required: true`)', () => {
-	// 	const { rows, errors } = parseData([
-	// 		[
-	// 			'COLUMN_2',
-	// 			'COLUMN_3',
-	// 			'COLUMN_4'
-	// 		], [
-	// 			'12',
-	// 			'13',
-	// 			'14'
-	// 		], [
-	// 			'22',
-	// 			'23',
-	// 			null
-	// 		]
-	// 	], {
-	// 		column1: {
-	// 			column: 'COLUMN_1',
-	// 			type: String,
-	// 			required: false
-	// 		},
-	// 		column2: {
-	// 			column: 'COLUMN_2',
-	// 			type: String,
-	// 			required: false
-	// 		},
-	// 		column4: {
-	// 			column: 'COLUMN_4',
-	// 			type: String,
-	// 			required: false
-	// 		},
-	// 		column5: {
-	// 			column: 'COLUMN_5',
-	// 			type: String,
-	// 			required: true
-	// 		}
-	// 	}, {
-	// 		propertyValueWhenColumnIsMissing: null,
-	// 		propertyValueWhenCellIsEmpty: null,
-	// 		shouldSkipRequiredValidationWhenColumnIsMissing: () => true
-	// 	})
-	//
-	// 	expect(errors).to.deep.equal([])
-	//
-	// 	expect(rows).to.deep.equal([{
-	// 		column1: null,
-	// 		column2: '12',
-	// 		column4: '14',
-	// 		column5: null
-	// 	}, {
-	// 		column1: null,
-	// 		column2: '22',
-	// 		column4: null,
-	// 		column5: null
-	// 	}])
-	// })
 })
 
 describe('getNextSubstring', () => {

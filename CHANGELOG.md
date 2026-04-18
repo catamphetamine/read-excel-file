@@ -22,6 +22,8 @@
     * The `result` of the function is an array where each element represents a "data row" and has shape `{ object, errors }`.
       * Depending on whether there were any errors when parsing a given "data row", either `object` or `errors` property will be `undefined`.
       * The `errors` don't have a `row` property anymore because it could be derived from "data row" number.
+        * In version `9.x`, the `row` property has been re-added, so consider migrating straight to `9.x`.
+      * In version `9.x`, the returned result of `parseData()` has been changed back to `{ errors, objects }`, so consider migrating straight to `9.x`. In that case, if there're no errors, `errors` will be `undefined`; otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
 * Removed `transformData` parameter because `schema` parameter was removed. A developer could transform the `data` themself and then pass it to `parseData()` function.
 * Removed `isColumnOriented` parameter.
 * Removed `ignoreEmptyRows` parameter. Empty rows somewhere in the middle are not ignored now.

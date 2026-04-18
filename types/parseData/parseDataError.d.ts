@@ -16,7 +16,7 @@ export interface ParseDataValueRequiredError<
 	ColumnTitle extends string = string,
 	CustomType extends ParseDataCustomType<unknown> = never
 > {
-	// row: number;
+	row: number;
 	column: ColumnTitle;
 	// `type: undefined` is treated as `type: String`.
 	type?: ParseDataValueType<CustomType>;
@@ -42,7 +42,7 @@ interface ParseDataError_<
 	ErrorMessage extends string,
 	ErrorReason extends string | undefined
 > {
-	// row: number;
+	row: number;
 	column: ColumnTitle;
 	type: Type;
 	error: ErrorMessage;

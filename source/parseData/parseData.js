@@ -36,9 +36,10 @@ export default function parseData(data, schema, optionsCustom) {
   let errors = []
 
   const parsedRows = parseDataWithPerRowErrors(data, schema, optionsCustom)
+  let parsedRowIndex = 0
   for (const { object, errors: rowErrors } of parsedRows) {
     if (rowErrors) {
-      errors = errors.concat(rowErrors)
+      errors = errors.concat(rowErrors.map(rowError => ({ ...rowError, row: parsedRowIndex + 1 })))
     } else {
       objects.push(object)
     }
