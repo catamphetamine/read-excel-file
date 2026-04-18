@@ -1,31 +1,23 @@
 import { ParseDataError } from './parseDataError.d.js'
 
-export type ParseDataResult<
-	Object,
-	Error extends ParseDataError = ParseDataError
-> = ParseDataResultItem<
-	Object,
-	Error
->[]
-
-type ParseDataResultItem<
-	Object,
-	Error extends ParseDataError
-> =
-	| ParseDataResultItemSuccess<Object>
-	| ParseDataResultItemError<Error>
-
-interface ParseDataResultItemSuccess<Object> {
-	object: Object;
+interface ParseDataResultSuccess<Object> {
+	objects: Object[];
 	errors: undefined;
 }
 
-interface ParseDataResultItemError<
+interface ParseDataResultError<
 	Error extends ParseDataError
 > {
-	object: undefined;
+	objects: undefined;
 	errors: Error[];
 }
+
+export type ParseDataResult<
+	Object,
+	Error extends ParseDataError = ParseDataError
+> =
+	| ParseDataResultSuccess<Object>
+	| ParseDataResultError<Error>
 
 export interface ParseDataOptions {
 	propertyValueWhenColumnIsMissing?: any;

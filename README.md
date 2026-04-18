@@ -70,6 +70,7 @@ Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-fi
 * Refactored `parseData()` function.
 * The result of `parseData()` function is now `{ errors, objects }`. If there're no errors, `errors` will be `undefined`. Otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
   * Previously the result of `parseData()` function was `[{ errors, object }, ...]`, i.e. the `errors` were split between each particular data row. Now the `errors` are combined for all data rows. The rationale is that it's simpler to handle the result of the function this way.
+  * Re-added `row: number` property to the `error` object.
 * In a schema, a nested object is now not allowed to be `required: true`. Otherwise, if a nested object was allowed to be `required: true`, a corresponding `"required"` error  would have to include a specific `column` title but a nested object simply doesn't have one.
 </details>
 
@@ -435,18 +436,19 @@ const schema = {
 // Read `data` from an `.xlsx` file
 const data = await readSheet(file)
 
-// Parse `data` using the `schema`
-const results = parseData(data, schema)
+// Parse `data` using a `schema`
+const { objects, errors } = parseData(data, schema)
+
+// There have been no errors when parsing the sheet data, so `errors` is `undefined`.
+// Should there have been any errors when parsing the sheet data, `errors` would've been
+// an array of items having shape: `{ row, column, error, reason?, value?, type? }`.
+errors === undefined
 
 // There's one data row in the `.xlsx` file.
-results.length === 1
+objects.length === 1
 
-// There have been no errors when parsing the first data row, so `errors` is `undefined`.
-// Should there have been any errors when parsing the row, `errors` would've been an array
-// with items having shape: `{ column, error, reason?, value?, type? }`.
-results[0].errors === undefined
-
-results[0].object === {
+// The parsed data row.
+objects[0] === {
   startDate: new Date(Date.UTC(2018, 3 - 1, 24)),
   seats: 10,
   status: 'SCHEDULED',
@@ -466,37 +468,6 @@ function PhoneNumber(value) {
     throw new Error('invalid')
   }
   return number
-}
-```
-
-An example of how an application could handle the `results`:
-
-```js
-const errors = []
-const objects = []
-
-// If this code was written in TypeScript, `errors` and `objects` would've been declared as:
-// const errors: { error: ParseDataError, row: number }[] = []
-// const objects: Object[] = []
-
-let row = 1
-for (const { errors: errorsInRow, object } of results) {
-  if (errorsInRow) {
-    for (const error of errorsInRow) {
-      errors.push({ error, row })
-    }
-  } else {
-    objects.push(object)
-  }
-  row++
-}
-
-if (errors.length > 0) {
-  for (const { error, row } of errors) {
-    console.error('Error in data row', row, 'column', error.column, ':', error.error, error.reason || '')
-  }
-} else {
-  console.log('Objects', objects)
 }
 ```
 
@@ -562,33 +533,14 @@ const schema: Schema<Object, ColumnTitle> = {
   }
 }
 
-const results = parseData<Object, ColumnTitle, PossibleError>([
+const { objects, errors } = parseData<Object, ColumnTitle, PossibleError>([
   ['COLUMN TITLE 1', 'COLUMN TITLE 2'],
   ['Value 1', 'Value 2']
 ], schema)
 
-const errors: {
-  error: PossibleError,
-  row: number
-}[] = []
-
-const objects: Object[] = []
-
-let row = 1
-for (const { errors: errorsInRow, object } of results) {
-  if (errorsInRow) {
-    for (const error of errorsInRow) {
-      errors.push({ error, row })
-    }
-  } else {
-    objects.push(object)
-  }
-  row++
-}
-
-if (errors.length > 0) {
-  for (const { error, row } of errors) {
-    console.error('Error in data row', row, 'column', error.column, ':', error.error, error.reason || '')
+if (errors) {
+  for (const error of errors) {
+    console.error('Error in data row', error.row, 'column', error.column, ':', error.error, error.reason || '')
   }
 } else {
   console.log('Objects', objects)
@@ -629,9 +581,9 @@ function ErrorItem({ error: errorDetails }) {
       <code>{stringifyValue(value)}</code>
       {' in column '}
       <code>"{column}"</code>
-      {' in row '}
+      {' in data row '}
       <code>{row}</code>
-      {' of spreadsheet'}
+      {' of the spreadsheet'}
     </div>
   )
 }

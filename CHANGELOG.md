@@ -4,6 +4,7 @@
 * Refactored `parseData()` function.
 * The result of `parseData()` function is now `{ errors, objects }`. If there're no errors, `errors` will be `undefined`. Otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
   * Previously the result of `parseData()` function was `[{ errors, object }, ...]`, i.e. the `errors` were split between each particular data row. Now the `errors` are combined for all data rows. The rationale is that it's simpler to handle the result of the function this way.
+  * Re-added `row: number` property to the `error` object.
 * In a schema, a nested object is now not allowed to be `required: true`. Otherwise, if a nested object was allowed to be `required: true`, a corresponding `"required"` error  would have to include a specific `column` title but a nested object simply doesn't have one.
 
 8.0.0 / 11.03.2026
