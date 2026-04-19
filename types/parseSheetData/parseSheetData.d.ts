@@ -1,25 +1,25 @@
-import { ParseDataError } from './parseDataError.d.js'
+import { ParseSheetDataError } from './parseSheetDataError.d.js'
 
-interface ParseDataResultSuccess<Object> {
+interface ParseSheetDataResultSuccess<Object> {
 	objects: Object[];
 	errors: undefined;
 }
 
-interface ParseDataResultError<
-	Error extends ParseDataError
+interface ParseSheetDataResultError<
+	Error extends ParseSheetDataError
 > {
 	objects: undefined;
 	errors: Error[];
 }
 
-export type ParseDataResult<
+export type ParseSheetDataResult<
 	Object,
-	Error extends ParseDataError = ParseDataError
+	Error extends ParseSheetDataError = ParseSheetDataError
 > =
-	| ParseDataResultSuccess<Object>
-	| ParseDataResultError<Error>
+	| ParseSheetDataResultSuccess<Object>
+	| ParseSheetDataResultError<Error>
 
-export interface ParseDataOptions {
+export interface ParseSheetDataOptions {
 	propertyValueWhenColumnIsMissing?: any;
 	propertyValueWhenCellIsEmpty?: any;
 	transformEmptyArray?(arrayPropertyValue: never[], parameters: { path: string }): any;

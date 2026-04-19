@@ -31,11 +31,11 @@ import DateType from './types/Date.js'
  * @param {string} [options.separatorCharacter] — When specified, string values will be split by this separator to get the array.
  * @return {object} — An object of shape `{ objects, errors }`. Either `objects` or `errors` is going to be `undefined`.
  */
-export default function parseData(data, schema, optionsCustom) {
+export default function parseSheetData(data, schema, optionsCustom) {
   const objects = []
   let errors = []
 
-  const parsedRows = parseDataWithPerRowErrors(data, schema, optionsCustom)
+  const parsedRows = parseSheetDataWithPerRowErrors(data, schema, optionsCustom)
   let parsedRowIndex = 0
   for (const { object, errors: rowErrors } of parsedRows) {
     if (rowErrors) {
@@ -53,7 +53,7 @@ export default function parseData(data, schema, optionsCustom) {
 }
 
 // This one is only used in tests.
-export function parseDataWithPerRowErrors(data, schema, optionsCustom) {
+export function parseSheetDataWithPerRowErrors(data, schema, optionsCustom) {
   validateSchema(schema)
 
   const options = applyDefaultOptions(optionsCustom)

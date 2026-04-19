@@ -1,7 +1,7 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import parseData, { parseDataWithPerRowErrors, parseSeparatedSubstrings, getNextSubstring } from './parseData.js'
+import parseSheetData, { parseSheetDataWithPerRowErrors, parseSeparatedSubstrings, getNextSubstring } from './parseSheetData.js'
 
 // Additional included types.
 import Integer from './types/additional/Integer.js'
@@ -10,9 +10,9 @@ import Email from './types/additional/Email.js'
 
 const date = new Date(Date.UTC(2018, 3 - 1, 24))
 
-describe('parseData', () => {
+describe('parseSheetData', () => {
 	it('should include data row number in error objects', () => {
-		const { errors, objects } = parseData([
+		const { errors, objects } = parseSheetData([
 			['NUMBER'],
 			[null]
 		], {
@@ -36,9 +36,9 @@ describe('parseData', () => {
 	})
 })
 
-describe('parseDataWithPerRowErrors', () => {
+describe('parseSheetDataWithPerRowErrors', () => {
 	it('should parse object from sheet data', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'DATE',
 				'NUMBER',
@@ -101,7 +101,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should support schema entries with no `type`s', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'DATE',
 				'NUMBER',
@@ -142,7 +142,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should return an error when a propertry is required and the cell value is empty', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'NUMBER',
 				'STRING'
@@ -178,7 +178,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should not skip empty rows', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			['NAME'],
 			// Non-empty row
 			['Barack Obama'],
@@ -225,7 +225,7 @@ describe('parseDataWithPerRowErrors', () => {
 			['Math']
 		]
 
-		const results = parseDataWithPerRowErrors(data, schema)
+		const results = parseSheetDataWithPerRowErrors(data, schema)
 
 		expect(results.length).to.equal(2)
 
@@ -251,7 +251,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should parse arrays', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			['NAMES'],
 			// 'Barack Obama, "String, with, colons", Donald Trump'
 			['Barack Obama, String, Donald Trump'],
@@ -292,7 +292,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should parse integers', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'INTEGER'
 			], [
@@ -331,7 +331,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should parse URLs', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'URL'
 			], [
@@ -370,7 +370,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should parse Emails', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'EMAIL'
 			], [
@@ -409,7 +409,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should call .validate()', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'NAME'
 			], [
@@ -443,7 +443,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should validate numbers', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'NUMBER'
 			], [
@@ -473,7 +473,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should validate booleans', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'TRUE',
 				'FALSE',
@@ -517,7 +517,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should validate dates', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'DATE',
 				'INVALID'
@@ -558,7 +558,7 @@ describe('parseDataWithPerRowErrors', () => {
 			throw new Error('invalid')
 		}
 
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'PHONE',
 				'PHONE_TYPE'
@@ -598,7 +598,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should map row numbers', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'NUMBER'
 			], [
@@ -629,7 +629,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should validate "oneOf" (valid)', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'STATUS'
 			],
@@ -658,7 +658,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should validate "oneOf" (not valid)', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'STATUS'
 			],
@@ -692,7 +692,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should support `required: undefined` on nested objects (nested object properties are not required)', function() {
-		const results = parseDataWithPerRowErrors(
+		const results = parseSheetDataWithPerRowErrors(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', null, null]
@@ -732,7 +732,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should support `required: undefined` on nested objects (some of nested object properties are required)', function() {
-		const results = parseDataWithPerRowErrors(
+		const results = parseSheetDataWithPerRowErrors(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', null, null]
@@ -776,7 +776,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should support `required: false` on nested objects (nested object is completely absent)', function() {
-		const results = parseDataWithPerRowErrors(
+		const results = parseSheetDataWithPerRowErrors(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', null, null]
@@ -818,7 +818,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should support `required: false` on nested objects (nested object is not absent)', function() {
-		const results = parseDataWithPerRowErrors(
+		const results = parseSheetDataWithPerRowErrors(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', 'ca', null]
@@ -863,7 +863,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should reduce empty nested objects to `null` by default', function() {
-		const results = parseDataWithPerRowErrors(
+		const results = parseSheetDataWithPerRowErrors(
 			[
 				['A', 'B', 'CA', 'CB'],
 				['a', 'b', 'ca', null],
@@ -911,7 +911,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should parse missing columns (`undefined` by default) and empty cells (`null` by default) (`required: false`)', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -972,7 +972,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should parse missing columns (`undefined` by default) and empty cells (`null` by default) (`propertyValueWhenColumnIsMissing: null`) (`required: false`)', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -1035,7 +1035,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should parse missing columns (`undefined` by default) and empty cells (`null` by default) (`propertyValueWhenCellIsEmpty: undefined`) (`required: false`)', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -1098,7 +1098,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should parse missing columns (`undefined` by default) and empty cells (`null` by default) (`propertyValueWhenColumnIsMissing: null` and `propertyValueWhenCellIsEmpty: null`) (`required: false`)', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'COLUMN_2',
 				'COLUMN_3',
@@ -1162,7 +1162,7 @@ describe('parseDataWithPerRowErrors', () => {
 	})
 
 	it('should parse missing columns (`undefined` by default) and empty cells (`null` by default) (`propertyValueWhenColumnIsMissing: null` and `propertyValueWhenCellIsEmpty: null`) (`required: true`)', () => {
-		const results = parseDataWithPerRowErrors([
+		const results = parseSheetDataWithPerRowErrors([
 			[
 				'COLUMN_2',
 				'COLUMN_3',

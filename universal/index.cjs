@@ -3,8 +3,8 @@ exports['default'] = require('../commonjs/export/readXlsxFileUniversal.js').defa
 
 exports.readSheet = require('../commonjs/export/readSheetUniversal.js').default
 
-// `parseData()`
-exports.parseData = require('../commonjs/parseData/parseData.js').default
-exports.Integer = require('../commonjs/parseData/types/additional/Integer.js').default
-exports.Email = require('../commonjs/parseData/types/additional/Email.js').default
-exports.URL = require('../commonjs/parseData/types/additional/URL.js').default
+// `parseSheetData()`
+exports.parseSheetData = require('../commonjs/parseSheetData/parseSheetData.js').default
+exports.Integer = require('../commonjs/parseSheetData/types/additional/Integer.js').default
+exports.Email = require('../commonjs/parseSheetData/types/additional/Email.js').default
+exports.URL = require('../commonjs/parseSheetData/types/additional/URL.js').default

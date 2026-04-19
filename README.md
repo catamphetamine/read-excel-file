@@ -83,10 +83,17 @@ Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-fi
 ######
 
 * If you were using `parseData()` function:
-  * Rewrote the code of the `parseData()` function.
-  * The result of `parseData()` function is now `{ errors, objects }`. If there're no errors, `errors` will be `undefined`. Otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
-    * Previously the result of `parseData()` function was `[{ errors, object }, ...]`, i.e. the `errors` were split between each particular data row. Now the `errors` are combined for all data rows. The rationale is that it's simpler to handle the result of the function this way.
+  * Rewrote the code of the `parseData()` function and renamed it to `parseSheetData()`.
+  * The result of `parseSheetData()` function is now `{ errors, objects }`. If there're no errors, `errors` will be `undefined`. Otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
+    * Previously the result of `parseSheetData()` function was `[{ errors, object }, ...]`, i.e. the `errors` were split between each particular data row. Now the `errors` are combined for all data rows. The rationale is that it's simpler to handle the result of the function this way.
     * Re-added `row: number` property to the `error` object.
+  * Renamed some of the exported TypeScript types:
+    * `ParseDataCustomType` → `ParseSheetDataCustomType`
+    * `ParseDataCustomTypeErrorMessage` → `ParseSheetDataCustomTypeErrorMessage`
+    * `ParseDataCustomTypeErrorReason` → `ParseSheetDataCustomTypeErrorReason`
+    * `ParseDataError` → `ParseSheetDataError`
+    * `ParseDataValueRequiredError` → `ParseSheetDataValueRequiredError`
+    * `ParseDataResult` → `ParseSheetDataResult`
   * In a `schema`, a nested object could be declared as: `{ required: true/false, schema: { ... } }`. This is still true but the `required` flag is now only allowed to be either `undefined` or `false`, so `true` value is not allowed. The reason is quite simple. If a nested object as a whole is marked as `required: true`, and then it happens to be empty, a `"required"` error should be returned for it. But that error would also have to include a `column` title, and a nested object simply can't be pinned down to a single column in a sheet because it is by definition spread over multiple columns. So instead of marking a nested object as a whole with `required: true`, mark the specific required properties of it.
 </details>
 
@@ -317,14 +324,14 @@ Here're the results of reading [sample `.xlsx` files](https://examplefile.com/do
 
 ## Schema
 
-Oftentimes, the task is not just to read the "raw" spreadsheet data but also to convert each row of that data to a JSON object having a certain structure. Because it's such a common task, this package exports a named function `parseData(data, schema)` which does exactly that. It parses sheet data into an array of JSON objects according to a pre-defined `schema` which describes how should a row of data be converted to a JSON object.
+Oftentimes, the task is not just to read the "raw" spreadsheet data but also to convert each row of that data to a JSON object having a certain structure. Because it's such a common task, this package exports a named function `parseSheetData(data, schema)` which does exactly that. It parses sheet data into an array of JSON objects according to a pre-defined `schema` which describes how should a row of data be converted to a JSON object.
 
 ```js
-import { readSheet, parseData } from "read-excel-file/browser"
+import { readSheet, parseSheetData } from "read-excel-file/browser"
 
 const data = await readSheet(file)
 const schema = { ... }
-const { objects, errors } = parseData(data, schema)
+const { objects, errors } = parseSheetData(data, schema)
 if (errors) {
   console.error(errors)
 } else {
@@ -332,7 +339,7 @@ if (errors) {
 }
 ```
 
-The `parseData()` function returns an object — `{ objects, errors }`. Depending on whether there were any errors when parsing the data, either `objects` or `errors` property will be `undefined`.
+The `parseSheetData()` function returns an object — `{ objects, errors }`. Depending on whether there were any errors when parsing the data, either `objects` or `errors` property will be `undefined`.
 
 The sheet data that is being parsed should adhere to a simple structure: the first row should be a header row with just column titles, and each following row should specify the values for those columns.
 
@@ -459,7 +466,7 @@ const schema = {
 const data = await readSheet(file)
 
 // Parse `data` using a `schema`
-const { objects, errors } = parseData(data, schema)
+const { objects, errors } = parseSheetData(data, schema)
 
 // There have been no errors when parsing the sheet data, so `errors` is `undefined`.
 // Should there have been any errors when parsing the sheet data, `errors` would've been
@@ -502,9 +509,9 @@ function PhoneNumber(value) {
 import type {
   Schema,
   CellValue,
-  ParseDataError,
-  ParseDataCustomType,
-  ParseDataCustomTypeErrorMessage
+  ParseSheetDataError,
+  ParseSheetDataCustomType,
+  ParseSheetDataCustomTypeErrorMessage
 } from 'read-excel-file/node'
 
 type ColumnTitle = 'COLUMN TITLE 1' | 'COLUMN TITLE 2'
@@ -518,20 +525,20 @@ function CustomType(value: CellValue): CustomTypeValue {
   return '~' + value + '~'
 }
 
-type CustomTypeErrorMessage<Type extends ParseDataCustomType<unknown>> =
+type CustomTypeErrorMessage<Type extends ParseSheetDataCustomType<unknown>> =
   Type extends typeof CustomType
     ? 'not_a_string'
     : never
 
 // type CustomTypeErrorReason<
-//   Type extends ParseDataCustomType<unknown>,
-//   ErrorMessage extends ParseDataCustomTypeErrorMessage<Type>
+//   Type extends ParseSheetDataCustomType<unknown>,
+//   ErrorMessage extends ParseSheetDataCustomTypeErrorMessage<Type>
 // > =
 //   Type extends typeof CustomType
 //     ? (ErrorMessage extends 'not_a_string' ? undefined : never)
 //     : never
 
-type PossibleError = ParseDataError<
+type PossibleError = ParseSheetDataError<
   ColumnTitle,
   typeof CustomType,
   CustomTypeErrorMessage<typeof CustomType>
@@ -555,7 +562,7 @@ const schema: Schema<Object, ColumnTitle> = {
   }
 }
 
-const { objects, errors } = parseData<Object, ColumnTitle, PossibleError>([
+const { objects, errors } = parseSheetData<Object, ColumnTitle, PossibleError>([
   ['COLUMN TITLE 1', 'COLUMN TITLE 2'],
   ['Value 1', 'Value 2']
 ], schema)

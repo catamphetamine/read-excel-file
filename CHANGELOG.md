@@ -2,10 +2,17 @@
 ==================
 
 * If you were using `parseData()` function:
-  * Rewrote the code of the `parseData()` function.
-  * The result of `parseData()` function is now `{ errors, objects }`. If there're no errors, `errors` will be `undefined`. Otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
-    * Previously the result of `parseData()` function was `[{ errors, object }, ...]`, i.e. the `errors` were split between each particular data row. Now the `errors` are combined for all data rows. The rationale is that it's simpler to handle the result of the function this way.
+  * Rewrote the code of the `parseData()` function and renamed it to `parseSheetData()`.
+  * The result of `parseSheetData()` function is now `{ errors, objects }`. If there're no errors, `errors` will be `undefined`. Otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
+    * Previously the result of `parseSheetData()` function was `[{ errors, object }, ...]`, i.e. the `errors` were split between each particular data row. Now the `errors` are combined for all data rows. The rationale is that it's simpler to handle the result of the function this way.
     * Re-added `row: number` property to the `error` object.
+  * Renamed some of the exported TypeScript types:
+    * `ParseDataCustomType` → `ParseSheetDataCustomType`
+    * `ParseDataCustomTypeErrorMessage` → `ParseSheetDataCustomTypeErrorMessage`
+    * `ParseDataCustomTypeErrorReason` → `ParseSheetDataCustomTypeErrorReason`
+    * `ParseDataError` → `ParseSheetDataError`
+    * `ParseDataValueRequiredError` → `ParseSheetDataValueRequiredError`
+    * `ParseDataResult` → `ParseSheetDataResult`
   * In a `schema`, a nested object could be declared as: `{ required: true/false, schema: { ... } }`. This is still true but the `required` flag is now only allowed to be either `undefined` or `false`, so `true` value is not allowed. The reason is quite simple. If a nested object as a whole is marked as `required: true`, and then it happens to be empty, a `"required"` error should be returned for it. But that error would also have to include a `column` title, and a nested object simply can't be pinned down to a single column in a sheet because it is by definition spread over multiple columns. So instead of marking a nested object as a whole with `required: true`, mark the specific required properties of it.
 
 8.0.0 / 11.03.2026

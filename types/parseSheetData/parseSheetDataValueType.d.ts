@@ -21,7 +21,7 @@ export type NumberType = Constructor<Number>;
 export type BooleanType = Constructor<Boolean>;
 
 // Parsed value `type` (foundational ones).
-type ParseDataBaseType =
+type ParseSheetDataBaseType =
 	Constructor<String> |
 	Constructor<Date> |
 	Constructor<Number> |
@@ -32,7 +32,7 @@ export function Integer(value: CellValue): number;
 export function URL(value: CellValue): string;
 export function Email(value: CellValue): string;
 
-type ParseDataAdditionalType =
+type ParseSheetDataAdditionalType =
 	| typeof Integer
 	| typeof URL
 	| typeof Email;
@@ -41,10 +41,10 @@ type ParseDataAdditionalType =
 // A function that receives a cell `value` and returns a "parsed" value.
 // Returning `undefined` will have same effect as returning `null`.
 // When cell value is `undefined` or `null`, its `type` is completely ignored (skipped).
-export type ParseDataCustomType<ParsedValue> = (value: CellValue) => ParsedValue | undefined;
+export type ParseSheetDataCustomType<ParsedValue> = (value: CellValue) => ParsedValue | undefined;
 
 // Schema entry `type`: foundational ones, additional ones, custom ones.
-export type ParseDataValueType<ParseDataCustomType> =
-	| ParseDataBaseType
-	| ParseDataAdditionalType
-	| ParseDataCustomType;
+export type ParseSheetDataValueType<ParseSheetDataCustomType> =
+	| ParseSheetDataBaseType
+	| ParseSheetDataAdditionalType
+	| ParseSheetDataCustomType;

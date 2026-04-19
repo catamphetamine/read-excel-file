@@ -10,17 +10,17 @@ import {
 } from '../types/types.d.js';
 
 import {
-	ParseDataOptions,
-	ParseDataResult
-} from '../types/parseData/parseData.d.js';
+	ParseSheetDataOptions,
+	ParseSheetDataResult
+} from '../types/parseSheetData/parseSheetData.d.js';
 
 import {
 	Schema
-} from '../types/parseData/parseDataSchema.d.js';
+} from '../types/parseSheetData/parseSheetDataSchema.d.js';
 
 import {
-	ParseDataError
-} from '../types/parseData/parseDataError.d.js';
+	ParseSheetDataError
+} from '../types/parseSheetData/parseSheetDataError.d.js';
 
 export {
 	CellValue,
@@ -30,7 +30,7 @@ export {
 } from '../types/types.d.js';
 
 export {
-	ParseDataCustomType,
+	ParseSheetDataCustomType,
 	// Base `type`s when parsing data.
 	StringType as String,
 	DateType as Date,
@@ -40,22 +40,22 @@ export {
 	Integer,
 	Email,
 	URL
-} from '../types/parseData/parseDataValueType.d.js';
+} from '../types/parseSheetData/parseSheetDataValueType.d.js';
 
 export {
-	ParseDataCustomTypeErrorMessage,
-	ParseDataCustomTypeErrorReason,
-	ParseDataError,
-	ParseDataValueRequiredError
-} from '../types/parseData/parseDataError.d.js';
+	ParseSheetDataCustomTypeErrorMessage,
+	ParseSheetDataCustomTypeErrorReason,
+	ParseSheetDataError,
+	ParseSheetDataValueRequiredError
+} from '../types/parseSheetData/parseSheetDataError.d.js';
 
 export {
-	ParseDataResult
-} from '../types/parseData/parseData.d.js';
+	ParseSheetDataResult
+} from '../types/parseSheetData/parseSheetData.d.js';
 
 export {
 	Schema
-} from '../types/parseData/parseDataSchema.d.js';
+} from '../types/parseSheetData/parseSheetDataSchema.d.js';
 
 export default function readXlsxFile<ParsedNumber = number>(
 	input: Input,
@@ -73,12 +73,12 @@ export function readSheet<ParsedNumber = number>(
 	options?: ReadOptions<ParsedNumber>
 ): Promise<SheetData<ParsedNumber>>;
 
-export function parseData<
+export function parseSheetData<
 	Object extends object,
 	ColumnTitle extends string,
-	Error extends ParseDataError
+	Error extends ParseSheetDataError
 >(
 	data: SheetData,
 	schema: Schema<Object, ColumnTitle>,
-	options?: ParseDataOptions
-): ParseDataResult<Object, Error>;
+	options?: ParseSheetDataOptions
+): ParseSheetDataResult<Object, Error>;
