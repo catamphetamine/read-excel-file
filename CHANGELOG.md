@@ -1,51 +1,67 @@
 9.0.0 / 18.04.2026
 ==================
 
-* Refactored `parseData()` function.
-* The result of `parseData()` function is now `{ errors, objects }`. If there're no errors, `errors` will be `undefined`. Otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
-  * Previously the result of `parseData()` function was `[{ errors, object }, ...]`, i.e. the `errors` were split between each particular data row. Now the `errors` are combined for all data rows. The rationale is that it's simpler to handle the result of the function this way.
-  * Re-added `row: number` property to the `error` object.
-* In a schema, a nested object is now not allowed to be `required: true`. Otherwise, if a nested object was allowed to be `required: true`, a corresponding `"required"` error  would have to include a specific `column` title but a nested object simply doesn't have one.
+* If you were using `parseData()` function:
+  * Rewrote the code of the `parseData()` function.
+  * The result of `parseData()` function is now `{ errors, objects }`. If there're no errors, `errors` will be `undefined`. Otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
+    * Previously the result of `parseData()` function was `[{ errors, object }, ...]`, i.e. the `errors` were split between each particular data row. Now the `errors` are combined for all data rows. The rationale is that it's simpler to handle the result of the function this way.
+    * Re-added `row: number` property to the `error` object.
+  * In a `schema`, a nested object could be declared as: `{ required: true/false, schema: { ... } }`. This is still true but the `required` flag is now only allowed to be either `undefined` or `false`, so `true` value is not allowed. The reason is quite simple. If a nested object as a whole is marked as `required: true`, and then it happens to be empty, a `"required"` error should be returned for it. But that error would also have to include a `column` title, and a nested object simply can't be pinned down to a single column in a sheet because it is by definition spread over multiple columns. So instead of marking a nested object as a whole with `required: true`, mark the specific required properties of it.
 
 8.0.0 / 11.03.2026
 ==================
 
-* Renamed the default exported function to a named exported function `readSheet`.
-  * Old: `import readExcelFile from "read-excel-file/browser"`
-  * New: `import { readSheet } from "read-excel-file/browser"`
-  * And same for other exports like `"read-excel-file/node"`, etc.
-* The default exported function now returns all sheets in a form of an array of objects: `[{ name: "Sheet 1", rows: [['a','b','c'],['d','e','f']] }, ...]`.
-* Removed `getSheets: true` parameter. The default exported function now returns all sheets.
-* Removed exported `readSheetNames()` function. The default exported function now returns all sheets.
-* Removed `schema` parameter. Instead, use exported function `parseData(data, schema)` to map data to an array of objects.
-  * Old: `import readExcelFile from "read-excel-file"` and then `const { rows, errors } = await readExcelFile(..., { schema })`
-  * New: `import { readSheet, parseData } from "read-excel-file/browser"` and then `const result = parseData(await readSheet(...), schema)`
-    * The `result` of the function is an array where each element represents a "data row" and has shape `{ object, errors }`.
-      * Depending on whether there were any errors when parsing a given "data row", either `object` or `errors` property will be `undefined`.
-      * The `errors` don't have a `row` property anymore because it could be derived from "data row" number.
-        * In version `9.x`, the `row` property has been re-added, so consider migrating straight to `9.x`.
-      * In version `9.x`, the returned result of `parseData()` has been changed back to `{ errors, objects }`, so consider migrating straight to `9.x`. In that case, if there're no errors, `errors` will be `undefined`; otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
-* Removed `transformData` parameter because `schema` parameter was removed. A developer could transform the `data` themself and then pass it to `parseData()` function.
-* Removed `isColumnOriented` parameter.
-* Removed `ignoreEmptyRows` parameter. Empty rows somewhere in the middle are not ignored now.
-* Renamed some options that're used when parsing using a `schema`:
-	* `schemaPropertyValueForMissingColumn` → `propertyValueWhenColumnIsMissing`
-	* `schemaPropertyValueForMissingValue` → `propertyValueWhenCellIsEmpty`
-	* `schemaPropertyShouldSkipRequiredValidationForMissingColumn` → (removed)
-	* `getEmptyObjectValue` → `transformEmptyObject`
-    * The leading `.` character is now removed from the `path` parameter.
-	* `getEmptyArrayValue` → `transformEmptyArray`
-    * The leading `.` character is now removed from the `path` parameter.
-* Previously, when parsing comma-separated values, it used to ignore any commas that're surrounded by quotes, similar to how it's done in `.csv` files. Now it no longer does that.
-* Previously, when parsing comma-separated values, it used to allow empty-string elements. Now it no longer does that and such empty-string elements will now result in an error with properties: `{ error: "invalid", reason: "syntax" }`.
-* Previously, when parsing using a schema, it used to force-convert all `type: Date` schema properties from any numeric cell value to a `Date` with a given timestamp. Now it demands the cell values for all such `type: Date` schema properties to already be correctly recognized as `Date`s when they're returned from `readSheet()` or `readExcelFile()` function. And I'd personally assume that in any sane (non-contrived) real-world usage scenario that would be the case, so it doesn't really seem like a "breaking change". And if, for some strange reason, that happens not to be the case, `parseData()` function will throw an error: `not_a_date`.
-* Previously, when parsing using a schema, it used to skip `required` validation for completely-empty rows. It no longer does that.
-* Removed exported function `parseExcelDate()` because there seems to be no need to have it exported.
-* (TypeScript) Renamed exported types:
-  * `Type` → `ParseDataCustomType`
-  * `Error` or `SchemaParseCellValueError` → `ParseDataError`
-  * `CellValueRequiredError` → `ParseDataValueRequiredError`
-  * `ParsedObjectsResult` → `ParseDataResult`
+* If you were using the default exported function:
+  * Renamed the default exported function to a named exported function `readSheet`.
+    * Old: `import readExcelFile from "read-excel-file/browser"`
+    * New: `import { readSheet } from "read-excel-file/browser"`
+    * And same for other exports like `"read-excel-file/node"`, etc.
+  * The default exported function now returns a different kind of result. Specifically, now it returns all available sheets — an array of objects: `[{ sheet: "Sheet 1", data: [['a1','b1','c1'],['a2','b2','c2']] }, ...]`.
+  * The default exported function used to return sheet names when passed `getSheets: true` parameter. Now, instead of that, the default exported function just returns all available sheets, from which one could get the sheet names.
+
+* If you were using `readSheetNames()` function:
+  * Removed exported function `readSheetNames()`. Use the default exported function instead. The default exported function now returns all sheets.
+
+* If you were using `parseExcelDate()` function:
+  * Removed exported function `parseExcelDate()` because there seems to be no need to have it exported.
+
+* If you were using `schema` parameter:
+  * Removed `schema` parameter. Instead, use exported function `parseData(data, schema)` to map data to an array of objects.
+    * Old: `import readXlsxFile from "read-excel-file"` and then `const { rows, errors } = await readXlsxFile(..., { schema })`
+    * New: `import { readSheet, parseData } from "read-excel-file/browser"` and then `const result = parseData(await readSheet(...), schema)`
+      * The `result` of the function is an array where each element represents a "data row" and has shape `{ object, errors }`.
+        * Depending on whether there were any errors when parsing a given "data row", either `object` or `errors` property will be `undefined`.
+        * The `errors` don't have a `row` property anymore because it could be derived from "data row" number.
+          * In version `9.x`, the `row` property has been re-added, so consider migrating straight to `9.x`.
+        * In version `9.x`, the returned result of `parseData()` has been changed back to `{ errors, objects }`, so consider migrating straight to `9.x`. In that case, if there're no errors, `errors` will be `undefined`; otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
+  * Renamed some `schema`-related parameters:
+    * `schemaPropertyValueForMissingColumn` → `propertyValueWhenColumnIsMissing`
+    * `schemaPropertyValueForMissingValue` → `propertyValueWhenCellIsEmpty`
+    * `schemaPropertyShouldSkipRequiredValidationForMissingColumn` → (removed)
+    * `getEmptyObjectValue` → `transformEmptyObject`
+      * The leading `.` character is now removed from the `path` parameter.
+    * `getEmptyArrayValue` → `transformEmptyArray`
+      * The leading `.` character is now removed from the `path` parameter.
+  * Previously, when using a `schema` to parse comma-separated values, it used to ignore any commas that're surrounded by quotes, similar to how it's done in `.csv` files. Now it no longer does that.
+  * Previously, when using a `schema` to parse comma-separated values, it used to allow empty-string elements. Now it no longer does that and such empty-string elements will now result in an error with properties: `{ error: "invalid", reason: "syntax" }`.
+  * Previously, when using a `schema` to parse `type: Date` properties, it used to support both `Date` objects and numeric timestamps as the input data for the property value. In the latter case, it simply force-converted those numeric timestamps to corresponding `Date` objects. Now `parseData()` function no longer does that, and demands the input data for `type: Date` schema properties to only be `Date` objects, i.e. it shifts the responsibility to interpret date cell values correctly onto `readSheet()` and `readExcelFile()` functions. And I'd personally assume that in any real-world (i.e. non-contrived) scenario those functions would interpret date cell values correctly, so I personally don't consider this a "breaking change". Still, formally, it is a "breaking change" and therefore should be mentioned. So if, for some strange reason, those two functions happen to not recognize a date cell value correctly, `parseData()` function will return an error for such cell: `"not_a_date"`.
+  * Previously, when using a `schema` to parse sheet data, and a given row of data was completely empty, it didn't run any `required` property validations. Now it no longer does that and it will run all `required` property validations regardless of whether it's a completely empty row of data or not.
+
+* If you were using `transformData` parameter:
+  * Removed `transformData` parameter because the `schema` parameter was extracted into a separate function called `parseData()`. Now, if required, a developer could transform the `data` manually and then pass it to `parseData()` function.
+
+* If you were using `isColumnOriented` parameter:
+  * Removed `isColumnOriented` parameter because it seemed to be of no use.
+
+* If you were using `ignoreEmptyRows` parameter:
+  * Removed `ignoreEmptyRows` parameter. Empty rows somewhere in the middle of a sheet are not ignored now. That doesn't concern empty rows at the end of a sheet though — those're still ignored.
+
+* If you were using TypeScript:
+  * Renamed some of the exported types:
+    * `Type` → `ParseDataCustomType`
+    * `Error` or `SchemaParseCellValueError` → `ParseDataError`
+    * `CellValueRequiredError` → `ParseDataValueRequiredError`
+    * `ParsedObjectsResult` → `ParseDataResult`
 
 7.0.1 / 04.03.2026
 ==================
