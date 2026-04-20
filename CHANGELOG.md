@@ -5,7 +5,8 @@
   * Rewrote the code of the `parseData()` function and renamed it to `parseSheetData()`.
   * The result of `parseSheetData()` function is now `{ errors, objects }`. If there're no errors, `errors` will be `undefined`. Otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
     * Previously the result of `parseSheetData()` function was `[{ errors, object }, ...]`, i.e. the `errors` were split between each particular data row. Now the `errors` are combined for all data rows. The rationale is that it's simpler to handle the result of the function this way.
-    * Re-added `row: number` property to the `error` object.
+    * Re-added `row: number` property to the `error` object. It's the number of the data row that caused the error, starting from `1`.
+    * Added `columnIndex: number` property to the `error` object.
   * Renamed some of the exported TypeScript types:
     * `ParseDataCustomType` → `ParseSheetDataCustomType`
     * `ParseDataCustomTypeErrorMessage` → `ParseSheetDataCustomTypeErrorMessage`
@@ -61,7 +62,7 @@
   * Removed `isColumnOriented` parameter because it seemed to be of no use.
 
 * If you were using `ignoreEmptyRows` parameter:
-  * Removed `ignoreEmptyRows` parameter. Empty rows somewhere in the middle of a sheet are not ignored now. That doesn't concern empty rows at the end of a sheet though — those're still ignored.
+  * Removed `ignoreEmptyRows` parameter. Passing `ignoreEmptyRows: true` parameter no longer makes it skip empty rows in the middle of a sheet. Now it's always the default behavior, as it used to be: only empty rows at the end of a sheet are ignored.
 
 * If you were using TypeScript:
   * Renamed some of the exported types:

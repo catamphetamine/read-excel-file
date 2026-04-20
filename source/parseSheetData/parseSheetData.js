@@ -143,7 +143,8 @@ function parseDataRow(dataRow, schema, columns, options) {
     dummyParentObject.isRequired,
     dummyParentObject.value,
     dummyParentObject.isEmptyValue,
-    dummyParentObject.errors
+    dummyParentObject.errors,
+    columns
   )
 
   // If there were any errors, whether caused by `required`
@@ -220,7 +221,7 @@ function parseProperty(row, schemaEntry, path, columns, options) {
     ? (
       isMissingColumn
         ? { value: options.propertyValueWhenColumnIsMissing, isEmptyValue: true }
-        : parseCellValueWithPossibleErrors(row[columnIndex], schemaEntry, options)
+        : parseCellValueWithPossibleErrors(row[columnIndex], schemaEntry, columnIndex, options)
     )
     : parseObject(
       row,
@@ -248,7 +249,7 @@ function parseProperty(row, schemaEntry, path, columns, options) {
   }
 }
 
-function parseCellValueWithPossibleErrors(cellValue, schemaEntry, options) {
+function parseCellValueWithPossibleErrors(cellValue, schemaEntry, columnIndex, options) {
   const {
     value,
     isEmptyValue,
@@ -261,6 +262,7 @@ function parseCellValueWithPossibleErrors(cellValue, schemaEntry, options) {
       error: errorMessage,
       reason: errorReason,
       column: schemaEntry.column,
+      columnIndex,
       valueType: schemaEntry.type,
       value: cellValue
     })
@@ -584,7 +586,8 @@ function runPendingRequiredValidations(
   parentObjectIsRequired,
   parentObjectValue,
   parentObjectValueIsEmpty,
-  parentObjectErrors
+  parentObjectErrors,
+  columns
 ) {
   let requiredErrors = []
 
@@ -602,6 +605,7 @@ function runPendingRequiredValidations(
     requiredErrors.push(createError({
       error: 'required',
       column: schemaEntry.column,
+      columnIndex: columns.indexOf(schemaEntry.column),
       valueType: schemaEntry.type,
       value
     }))
@@ -621,7 +625,8 @@ function runPendingRequiredValidations(
         isRequired,
         value,
         isEmptyValue,
-        errors
+        errors,
+        columns
       )
       if (requiredErrorsOfChild) {
         requiredErrors = requiredErrors.concat(requiredErrorsOfChild)
@@ -678,6 +683,7 @@ function isPropertyRequired(
 
 function createError({
   column,
+  columnIndex,
   valueType,
   value,
   error: errorMessage,
@@ -686,6 +692,7 @@ function createError({
   const error = {
     error: errorMessage,
     column,
+    columnIndex,
     value
   }
   if (reason) {

@@ -30,8 +30,46 @@ describe('parseSheetData', () => {
 			error: 'required',
 			row: 1,
 			column: 'NUMBER',
+			columnIndex: 0,
 			type: Number,
 			value: null
+		}])
+	})
+
+	it('should include column index in error objects', () => {
+		const { errors, objects } = parseSheetData([
+			['IRRELEVANT COLUMN 1', 'IRRELEVANT COLUMN 2', 'NUMBER'],
+			[null, null, null]
+		], {
+			number: {
+				column: 'NUMBER',
+				type: Number,
+				required: true
+			},
+			columnNotExists: {
+				column: 'COLUMN NOT EXISTS',
+				type: Number,
+				required: true
+			}
+		})
+
+		expect(objects).to.be.undefined
+		expect(errors).to.not.be.undefined
+
+		expect(errors).to.deep.equal([{
+			error: 'required',
+			row: 1,
+			column: 'NUMBER',
+			columnIndex: 2,
+			type: Number,
+			value: null
+		}, {
+			error: 'required',
+			row: 1,
+			column: 'COLUMN NOT EXISTS',
+			columnIndex: -1,
+			type: Number,
+			value: undefined
 		}])
 	})
 })
@@ -172,6 +210,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			error: 'required',
 			// row: 1,
 			column: 'NUMBER',
+			columnIndex: 0,
 			type: Number,
 			value: null
 		}])
@@ -236,6 +275,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			error: 'required',
 			// row: 1,
 			column: 'NOT EXISTS',
+			columnIndex: -1,
 			value: undefined,
 			// value: null,
 			type: Number
@@ -283,6 +323,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			error: 'invalid',
 			reason: 'syntax',
 			column: 'NAMES',
+			columnIndex: 0,
 			value: ', String',
 			type: [String]
 		}])
@@ -325,6 +366,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			reason: 'not_an_integer',
 			// row: 2,
 			column: 'INTEGER',
+			columnIndex: 0,
 			type: Integer,
 			value: '1.2'
 		}])
@@ -364,6 +406,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			reason: 'not_a_url',
 			// row: 2,
 			column: 'URL',
+			columnIndex: 0,
 			type: URL,
 			value: 'kremlin.ru'
 		}])
@@ -403,6 +446,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			reason: 'not_an_email',
 			// row: 2,
 			column: 'EMAIL',
+			columnIndex: 0,
 			type: Email,
 			value: '123'
 		}])
@@ -437,6 +481,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			error: 'custom-error',
 			// row: 1,
 			column: 'NAME',
+			columnIndex: 0,
 			type: String,
 			value: 'George Bush'
 		}])
@@ -467,6 +512,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			reason: 'not_a_number',
 			// row: 1,
 			column: 'NUMBER',
+			columnIndex: 0,
 			type: Number,
 			value: '123abc'
 		}])
@@ -511,6 +557,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			reason: 'not_a_boolean',
 			// row: 1,
 			column: 'INVALID',
+			columnIndex: 2,
 			type: Boolean,
 			value: 'TRUE'
 		}])
@@ -548,6 +595,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			reason: 'not_a_date',
 			// row: 1,
 			column: 'INVALID',
+			columnIndex: 1,
 			type: Date,
 			value: '-'
 		}])
@@ -586,12 +634,14 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			error: 'invalid',
 			// row: 1,
 			column: 'PHONE',
+			columnIndex: 0,
 			value: '123',
 			type
 		}, {
 			error: 'invalid',
 			// row: 1,
 			column: 'PHONE_TYPE',
+			columnIndex: 1,
 			value: '123',
 			type
 		}])
@@ -623,6 +673,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			reason: 'not_a_number',
 			// row: 1,
 			column: 'NUMBER',
+			columnIndex: 0,
 			type: Number,
 			value: '123abc'
 		}])
@@ -686,6 +737,7 @@ describe('parseSheetDataWithPerRowErrors', () => {
 			reason: 'unknown',
 			// row: 1,
 			column: 'STATUS',
+			columnIndex: 0,
 			type: String,
 			value: 'SCHEDULED'
 		}])
@@ -769,7 +821,9 @@ describe('parseSheetDataWithPerRowErrors', () => {
 
 		expect(results[0].errors).to.deep.equal([{
 			error: 'required',
+			// row: 1,
 			column: 'CB',
+			columnIndex: 3,
 			type: String,
 			value: null
 		}])
@@ -856,7 +910,9 @@ describe('parseSheetDataWithPerRowErrors', () => {
 
 		expect(results[0].errors).to.deep.equal([{
 			error: 'required',
+			// row: 1,
 			column: 'CB',
+			columnIndex: 3,
 			type: String,
 			value: null
 		}])
@@ -1208,9 +1264,10 @@ describe('parseSheetDataWithPerRowErrors', () => {
 		expect(results[0].errors).to.exist
 
 		expect(results[0].errors).to.deep.equal([{
-			column: 'COLUMN_5',
 			error: 'required',
 			// row: 1,
+			column: 'COLUMN_5',
+			columnIndex: -1,
 			type: String,
 			value: null
 		}])
@@ -1219,9 +1276,10 @@ describe('parseSheetDataWithPerRowErrors', () => {
 		expect(results[1].errors).to.exist
 
 		expect(results[1].errors).to.deep.equal([{
-			column: 'COLUMN_5',
 			error: 'required',
 			// row: 2,
+			column: 'COLUMN_5',
+			columnIndex: -1,
 			type: String,
 			value: null
 		}])

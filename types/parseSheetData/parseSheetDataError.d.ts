@@ -18,14 +18,15 @@ export interface ParseSheetDataValueRequiredError<
 > {
 	row: number;
 	column: ColumnTitle;
-	// `type: undefined` is treated as `type: String`.
-	type?: ParseSheetDataValueType<CustomType>;
+	columnIndex: number;
 	error: 'required';
 	reason: undefined;
 	// When `error` is `"required"`, `value` could only be `null` or `undefined`.
 	// * `null` means "cell is empty"
 	// * `undefined` means "column is missing"
 	value: null | undefined;
+	// When `type` is not specified, it assumes `type: String`.
+	type?: ParseSheetDataValueType<CustomType>;
 }
 
 interface ParseSheetDataError_<
@@ -38,19 +39,20 @@ interface ParseSheetDataError_<
 	// The answer is that `type` could only be `undefined` in case of `parseSheetData()` errors
 	// that originate from `type: String` parser while other type parsers can't have `type` be `undefined`.
 	//
-	Type extends ParseSheetDataValueType<unknown> | undefined,
+	ValueType extends ParseSheetDataValueType<unknown> | undefined,
 	ErrorMessage extends string,
 	ErrorReason extends string | undefined
 > {
 	row: number;
 	column: ColumnTitle;
-	type: Type;
+	columnIndex: number;
 	error: ErrorMessage;
 	reason: ErrorReason;
 	// When `error` is not `"required"`, `value` is known to not be `null` or `undefined`
 	// because when `value` is `null` or `undefined`, it won't be parsed at all,
 	// so there can't be any error thrown during parsing phase.
 	value: CellValue;
+	type: ValueType;
 }
 
 export type ParseSheetDataCustomTypeErrorMessage<
@@ -131,10 +133,10 @@ interface ParseSheetDataErrorStringNumberOutOfBounds<ColumnTitle extends string 
 
 interface ParseSheetDataErrorNotANumber<
 	ColumnTitle extends string = string,
-	Type extends ParseSheetDataCustomType<unknown> | undefined = NumberType
+	ValueType extends ParseSheetDataCustomType<unknown> | undefined = NumberType
 > extends ParseSheetDataError_<
 	ColumnTitle,
-	Type,
+	ValueType,
 	'not_a_number',
 	undefined
 > {
@@ -143,10 +145,10 @@ interface ParseSheetDataErrorNotANumber<
 
 interface ParseSheetDataErrorNotANumberString<
 	ColumnTitle extends string = string,
-	Type extends ParseSheetDataCustomType<unknown> | undefined = NumberType
+	ValueType extends ParseSheetDataCustomType<unknown> | undefined = NumberType
 > extends ParseSheetDataError_<
 	ColumnTitle,
-	Type,
+	ValueType,
 	'not_a_number',
 	undefined
 > {
@@ -155,10 +157,10 @@ interface ParseSheetDataErrorNotANumberString<
 
 interface ParseSheetDataErrorNumberInvalid<
 	ColumnTitle extends string = string,
-	Type extends ParseSheetDataCustomType<unknown> | undefined = NumberType
+	ValueType extends ParseSheetDataCustomType<unknown> | undefined = NumberType
 > extends ParseSheetDataError_<
 	ColumnTitle,
-	Type,
+	ValueType,
 	'invalid_number',
 	undefined
 > {
@@ -167,10 +169,10 @@ interface ParseSheetDataErrorNumberInvalid<
 
 interface ParseSheetDataErrorNumberOutOfBounds<
 	ColumnTitle extends string = string,
-	Type extends ParseSheetDataCustomType<unknown> | undefined = NumberType
+	ValueType extends ParseSheetDataCustomType<unknown> | undefined = NumberType
 > extends ParseSheetDataError_<
 	ColumnTitle,
-	Type,
+	ValueType,
 	'out_of_bounds',
 	undefined
 > {
