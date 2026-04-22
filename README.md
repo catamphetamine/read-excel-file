@@ -395,6 +395,8 @@ If there're any errors during the conversion process, the `errors` property retu
   * `row: 1` means "first row of data", etc.
   * Don't mind the header row.
 * `column: string` — The column title.
+* `columnIndex: number` — The column index.
+  * `columnIndex: 0` means "first column", etc.
 * `value?: any` — The cell value.
 * `type?: any` — The `type` of the property, as defined by the `schema`.
 
