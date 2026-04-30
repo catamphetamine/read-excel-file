@@ -47,6 +47,7 @@ Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-fi
         * The `errors` don't have a `row` property anymore because it could be derived from "data row" number.
           * In version `9.x`, the `row` property has been re-added, so consider migrating straight to `9.x`.
         * In version `9.x`, the returned result of `parseData()` has been changed back to `{ errors, objects }`, so consider migrating straight to `9.x`. In that case, if there're no errors, `errors` will be `undefined`; otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
+        * In version `9.x`, the `schema` parameter was re-added to `readSheet()` function, so consider migrating straight to `9.x`.
   * Renamed some `schema`-related parameters:
     * `schemaPropertyValueForMissingColumn` → `propertyValueWhenColumnIsMissing`
     * `schemaPropertyValueForMissingValue` → `propertyValueWhenCellIsEmpty`
@@ -96,6 +97,8 @@ Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-fi
     * `ParseDataValueRequiredError` → `ParseSheetDataValueRequiredError`
     * `ParseDataResult` → `ParseSheetDataResult`
   * In a `schema`, a nested object could be declared as: `{ required: true/false, schema: { ... } }`. This is still true but the `required` flag is now only allowed to be either `undefined` or `false`, so `true` value is not allowed. The reason is quite simple. If a nested object as a whole is marked as `required: true`, and then it happens to be empty, a `"required"` error should be returned for it. But that error would also have to include a `column` title, and a nested object simply can't be pinned down to a single column in a sheet because it is by definition spread over multiple columns. So instead of marking a nested object as a whole with `required: true`, mark the specific required properties of it.
+  * Re-added `schema` parameter to `readSheet()` function.
+    * `const { objects, errors } = readSheet(data, { schema })`
 </details>
 
 ## Install
@@ -160,6 +163,8 @@ The result is a non-empty array of "sheets". Each "sheet" is an object with prop
   * Example: `"Sheet1"`
 * `data` — Sheet data. An array of rows. Each row is an array of values — `string`, `number`, `boolean` or `Date`.
   * Example: `[ ['Name','Age'], ['John Smith',30], ['Kate Brown',15] ]`
+
+Also, a very common use case is to read a list of JSON objects from an `.xlsx` file. To do that, pass a [`schema`](#schema) parameter to `readSheet()` function.
 
 ## Import
 
@@ -325,14 +330,15 @@ Here're the results of reading [sample `.xlsx` files](https://examplefile.com/do
 
 ## Schema
 
-Oftentimes, the task is not just to read the "raw" spreadsheet data but also to convert each row of that data to a JSON object having a certain structure. Because it's such a common task, this package exports a named function `parseSheetData(data, schema)` which does exactly that. It parses sheet data into an array of JSON objects according to a pre-defined `schema` which describes how should a row of data be converted to a JSON object.
+Oftentimes, the task is not just to read the "raw" spreadsheet data but also to convert each row of that data to a JSON object having a certain structure. Because it's such a common task, this package provides an easy way to do that — just pass a `schema` parameter when calling `readSheet()` function and it will automatically parse sheet data into an array of JSON objects according to that `schema` (which basically describes all properties of the object and which column should be mapped to which property). The only requirement is that the sheet data should adhere to a simple structure: the first row should be a header row with just column titles, and each following row should specify the values for those columns.
 
 ```js
-import { readSheet, parseSheetData } from "read-excel-file/browser"
+import { readSheet } from 'read-excel-file/node'
 
-const data = await readSheet(file)
 const schema = { ... }
-const { objects, errors } = parseSheetData(data, schema)
+
+const { objects, errors } = await readSheet(file, { schema })
+
 if (errors) {
   console.error(errors)
 } else {
@@ -340,11 +346,11 @@ if (errors) {
 }
 ```
 
-The `parseSheetData()` function returns an object — `{ objects, errors }`. Depending on whether there were any errors when parsing the data, either `objects` or `errors` property will be `undefined`.
+The result is `{ objects, errors }`
+* If there were any errors, `objects` will be `undefined` and `errors` will be a list of errors.
+* If there were no errors, `errors` will be `undefined` and `objects` will be a list of objects.
 
-The sheet data that is being parsed should adhere to a simple structure: the first row should be a header row with just column titles, and each following row should specify the values for those columns.
-
-The `schema` argument should describe the structure of the resulting JSON objects. An example of a `schema` is provided at the end of this section.
+`schema` should describe the structure of the resulting JSON objects. An example of a `schema` is provided at the end of this section.
 
 Specifically, a `schema` should be an object having the same keys as a resulting JSON object, with values being nested objects having the following properties:
 
@@ -465,11 +471,8 @@ const schema = {
 // If this code was written in TypeScript, `schema` would've been declared as:
 // const schema: Schema<Object, ColumnTitle> = { ... }
 
-// Read `data` from an `.xlsx` file
-const data = await readSheet(file)
-
-// Parse `data` using a `schema`
-const { objects, errors } = parseSheetData(data, schema)
+// Read `data` from an `.xlsx` file and parse it using a `schema`.
+const { objects, errors } = await readSheet(file, { schema })
 
 // There have been no errors when parsing the sheet data, so `errors` is `undefined`.
 // Should there have been any errors when parsing the sheet data, `errors` would've been
@@ -500,6 +503,21 @@ function PhoneNumber(value) {
     throw new Error('invalid')
   }
   return number
+}
+```
+
+Also, for convenience, this package exports the same feature as a separate function — `parseSheetData(sheetData, schema)`.
+
+```js
+import { readSheet, parseSheetData } from 'read-excel-file/node'
+
+const schema = { ... }
+const sheetData = await readSheet(file)
+const { objects, errors } = parseSheetData(sheetData, schema)
+if (errors) {
+  console.error(errors)
+} else {
+  console.log(objects)
 }
 ```
 

@@ -1,11 +1,11 @@
-import { ParseSheetDataValueType, ParseSheetDataCustomType } from './parseSheetDataValueType.d.js'
+import type { ParseSheetDataValueType, ParseSheetDataCustomType } from './parseSheetDataValueType.d.js'
 
 type SchemaEntryRequiredOrNot<Object> = boolean | ((row: Object) => boolean);
 
 interface SchemaEntryForValue<
 	Key extends keyof Object,
-	Object,
-	TopLevelObject,
+	Object extends object,
+	TopLevelObject extends object,
 	ColumnTitle extends string
 > {
 	column: ColumnTitle;
@@ -19,28 +19,30 @@ interface SchemaEntryForValue<
 // https://dev.to/busypeoples/notes-on-typescript-recursive-types-and-immutability-5ck1
 interface SchemaEntryRecursive<
 	Key extends keyof Object,
-	Object,
-	TopLevelObject,
+	Object extends object,
+	TopLevelObject extends object,
 	ColumnTitle extends string
 > {
-	schema: Record<
-		keyof Object[Key],
-		SchemaEntry<keyof Object[Key], Object[Key], TopLevelObject, ColumnTitle>
-	>;
+	schema: Object[Key] extends object
+		? Record<
+			keyof Object[Key],
+			SchemaEntry<keyof Object[Key], Object[Key], TopLevelObject, ColumnTitle>
+		>
+		: never;
 	required?: SchemaEntryRequiredOrNot<TopLevelObject>;
 }
 
 type SchemaEntry<
 	Key extends keyof Object,
-	Object,
-	TopLevelObject,
+	Object extends object,
+	TopLevelObject extends object,
 	ColumnTitle extends string
 > =
 	| SchemaEntryForValue<Key, Object, TopLevelObject, ColumnTitle>
 	| SchemaEntryRecursive<Key, Object, TopLevelObject, ColumnTitle>;
 
 export type Schema<
-	Object = Record<string, any>,
+	Object extends object,
 	ColumnTitle extends string = string
 > = Record<
 	keyof Object,

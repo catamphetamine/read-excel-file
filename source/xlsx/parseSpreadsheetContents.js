@@ -12,7 +12,7 @@ import parseSheet from './parseSheet.js'
  * @param  {Record<string,string>} contents - A map of `.xml` files inside the `.xlsx` file (which itself is just a zipped directory).
  * @param  {object} xml — An object having a single property — `createDocument(string)` function.
  * @param  {object} [options]
- * @return {ReadFileResult}
+ * @return {Sheet[]}
  */
 export default function parseSpreadsheetContents(contents, xml, options = {}) {
   const getFileContent = (filePath) => {

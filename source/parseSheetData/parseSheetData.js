@@ -39,10 +39,16 @@ export default function parseSheetData(data, schema, optionsCustom) {
   let parsedRowIndex = 0
   for (const { object, errors: rowErrors } of parsedRows) {
     if (rowErrors) {
-      errors = errors.concat(rowErrors.map(rowError => ({ ...rowError, row: parsedRowIndex + 1 })))
+      errors = errors.concat(
+        rowErrors.map(
+          // Add row number property to each row error.
+          rowError => ({ ...rowError, row: parsedRowIndex + 1 })
+        )
+      )
     } else {
       objects.push(object)
     }
+    parsedRowIndex++
   }
 
   if (errors.length > 0) {

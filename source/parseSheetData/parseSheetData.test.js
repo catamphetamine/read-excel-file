@@ -14,6 +14,7 @@ describe('parseSheetData', () => {
 	it('should include data row number in error objects', () => {
 		const { errors, objects } = parseSheetData([
 			['NUMBER'],
+			[null],
 			[null]
 		], {
 			number: {
@@ -29,6 +30,13 @@ describe('parseSheetData', () => {
 		expect(errors).to.deep.equal([{
 			error: 'required',
 			row: 1,
+			column: 'NUMBER',
+			columnIndex: 0,
+			type: Number,
+			value: null
+		}, {
+			error: 'required',
+			row: 2,
 			column: 'NUMBER',
 			columnIndex: 0,
 			type: Number,

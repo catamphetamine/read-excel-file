@@ -1,4 +1,4 @@
-import { ParseSheetDataError } from './parseSheetDataError.d.js'
+import type { ParseSheetDataError } from './parseSheetDataError.d.js'
 
 interface ParseSheetDataResultSuccess<Object> {
 	objects: Object[];
@@ -13,8 +13,9 @@ interface ParseSheetDataResultError<
 }
 
 export type ParseSheetDataResult<
-	Object,
-	Error extends ParseSheetDataError = ParseSheetDataError
+	Object extends object,
+	ColumnTitle extends string,
+	Error extends ParseSheetDataError = ParseSheetDataError<ColumnTitle>
 > =
 	| ParseSheetDataResultSuccess<Object>
 	| ParseSheetDataResultError<Error>

@@ -1,35 +1,48 @@
 // The contents of this file is identical between the different exports:
 // `/node`, `/browser`, etc.
 
-import { Input } from './input.d.js'
+import type { Input } from './input.d.js'
 
-import {
-	SheetData,
-	ReadOptions,
-	ReadFileResult
-} from '../types/types.d.js';
+import type {
+	SheetData
+} from '../types/SheetData.d.js'
 
-import {
+import type {
+	Sheet
+} from '../types/Sheet.d.js'
+
+import type {
+	Options
+} from '../types/Options.d.js'
+
+import type {
+	OptionsWithSchema
+} from '../types/OptionsWithSchema.d.js'
+
+import type {
 	ParseSheetDataOptions,
 	ParseSheetDataResult
-} from '../types/parseSheetData/parseSheetData.d.js';
+} from '../types/parseSheetData/parseSheetData.d.js'
 
-import {
+import type {
 	Schema
-} from '../types/parseSheetData/parseSheetDataSchema.d.js';
+} from '../types/parseSheetData/parseSheetDataSchema.d.js'
 
-import {
+import type {
 	ParseSheetDataError
-} from '../types/parseSheetData/parseSheetDataError.d.js';
+} from '../types/parseSheetData/parseSheetDataError.d.js'
 
-export {
+export type {
 	CellValue,
 	Row,
-	SheetData,
-	Sheet
-} from '../types/types.d.js';
+	SheetData
+} from '../types/SheetData.d.js'
 
-export {
+export type {
+	Sheet
+} from '../types/Sheet.d.js'
+
+export type {
 	ParseSheetDataCustomType,
 	// Base `type`s when parsing data.
 	StringType as String,
@@ -40,45 +53,55 @@ export {
 	Integer,
 	Email,
 	URL
-} from '../types/parseSheetData/parseSheetDataValueType.d.js';
+} from '../types/parseSheetData/parseSheetDataValueType.d.js'
 
-export {
+export type {
 	ParseSheetDataCustomTypeErrorMessage,
 	ParseSheetDataCustomTypeErrorReason,
 	ParseSheetDataError,
 	ParseSheetDataValueRequiredError
-} from '../types/parseSheetData/parseSheetDataError.d.js';
+} from '../types/parseSheetData/parseSheetDataError.d.js'
 
-export {
+export type {
 	ParseSheetDataResult
-} from '../types/parseSheetData/parseSheetData.d.js';
+} from '../types/parseSheetData/parseSheetData.d.js'
 
-export {
+export type {
 	Schema
-} from '../types/parseSheetData/parseSheetDataSchema.d.js';
+} from '../types/parseSheetData/parseSheetDataSchema.d.js'
 
 export default function readXlsxFile<ParsedNumber = number>(
 	input: Input,
-	options?: ReadOptions<ParsedNumber>
-): Promise<ReadFileResult<ParsedNumber>>;
+	options?: Options<ParsedNumber>
+): Promise<Sheet<ParsedNumber>[]>;
 
 export function readSheet<ParsedNumber = number>(
 	input: Input,
 	sheet?: number | string,
-	options?: ReadOptions<ParsedNumber>
+	options?: Options<ParsedNumber>
 ): Promise<SheetData<ParsedNumber>>;
 
 export function readSheet<ParsedNumber = number>(
 	input: Input,
-	options?: ReadOptions<ParsedNumber>
+	options?: Options<ParsedNumber>
 ): Promise<SheetData<ParsedNumber>>;
+
+export function readSheet<
+	Object extends object,
+	ColumnTitle extends string = string,
+	Error extends ParseSheetDataError = ParseSheetDataError<ColumnTitle>,
+	ParsedNumber = number
+>(
+	input: Input,
+	options: OptionsWithSchema<Object, ColumnTitle, ParsedNumber>
+): Promise<ParseSheetDataResult<Object, ColumnTitle, Error>>;
 
 export function parseSheetData<
 	Object extends object,
-	ColumnTitle extends string,
-	Error extends ParseSheetDataError
+	ColumnTitle extends string = string,
+	Error extends ParseSheetDataError = ParseSheetDataError<ColumnTitle>
 >(
 	data: SheetData,
 	schema: Schema<Object, ColumnTitle>,
 	options?: ParseSheetDataOptions
-): ParseSheetDataResult<Object, Error>;
+): ParseSheetDataResult<Object, ColumnTitle, Error>;

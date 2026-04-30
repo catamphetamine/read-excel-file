@@ -1,3 +1,9 @@
+9.0.7 / 28.04.2026
+==================
+
+* Fixed `error.row` [bug](https://gitlab.com/catamphetamine/read-excel-file/-/work_items/111) when it was always equal to `1`.
+* Re-added `schema` parameter in `readSheet()` function.
+
 9.0.0 / 18.04.2026
 ==================
 
@@ -42,6 +48,7 @@
         * The `errors` don't have a `row` property anymore because it could be derived from "data row" number.
           * In version `9.x`, the `row` property has been re-added, so consider migrating straight to `9.x`.
         * In version `9.x`, the returned result of `parseData()` has been changed back to `{ errors, objects }`, so consider migrating straight to `9.x`. In that case, if there're no errors, `errors` will be `undefined`; otherwise, `errors` will be a non-empty array and `objects` will be `undefined`.
+        * In version `9.x`, the `schema` parameter was re-added to `readSheet()` function, so consider migrating straight to `9.x`.
   * Renamed some `schema`-related parameters:
     * `schemaPropertyValueForMissingColumn` → `propertyValueWhenColumnIsMissing`
     * `schemaPropertyValueForMissingValue` → `propertyValueWhenCellIsEmpty`

@@ -1,4 +1,4 @@
-import { CellValue } from '../types.d.js';
+import type { CellValue } from '../SheetData.d.js';
 
 // A way to define a `type = String` or `type = Number` variable in TypeScript
 // is by defining it as `type: StringConstructor` or `type: NumberConstructor`.

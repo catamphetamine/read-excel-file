@@ -1,6 +1,6 @@
-import { CellValue } from '../types.d.js'
+import type { CellValue } from '../SheetData.d.js'
 
-import {
+import type {
 	StringType,
 	DateType,
 	NumberType,

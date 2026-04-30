@@ -7,7 +7,7 @@ import parseSpreadsheetContents from '../xlsx/parseSpreadsheetContents.js'
  * Reads an `.xlsx` file.
  * @param  {(string|Stream|Buffer|Blob)} input
  * @param  {object} [options]
- * @return {Promise<ReadFileResult>}
+ * @return {Promise<Sheet[]>}
  */
 export default function readXlsxFile(input, options) {
 	return unpackXlsxFile(input)
