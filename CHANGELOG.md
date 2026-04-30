@@ -1,7 +1,7 @@
 9.0.7 / 28.04.2026
 ==================
 
-* Fixed `error.row` [bug](https://gitlab.com/catamphetamine/read-excel-file/-/work_items/111) when it was always equal to `1`.
+* Merged [Toni G](https://gitlab.com/infotoni91)'s fix for a [bug](https://gitlab.com/catamphetamine/read-excel-file/-/work_items/111) when `error.row` was always equal to `1`.
 * Re-added `schema` parameter in `readSheet()` function.
 
 9.0.0 / 18.04.2026
