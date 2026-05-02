@@ -24,10 +24,7 @@ interface SchemaEntryRecursive<
 	ColumnTitle extends string
 > {
 	schema: Object[Key] extends object
-		? Record<
-			keyof Object[Key],
-			SchemaEntry<keyof Object[Key], Object[Key], TopLevelObject, ColumnTitle>
-		>
+		? Schema<Object[Key], ColumnTitle>
 		: never;
 	required?: SchemaEntryRequiredOrNot<TopLevelObject>;
 }
