@@ -44,7 +44,6 @@ type SchemaEntry<
 export type Schema<
 	Object extends object,
 	ColumnTitle extends string = string
-> = Record<
-	keyof Object,
-	SchemaEntry<keyof Object, Object, Object, ColumnTitle>
->
+> = {
+	[Key in keyof Object]: SchemaEntry<Key, Object, Object, ColumnTitle>
+}
