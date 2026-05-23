@@ -418,7 +418,7 @@ export function parseValue(value, schemaEntry, options) {
       options
     )
   } else {
-    // If the `type` is not specified for a given schema entry, the default one is `String`.
+    // If the `type` is not specified for a given schema entry, the `value` will be returned as is.
     result = { value }
     // throw new Error('Invalid schema entry: no `type` specified:\n\n' + JSON.stringify(schemaEntry, null, 2))
   }

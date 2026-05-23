@@ -330,19 +330,56 @@ Here're the results of reading [sample `.xlsx` files](https://examplefile.com/do
 
 ## Schema
 
-Oftentimes, the task is not just to read the "raw" spreadsheet data but also to convert each row of that data to a JSON object having a certain structure. Because it's such a common task, this package provides an easy way to do that — just pass a `schema` parameter when calling `readSheet()` function and it will automatically parse sheet data into an array of JSON objects according to that `schema` (which basically describes all properties of the object and which column should be mapped to which property). The only requirement is that the sheet data should adhere to a simple structure: the first row should be a header row with just column titles, and each following row should specify the values for those columns.
+Oftentimes, the task is not just to read the "raw" spreadsheet data but also to convert each row of that data to a JSON object having a certain structure. Because it's such a common task, this package provides an easy way to do that — just pass a `schema` parameter when calling `readSheet()` function and it will automatically parse sheet data into an array of JSON objects according to that `schema` (which basically describes all properties of the object and which column should be mapped to which property).
+
+The only requirement is that the sheet data should adhere to a simple structure: the first row should be a header row with just column titles, and each following row should specify the values for those columns.
+
+| Name       | Date of Birth | Married | Kids |
+| ---------- | ------------- | ------- | ---- |
+| John Smith | 1/1/1995      | TRUE    | 3    |
+| Kate Brown | 3/1/2010      | FALSE   | 0    |
 
 ```js
 import { readSheet } from 'read-excel-file/node'
 
-const schema = { ... }
+const schema = {
+  name: {
+    column: 'Name',
+    type: String
+  },
+  dateOfBirth: {
+    column: 'Date of Birth',
+    type: Date
+  },
+  married: {
+    column: 'Married',
+    type: Boolean
+  },
+  kids: {
+    column: 'Kids',
+    type: Number
+  }
+}
 
 const { objects, errors } = await readSheet(file, { schema })
 
 if (errors) {
   console.error(errors)
 } else {
-  console.log(objects)
+  objects === [
+    {
+      name: 'John Smith',
+      dateOfBirth: 1995-01-01T00:00:00.000Z,
+      married: true,
+      kids: 3
+    },
+    {
+      name: 'Kate Brown',
+      dateOfBirth: 2010-03-01T00:00:00.000Z,
+      married: false,
+      kids: 0
+    }
+  ]
 }
 ```
 
@@ -350,7 +387,7 @@ The result is `{ objects, errors }`
 * If there were any errors, `objects` will be `undefined` and `errors` will be a list of errors.
 * If there were no errors, `errors` will be `undefined` and `objects` will be a list of objects.
 
-`schema` should describe the structure of the resulting JSON objects. An example of a `schema` is provided at the end of this section.
+`schema` should describe the structure of the resulting JSON objects. A slightly more complex example of a `schema` is provided at the end of this section.
 
 Specifically, a `schema` should be an object having the same keys as a resulting JSON object, with values being nested objects having the following properties:
 
@@ -371,7 +408,7 @@ Specifically, a `schema` should be an object having the same keys as a resulting
   * If when parsing such nested object, all of its property values happen to be empty — `undefined` or `null` — then the nested object will be itself set to `null`.
     * This can be overridden by passing `transformEmptyObject(object, { path? })` function as an option. By default, it returns `null`.
     * This applies both to nested objects and to the top-level object itself.
-* `type` — (optional) If the value is not going to be a nested object, `type` should describe the type of the value. It will determine how the cell value will be converted to a property value. If no `type` is specified then the property value will be same as the cell value.
+* `type` — (optional) If the value is not going to be a nested object, `type` should describe the type of the value. It will determine how the cell value will be converted to a property value. If no `type` is specified then there will be no conversion, and the cell value will simply be copied to the property value as is.
   * Valid `type`s:
     * Standard types:
       * `String`
