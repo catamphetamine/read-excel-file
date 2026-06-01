@@ -45,8 +45,7 @@
   },
   "dependencies": {
     "@xmldom/xmldom": "^0.9.9",
-    "fflate": "^0.8.2",
-    "unzipper": "^0.12.3"
+    "fflate": "^0.8.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.10",

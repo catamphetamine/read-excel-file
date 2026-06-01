@@ -1,22 +1,15 @@
 import { Buffer } from 'buffer'
 
-// `unzipper` has a bug when it doesn't include "@aws-sdk/client-s3" package in the `dependencies`
-// which causes some "bundlers" throw an error.
-// https://github.com/ZJONSSON/node-unzipper/issues/330
+// `fflate`'s `Unzip` is a forward-streaming unzipper: it reads a `.zip` archive
+// from its local file headers as bytes arrive, so a Node.js stream is never
+// buffered into memory in full. `UnzipInflate` is its `DEFLATE` decompressor.
 //
-// One workaround is to install "@aws-sdk/client-s3" package manually, which would still lead to increased bundle size.
-// If the code is bundled for server-side-use only, that is will not be used in a web browser,
-// then the increased bundle size would not be an issue.
-//
-// Another workaround could be to "alias" "@aws-sdk/client-s3" package in a "bundler" configuration file
-// with a path to a `*.js` file containing just "export default null". But that kind of a workaround would also
-// result in errors when using other packages that `import` anything from "@aws-sdk/client-s3" package,
-// so it's not really a workaround but more of a ticking bomb.
-//
-import unzip from 'unzipper'
-
-// Althernatively, it could use `fflate` if someone writes an example of handling a Node.js stream.
+// `Unzip` doesn't speak the Node.js stream interface, though — it has its own
+// `push(chunk)` / `onfile` / `entry.ondata` protocol — so this function does the
+// plumbing manually: it forwards each chunk from the Node.js stream into
+// `unzip.push()` and collects the decompressed entries.
 // https://github.com/101arrowz/fflate/issues/251
+import { Unzip, UnzipInflate } from 'fflate'
 
 /**
  * Reads `*.zip` file contents.
@@ -28,8 +21,6 @@ export default function unzipFromStream(stream, { filter } = {}) {
 	const files = {}
 
 	return new Promise((resolve, reject) => {
-		const promises = []
-
 		let errored = false
 
 		const onError = (error) => {
@@ -39,86 +30,101 @@ export default function unzipFromStream(stream, { filter } = {}) {
 			}
 		}
 
-		stream
-			// This first "error" listener catches the original stream errors.
-			//
-			// That's because the .pipe() method does not automatically propagate errors
-			// from a source (input) stream to the destination stream or the end of the pipeline.
-			// You would need to attach an 'error' event handler to each stream in the chain.
-			//
-			// A more convenient alternative would be to use `stream.pipeline()` function:
-			// `pipeline(stream1, stream2, (error) => { ... })`
-			//
-			.on('error', onError)
-			// Pipe the input stream through the unzipper stream.
-			.pipe(unzip.Parse())
-			// This second "error" listener catches the unzipper stream errors.
-			//
-			// That's because the .pipe() method does not automatically propagate errors
-			// from a source (input) stream to the destination stream or the end of the pipeline.
-			// You would need to attach an 'error' event handler to each stream in the chain.
-			//
-			// A more convenient alternative would be to use `stream.pipeline()` function:
-			// `pipeline(stream1, stream2, (error) => { ... })`
-			//
-			.on('error', onError)
-			// The unzipper stream is closed when all `entries` have been reported.
-			.on('finish', () => {
-				if (!errored) {
-					// Wait for all `entries` to be read.
-					// The second argument of `.then()` function is not required
-					// but I didn't remove it just to potentially prevent any potential silly bugs
-					// in case of some potential changes in some potential future.
-					Promise.all(promises).then(() => {
-						resolve(files)
-					}, onError)
+		// Every `.zip` archive (and therefore every `.xlsx` file) starts with the
+		// "PK" magic bytes of a local file header or an end-of-central-directory
+		// record. `fflate`'s `Unzip` silently yields zero entries for data that
+		// contains no archive headers at all, so validate the magic bytes up front
+		// to reject non-zip input with a clear error rather than an empty result.
+		const magicBytes = []
+		let magicChecked = false
+		const checkZipMagicBytes = (chunk) => {
+			for (let i = 0; i < chunk.length && magicBytes.length < 2; i++) {
+				magicBytes.push(chunk[i])
+			}
+			if (magicBytes.length === 2) {
+				magicChecked = true
+				if (magicBytes[0] !== 0x50 || magicBytes[1] !== 0x4B) {
+					onError(new Error('Invalid zip data: not a zip archive'))
 				}
-			})
-			.on('entry', (entry) => {
-				// See if this file should be ignored.
-				let ignore = false
-				// `entry.type` could be 'Directory' or 'File'.
-				// Ignore anything except files.
-				if (entry.type === 'Directory') {
-					ignore = true
-				}
-				if (errored) {
-					ignore = true
-				}
-				if (filter) {
-					if (!filter({ path: entry.path })) {
-						ignore = true
-					}
-				}
+			}
+		}
 
-				// If this file should be ignored.
-				if (ignore) {
-					// Call `entry.autodrain()` when you do not intend to process a specific `entry`'s raw data.
-					// Otherwise, if an `entry` is not consumed (via .pipe(), .buffer(), or .autodrain()),
-					// the stream will halt, preventing further file processing.
-					entry.autodrain().on('error', onError)
+		// `Unzip` discovers each archive entry from its local file header as the
+		// archive bytes are pushed in, calling `onfile` for every entry.
+		const unzip = new Unzip((entry) => {
+			if (errored) {
+				return
+			}
+
+			// Skip directory entries (their names end with a slash). Only files
+			// are reported, matching the `Record<path, contents>` return type.
+			if (entry.name.endsWith('/')) {
+				return
+			}
+
+			// See if this file should be ignored.
+			// Not calling `entry.start()` means the entry is skipped entirely:
+			// its data is never decompressed (or even buffered for long).
+			if (filter && !filter({ path: entry.name })) {
+				return
+			}
+
+			const chunks = []
+
+			// `entry.ondata` is called with each decompressed chunk of the entry,
+			// and a final time with `isLast === true` once the entry is complete.
+			entry.ondata = (error, chunk, isLast) => {
+				if (error) {
+					return onError(error)
+				}
+				chunks.push(chunk)
+				if (isLast) {
+					files[entry.name] = Buffer.concat(chunks)
+				}
+			}
+
+			// Start decompressing this entry.
+			entry.start()
+		})
+
+		// Register the `DEFLATE` decompressor (compression method `8`), which is
+		// what `.xlsx` archives use. The "stored" method (`0`, no compression) is
+		// handled by `fflate` out of the box, so it doesn't need to be registered.
+		unzip.register(UnzipInflate)
+
+		stream
+			// Catch errors from the source stream (e.g. a file read error).
+			.on('error', onError)
+			.on('data', (chunk) => {
+				if (errored) {
 					return
 				}
-
-				const chunks = []
-
-				promises.push(new Promise((resolve) => {
-					// `entry` seems to be a generic Node.js stream.
-					// `entry.pipe()` pipes the file contents to a stream.
-					// `entry.stream()` returns a readable stream.
-					// `entry.buffer()` returns a promise that resolves to a `Buffer` with the file contents.
-					entry
-						.on('data', (data) => {
-							chunks.push(data)
-						})
-						.on('error', (error) => {
-							onError(error)
-						})
-						.on('finish', () => {
-							files[entry.path] = Buffer.concat(chunks)
-							resolve()
-						})
-				}))
+				if (!magicChecked) {
+					checkZipMagicBytes(chunk)
+					if (errored) {
+						return
+					}
+				}
+				try {
+					// Push the next archive chunk. `UnzipInflate` is synchronous,
+					// so any entries completed by this chunk have already populated
+					// `files` by the time `push()` returns.
+					unzip.push(chunk, false)
+				} catch (error) {
+					onError(error)
+				}
+			})
+			.on('end', () => {
+				if (errored) {
+					return
+				}
+				try {
+					// Signal the end of the archive and flush any remaining state.
+					unzip.push(new Uint8Array(0), true)
+					resolve(files)
+				} catch (error) {
+					onError(error)
+				}
 			})
 	})
 }
