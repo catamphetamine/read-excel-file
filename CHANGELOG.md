@@ -1,3 +1,8 @@
+9.1.0 / 07.06.2026
+==================
+
+* Merged [Stian Jensen](https://github.com/stianjensen)'s [pull request](https://github.com/catamphetamine/read-excel-file/pull/122) that replaces `unzipper` package with `fflate`. This prunes 15 packages from `node_modules` (`unzipper` plus 14 transitive deps, e.g. `bluebird`, `fs-extra`, `readable-stream`).
+
 9.0.7 / 28.04.2026
 ==================
 

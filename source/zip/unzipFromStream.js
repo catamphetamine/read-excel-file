@@ -1,15 +1,45 @@
-import { Buffer } from 'buffer'
+// This code was originally submitted by Stian Jensen.
+// https://github.com/catamphetamine/read-excel-file/pull/122
 
-// `fflate`'s `Unzip` is a forward-streaming unzipper: it reads a `.zip` archive
-// from its local file headers as bytes arrive, so a Node.js stream is never
-// buffered into memory in full. `UnzipInflate` is its `DEFLATE` decompressor.
+// A `*.zip` file consists of individual file entries with the "total" summary section
+// placed at the end of the file rather than at the start of it, which was originally done
+// to allow for easy append of data to a given `.zip` file.
+// https://en.wikipedia.org/wiki/ZIP_(file_format)
 //
-// `Unzip` doesn't speak the Node.js stream interface, though — it has its own
-// `push(chunk)` / `onfile` / `entry.ondata` protocol — so this function does the
-// plumbing manually: it forwards each chunk from the Node.js stream into
-// `unzip.push()` and collects the decompressed entries.
+// But this also means that reading a `*.zip` file from a stream can't really be done
+// using the "officially recommended" way of first reading the "total" summary section
+// and only then reading the individual file entries specified in that summary section.
+//
+// So in order to be able to read a `*.zip` file from a stream, some corners have to be cut.
+// For example, the "total" summary section is completely ignored and instead the reader
+// should adopt "data recovery" software approach — it should proactively "scan" the input stream
+// for individual file entries and handle them one-by-one as they come.
+//
+// Such approach doesn't seem to contradict with the XLSX specification
+// because an `*.xlsx` files is supposed to be a normal `.zip` archive
+// without any "trickery" such as "deleted" files or "garbage" data
+// hiding under the hood.
+//
+// So when handling `*.xlsx` file, we assume that each such file must start
+// with an individual file entry followed by another individual file entry, etc.
+//
+// When the "summary" section is reached, we assume that the archive has ended.
+//
+// To read a `.zip` archive, the code uses `fflate`'s `Unzip` class
+// with `UnzipInflate` decompression implementation to decompress the data
+// that was previously compressed using `DEFLATE` compressing algorithm,
+// which is what `*.xlsx` files use.
+//
+// The `Unzip` class doesn't speak the Node.js stream interface, and `fflate`'s readme
+// doesn't include a clear "reading a `.zip` file from a Node.js stream" section.
 // https://github.com/101arrowz/fflate/issues/251
+// Instead, the `Unzip` class has its own `push(chunk)` / `onfile` / `entry.ondata` protocol.
+// This code reads the binary input stream and forwards each chunk of it to `unzip.push()`,
+// and then collects the decompressed file entries.
+//
 import { Unzip, UnzipInflate } from 'fflate'
+
+import { Buffer } from 'buffer'
 
 /**
  * Reads `*.zip` file contents.
@@ -30,41 +60,30 @@ export default function unzipFromStream(stream, { filter } = {}) {
 			}
 		}
 
-		// Every `.zip` archive (and therefore every `.xlsx` file) starts with the
-		// "PK" magic bytes of a local file header or an end-of-central-directory
-		// record. `fflate`'s `Unzip` silently yields zero entries for data that
-		// contains no archive headers at all, so validate the magic bytes up front
-		// to reject non-zip input with a clear error rather than an empty result.
-		const magicBytes = []
-		let magicChecked = false
-		const checkZipMagicBytes = (chunk) => {
-			for (let i = 0; i < chunk.length && magicBytes.length < 2; i++) {
-				magicBytes.push(chunk[i])
+		const { validateChunk } = createZipFileValidator((isValid) => {
+			if (!isValid) {
+				onError(new Error('Invalid `.zip` archive'))
 			}
-			if (magicBytes.length === 2) {
-				magicChecked = true
-				if (magicBytes[0] !== 0x50 || magicBytes[1] !== 0x4B) {
-					onError(new Error('Invalid zip data: not a zip archive'))
-				}
-			}
-		}
+		})
 
-		// `Unzip` discovers each archive entry from its local file header as the
-		// archive bytes are pushed in, calling `onfile` for every entry.
+		// `Unzip` discovers each individual file entry in the input data stream
+		// and then calls the callback function for each such entry.
 		const unzip = new Unzip((entry) => {
+			// If there already was an error while reading this `.zip` file,
+			// ignore any follow-up entries.
 			if (errored) {
 				return
 			}
 
-			// Skip directory entries (their names end with a slash). Only files
-			// are reported, matching the `Record<path, contents>` return type.
+			// Skip directory entries (their names end with a slash).
+			// Only files are of any interest.
 			if (entry.name.endsWith('/')) {
 				return
 			}
 
 			// See if this file should be ignored.
-			// Not calling `entry.start()` means the entry is skipped entirely:
-			// its data is never decompressed (or even buffered for long).
+			// If it should, this entry won't be processed, i.e. `Unzip` will not try
+			// to decompress its data, and will just discard it.
 			if (filter && !filter({ path: entry.name })) {
 				return
 			}
@@ -87,44 +106,89 @@ export default function unzipFromStream(stream, { filter } = {}) {
 			entry.start()
 		})
 
-		// Register the `DEFLATE` decompressor (compression method `8`), which is
-		// what `.xlsx` archives use. The "stored" method (`0`, no compression) is
-		// handled by `fflate` out of the box, so it doesn't need to be registered.
+		// Register the decompressor for the data that was compressed using
+		// `DEFLATE` compression algorithm (compression method `8`),
+		// which is what `.xlsx` files use.
 		unzip.register(UnzipInflate)
 
 		stream
-			// Catch errors from the source stream (e.g. a file read error).
+			// Catch errors emitted from the input stream (for example, a file read error).
 			.on('error', onError)
+			// When another chunk of data is read from the input stream.
 			.on('data', (chunk) => {
+				// If there already was an error while reading this `.zip` file,
+				// ignore any follow-up data chunks.
 				if (errored) {
 					return
 				}
-				if (!magicChecked) {
-					checkZipMagicBytes(chunk)
-					if (errored) {
-						return
-					}
+				// Validate the `.zip` archive as its data comes through.
+				validateChunk(chunk)
+				// If the `.zip` archive is found to be invalid, stop any further
+				// processing of it.
+				if (errored) {
+					return
 				}
+				// Push the next data chunk to `fflate`'s `Unzip` class instance.
+				// The `.push()` function is synchronous, meaning that by the time it returns,
+				// any complete files entries encountered so far have already been decompressed
+				// and populated in the `files` object.
 				try {
-					// Push the next archive chunk. `UnzipInflate` is synchronous,
-					// so any entries completed by this chunk have already populated
-					// `files` by the time `push()` returns.
 					unzip.push(chunk, false)
 				} catch (error) {
 					onError(error)
 				}
 			})
+			// When there's no more data in the input stream to consume,
+			// finish reading the `.zip` archive.
 			.on('end', () => {
+				// If there were any errors when reading the `.zip` archive,
+				// don't `resolve()` with anything.
 				if (errored) {
 					return
 				}
 				try {
-					// Signal the end of the archive and flush any remaining state.
+					// Signal the end of the archive to `fflate`'s `Unzip` class instance.
+					// It will flush any remaining state in it.
 					unzip.push(new Uint8Array(0), true)
+					// Resolve with the unzipped files.
 					resolve(files)
 				} catch (error) {
 					onError(error)
 				}
 			})
 	})
+}
+
+// Every section in a `.zip` archive is marked with 4 bytes, the first two of which
+// are `0x50` and `0x4B`, which reads "PK", referencing the initials of the inventor Phil Katz.
+//
+// It looks like `fflate`'s `Unzip` doesn't ever complain about whatever data is thrown at it.
+// Due to how `.zip` file format is defined, "garbage" data could be placed at various
+// places in it and it'd still be a valid `.zip` archive. It's likely that for this reason
+// `fflate` doesn't ever complain and simply emits no entries when fed any kind of invalid data.
+//
+// In order to introduce some basic validation, here we specifically demand
+// that a `.zip` archive must at least start with an individual file entry
+// because an `.xlsx` file creator softwared really shouldn't attempt doing
+// anything "funny" when writing a file, hence this adherence requirement.
+//
+function createZipFileValidator(onValidationResult) {
+	const firstBytesCount = 2
+	const firstBytes = []
+	let firstBytesCheckResult
+	return {
+		validateChunk(chunk) {
+			if (firstBytes.length < 2) {
+				let i = 0
+				while (i < chunk.length && i < firstBytesCount) {
+					firstBytes.push(chunk[i])
+					i++
+				}
+				if (firstBytes.length === 2) {
+					const isValid = firstBytes[0] === 0x50 && firstBytes[1] === 0x4B
+					onValidationResult(isValid)
+				}
+			}
+		}
+	}
 }

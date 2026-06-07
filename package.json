@@ -1,6 +1,6 @@
 {
   "name": "read-excel-file",
-  "version": "9.0.10",
+  "version": "9.1.0",
   "description": "Read `.xlsx` files in a web browser or in Node.js",
   "type": "module",
   "exports": {
@@ -44,8 +44,8 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@xmldom/xmldom": "^0.9.9",
-    "fflate": "^0.8.2"
+    "@xmldom/xmldom": "^0.9.10",
+    "fflate": "^0.8.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.10",
