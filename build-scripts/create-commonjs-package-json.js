@@ -2,7 +2,7 @@
 // That marks that whole folder as CommonJS so that Node.js doesn't complain
 // about `require()`-ing those files.
 
-import fs from 'fs'
+import fs from 'node:fs'
 
 fs.writeFileSync('./commonjs/package.json', JSON.stringify({
 	name: 'read-excel-file/commonjs',

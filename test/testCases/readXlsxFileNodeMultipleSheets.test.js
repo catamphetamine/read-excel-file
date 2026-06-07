@@ -1,7 +1,7 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import path from 'path'
+import path from 'node:path'
 
 import readXlsxFileNode from '../../source/export/readXlsxFileNode.js'
 

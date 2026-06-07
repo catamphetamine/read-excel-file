@@ -45,7 +45,7 @@
 //
 import { Unzip, UnzipInflate } from 'fflate'
 
-import { Buffer } from 'buffer'
+import { Buffer } from 'node:buffer'
 
 /**
  * Reads `*.zip` file contents.

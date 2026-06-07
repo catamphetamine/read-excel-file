@@ -1,6 +1,6 @@
-import fs from 'fs'
-import { Blob } from 'buffer'
-import Stream, { Readable } from 'stream'
+import fs from 'node:fs'
+import { Blob } from 'node:buffer'
+import Stream, { Readable } from 'node:stream'
 
 /**
  * Converts Node.js input argument to a stream.

@@ -1,7 +1,7 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import fs from 'fs'
+import fs from 'node:fs'
 
 import readSheet from '../../source/export/readSheetNode.js'
 

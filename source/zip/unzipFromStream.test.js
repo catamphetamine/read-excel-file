@@ -4,7 +4,7 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import { Readable } from 'stream'
+import { Readable } from 'node:stream'
 import { zipSync, strToU8, strFromU8 } from 'fflate'
 
 import unzipFromStream from './unzipFromStream.js'

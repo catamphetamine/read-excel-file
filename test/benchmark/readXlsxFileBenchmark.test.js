@@ -1,6 +1,6 @@
 import { describe, it } from 'mocha'
 
-import path from 'path'
+import path from 'node:path'
 
 import readXlsxFile from '../../source/export/readXlsxFileNode.js'
 
