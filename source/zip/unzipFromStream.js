@@ -37,6 +37,12 @@
 // This code reads the binary input stream and forwards each chunk of it to `unzip.push()`,
 // and then collects the decompressed file entries.
 //
+// P.S. In the comments to `UnzipInflate` in `fflate` package, it says:
+// "Streaming DEFLATE decompression for ZIP archives. Prefer AsyncZipInflate for better performance."
+// But there seems to be no `AsyncZipInflate` class in the `fflate` package.
+// https://github.com/101arrowz/fflate/issues/277
+// So just the regular `UnzipInflate` is used here.
+//
 import { Unzip, UnzipInflate } from 'fflate'
 
 import { Buffer } from 'buffer'
