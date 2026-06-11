@@ -1,5 +1,9 @@
-// `fflate` uses a javascript-only implementation of `.zip` compression/decompression.
-// This means that it could likely be less performant than Node.js's "native" `zlib` module`.
+// `fflate` provides a pure-javascript `.zip` archive reader, but its `DEFLATE`
+// decompressor is also pure javascript and about twice as slow as Node.js's
+// "native" `zlib` module (which is written in C). So this implementation uses
+// `fflate` only to "scan" the input stream for individual file entries, and
+// delegates the actual decompression to Node.js's `zlib` (see `NodeZlibInflate`
+// below) to get native speed while keeping `fflate`'s streaming archive reader.
 
 // This code was originally submitted by Stian Jensen.
 // https://github.com/catamphetamine/read-excel-file/pull/122
@@ -28,10 +32,12 @@
 //
 // When the "summary" section is reached, we assume that the archive has ended.
 //
-// To read a `.zip` archive, the code uses `fflate`'s `Unzip` class
-// with `UnzipInflate` decompression implementation to decompress the data
-// that was previously compressed using `DEFLATE` compressing algorithm,
-// which is what `*.xlsx` files use.
+// To read a `.zip` archive, the code uses `fflate`'s `Unzip` class to "scan" the input
+// stream for individual file entries. The actual decompression of the entries' data, which
+// in `*.xlsx` files is compressed using the `DEFLATE` compression algorithm, is delegated
+// to Node.js's built-in `zlib` module (see `NodeZlibInflate` below) rather than to `fflate`'s
+// own pure-javascript `UnzipInflate` decompressor, because the native `zlib` bindings are
+// about twice as fast.
 //
 // The `Unzip` class doesn't speak the Node.js stream interface, and `fflate`'s readme
 // doesn't include a clear "reading a `.zip` file from a Node.js stream" section.
@@ -40,15 +46,41 @@
 // This code reads the binary input stream and forwards each chunk of it to `unzip.push()`,
 // and then collects the decompressed file entries.
 //
-// P.S. In the comments to `UnzipInflate` in `fflate` package, it says:
-// "Streaming DEFLATE decompression for ZIP archives. Prefer AsyncZipInflate for better performance."
-// But there seems to be no `AsyncZipInflate` class in the `fflate` package.
-// https://github.com/101arrowz/fflate/issues/277
-// So just the regular `UnzipInflate` is used here.
-//
-import { Unzip, UnzipInflate } from 'fflate'
+import { Unzip } from 'fflate'
 
 import { Buffer } from 'node:buffer'
+import zlib from 'node:zlib'
+
+// A `DEFLATE` (compression method `8`) decompressor for `fflate`'s `Unzip` class
+// that's backed by Node.js's native `zlib` bindings (about twice as fast as
+// `fflate`'s pure-javascript `UnzipInflate`).
+//
+// It implements `fflate`'s decoder interface: `Unzip` constructs one per entry,
+// assigns its `ondata(error, chunk, isLast)` callback, and feeds it the entry's
+// compressed bytes via `push(chunk, isLast)`. Unlike `fflate`'s synchronous
+// `UnzipInflate`, `zlib` decompresses asynchronously, so an entry only finishes
+// some ticks after its last chunk is pushed (see the `pending` bookkeeping below).
+class NodeZlibInflate {
+	static compression = 8
+
+	constructor() {
+		this.inflate = zlib.createInflateRaw()
+		this.inflate.on('data', (chunk) => this.ondata(null, chunk, false))
+		this.inflate.on('end', () => this.ondata(null, new Uint8Array(0), true))
+		this.inflate.on('error', (error) => this.ondata(error, null, false))
+	}
+
+	push(chunk, isLast) {
+		this.inflate.write(Buffer.from(chunk))
+		if (isLast) {
+			this.inflate.end()
+		}
+	}
+
+	terminate() {
+		this.inflate.destroy()
+	}
+}
 
 /**
  * Reads `*.zip` file contents.
@@ -66,6 +98,18 @@ export default function unzipFromStream(stream, { filter } = {}) {
 			if (!errored) {
 				errored = true
 				reject(error)
+			}
+		}
+
+		// The native `zlib` decoder finishes inflating an entry asynchronously, so
+		// the archive's `end` event can fire while entries are still decompressing.
+		// `pending` counts entries that have started but not yet finished, and the
+		// promise only resolves once the stream has ended *and* every entry is done.
+		let pending = 0
+		let streamEnded = false
+		const resolveIfDone = () => {
+			if (!errored && streamEnded && pending === 0) {
+				resolve(files)
 			}
 		}
 
@@ -97,6 +141,8 @@ export default function unzipFromStream(stream, { filter } = {}) {
 				return
 			}
 
+			pending++
+
 			const chunks = []
 
 			// `entry.ondata` is called with each decompressed chunk of the entry,
@@ -108,6 +154,8 @@ export default function unzipFromStream(stream, { filter } = {}) {
 				chunks.push(chunk)
 				if (isLast) {
 					files[entry.name] = Buffer.concat(chunks)
+					pending--
+					resolveIfDone()
 				}
 			}
 
@@ -117,8 +165,9 @@ export default function unzipFromStream(stream, { filter } = {}) {
 
 		// Register the decompressor for the data that was compressed using
 		// `DEFLATE` compression algorithm (compression method `8`),
-		// which is what `.xlsx` files use.
-		unzip.register(UnzipInflate)
+		// which is what `.xlsx` files use. The "stored" method (`0`, no compression)
+		// is handled by `fflate` out of the box, so it doesn't need to be registered.
+		unzip.register(NodeZlibInflate)
 
 		stream
 			// Catch errors emitted from the input stream (for example, a file read error).
@@ -138,9 +187,6 @@ export default function unzipFromStream(stream, { filter } = {}) {
 					return
 				}
 				// Push the next data chunk to `fflate`'s `Unzip` class instance.
-				// The `.push()` function is synchronous, meaning that by the time it returns,
-				// any complete files entries encountered so far have already been decompressed
-				// and populated in the `files` object.
 				try {
 					unzip.push(chunk, false)
 				} catch (error) {
@@ -159,8 +205,10 @@ export default function unzipFromStream(stream, { filter } = {}) {
 					// Signal the end of the archive to `fflate`'s `Unzip` class instance.
 					// It will flush any remaining state in it.
 					unzip.push(new Uint8Array(0), true)
-					// Resolve with the unzipped files.
-					resolve(files)
+					streamEnded = true
+					// Entries may still be inflating asynchronously; resolve once
+					// they all finish (or immediately if there are none pending).
+					resolveIfDone()
 				} catch (error) {
 					onError(error)
 				}
