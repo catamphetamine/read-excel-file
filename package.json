@@ -1,6 +1,6 @@
 {
   "name": "read-excel-file",
-  "version": "9.1.1",
+  "version": "9.2.0",
   "description": "Read `.xlsx` files in a web browser or in Node.js",
   "type": "module",
   "exports": {
@@ -28,14 +28,15 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "mocha --bail \"source/**/*.test.js\" \"test/*.test.js\" \"test/!(exports|benchmark)/**/*.test.js\"",
+    "test": "mocha --bail \"source/**/*.test.js\" \"test/*.test.js\" \"test/!(exports|benchmark|benchmark-unzipFromStream)/**/*.test.js\"",
     "test:exports": "mocha --bail \"test/exports/**/*.test.js\"",
     "test:benchmark": "mocha --bail \"test/benchmark/**/*.test.js\"",
-    "clean-for-build": "rimraf ./commonjs/**/* ./modules/**/*",
-    "build-commonjs-modules": "better-npm-run build-commonjs-modules",
+    "test:benchmark:unzipFromStream": "mocha --bail \"test/benchmark-unzipFromStream/**/*.test.js\"",
+    "clean-for-build": "rimraf ./commonjs ./modules",
+    "build-es6-modules": "cross-env BABEL_ENV=es6 babel ./source --out-dir ./modules --source-maps",
+    "build-commonjs-modules": "cross-env BABEL_ENV=commonjs babel ./source --out-dir ./commonjs --source-maps",
     "build-commonjs-package.json": "node build-scripts/create-commonjs-package-json.js",
     "build-commonjs": "npm-run-all build-commonjs-modules build-commonjs-package.json",
-    "build-es6-modules": "better-npm-run build-es6-modules",
     "browser-build": "rollup --config rollup.config.mjs",
     "build": "npm-run-all clean-for-build build-commonjs build-es6-modules browser-build",
     "prepublishOnly": "npm-run-all build test test:exports browser-build"
@@ -45,7 +46,8 @@
   },
   "dependencies": {
     "@xmldom/xmldom": "^0.9.10",
-    "fflate": "^0.8.3"
+    "fflate": "^0.8.3",
+    "unzipper-esm": "^0.13.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.10",
@@ -55,39 +57,19 @@
     "@babel/plugin-transform-runtime": "^7.17.12",
     "@babel/preset-env": "^7.17.12",
     "@babel/register": "^7.17.7",
-    "better-npm-run": "^0.1.1",
     "chai": "^4.3.6",
     "core-js": "^3.22.5",
+    "cross-env": "^10.1.0",
     "mocha": "^10.0.0",
     "npm-run-all": "^4.1.5",
     "regenerator-runtime": "^0.13.9",
-    "rimraf": "^3.0.2",
+    "rimraf": "^6.1.3",
     "rollup": "^2.73.0",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^7.0.2",
     "xpath": "0.0.32"
-  },
-  "betterScripts": {
-    "browser-build": {
-      "command": "webpack --mode production --progress --colors",
-      "env": {
-        "WEBPACK_ENV": "build"
-      }
-    },
-    "build-commonjs-modules": {
-      "command": "babel ./source --out-dir ./commonjs --source-maps",
-      "env": {
-        "BABEL_ENV": "commonjs"
-      }
-    },
-    "build-es6-modules": {
-      "command": "babel ./source --out-dir ./modules --source-maps",
-      "env": {
-        "BABEL_ENV": "es6"
-      }
-    }
   },
   "repository": {
     "type": "git",

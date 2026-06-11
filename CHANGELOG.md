@@ -1,3 +1,12 @@
+9.2.0 / 11.06.2026
+==================
+
+* Reverted the shift from `unzipper` to `fflate` in Node.js code.
+  * The reason is that `unzipper` turns out to be 2x faster than `fflate` because `fflate` reimplements decompression in pure javascript while `unzipper` uses Node.js's "native" module `zlib` which is written in C.
+
+* Replaced `unzipper` with `unzipper-esm`.
+  * This fixes the long-present [bug](https://github.com/ZJONSSON/node-unzipper/issues/330) when bundlers can't bundle an app that uses `unzipper` package because of that dynamic `require()` statement.
+
 9.1.0 / 07.06.2026
 ==================
 
