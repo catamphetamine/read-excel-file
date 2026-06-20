@@ -1,4 +1,5 @@
-import xml from '../xml/xmlBrowser.js'
+import parseXmlTree from '../xml/parseXmlTreeBrowser.js'
+import parseXmlStream from '../xml/parseXmlStream.js'
 
 import unpackXlsxFile from './unpackXlsxFileBrowser.js'
 import parseSheet from './parseSheet.js'
@@ -18,5 +19,5 @@ export default function readSheet(input, sheet, options) {
 		sheet = undefined
 	}
 	return unpackXlsxFile(input)
-		.then((contents) => parseSheet(contents, xml, sheet, options))
+		.then((contents) => parseSheet(contents, parseXmlTree, parseXmlStream, sheet, options))
 }

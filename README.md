@@ -322,11 +322,13 @@ This package doesn't support reading cells that use formulas to calculate the va
 
 Here're the results of reading [sample `.xlsx` files](https://examplefile.com/document/xlsx) of different size:
 
-|File Size| Browser |  Node.js  |
-|---------|---------|-----------|
-|   1 MB  | 0.2 sec.| 0.25 sec. |
-|  10 MB  | 1.5 sec.|    2 sec. |
-|  50 MB  | 8.5 sec.|   14 sec. |
+|File Size| Browser  | Node.js  |
+|---------|----------|----------|
+|   1 MB  | 0.1 sec. | 0.1 sec. |
+|  10 MB  | 0.5 sec. | 0.6 sec. |
+|  50 MB  | 2.6 sec. | 3.0 sec. |
+
+To run the benchmark yourself, clone the repository, download the sample `.xlsx` files to `./test/benchmark` folder, run `npm install` and then `npm run test:benchmark`.
 
 ## Schema
 
@@ -714,6 +716,27 @@ To include this library directly via a `<script/>` tag on a page, one can use an
   })
 </script>
 ```
+
+<!--
+## Possible Enhancements
+
+### Streaming Decompression
+
+Currently, it reads and unpacks an `.xlsx` file archive "all at once". But it could also do this in a "streaming" fashion. The existing `unzipFromStream.js` function uses [`unzipper-esm`](https://www.npmjs.com/package/unzipper-esm) package and could easily be refactored to return not just the entire `.xlsx` archive contents but instead an `objectMode: true` readable stream of `file` entries, each `file` entry itself being a readable stream of decompressed data. And, considering that the `sheet.xml` parser is already written in a "streaming" fashion, it could synergize well with such "sreaming" decompression. But how much beneficial could it be? I guess, not much. The reason is that `.xlsx` files aren't that huge, and fitting an `.xlsx` file in memory isn't that big of a deal, considering that the parsed data from that `.xlsx` file would occupy an order of magnitude more RAM. So the effect of such change would be minimal, if not negligible.
+
+Still, if someone decides to flex their intellectual muscle and toy with implementing "streaming" decompression, an `.xlsx` file would have to be read in 3 passes: first read the file paths from `xl/_rels/workbook.xml.rels`, then read "shared strings" and "styles", then read the individual sheet data files. But again, if the file input is a readable stream, it could only be read once, after which it closes. So this type of a "chicken and an egg" dilemma introduced by `.xlsx` file structure specification really makes it cumbersome to parse an `.xlsx` file in a "streaming" fashion rather than "all at once". Specifically, the input argument would have to be passed in the form of a "create readable stream" function rather than just a "readable stream" in order for "streaming" mode to be enabled.
+
+Reading the `.xml` files is implemented in mixed fashion: `sharedStrings.xml` and `sheet{id}.xml` are read in a "streaming" fashion (because those're the largest ones) while other `.xml` files are read in non-"streaming" fashion (for better code readability).
+
+Finally, one could go even further with the "streaming" approach and output not just `Sheet[]` array but an `objectMode: true` stream of `Sheet` objects, the `data` property of each `Sheet` being not just `SheetData = Row[]` but an `objectMode: true` stream of `Row`s.
+-->
+
+## Dependencies
+
+* [`fflate`](https://www.npmjs.com/package/fflate) — Unzips `.zip` archives in web browsers.
+* [`unzipper-esm`](https://www.npmjs.com/package/unzipper-esm) — Unzips `.zip` archives in Node.js using `stream` API.
+* [`@xmldom/xmldom`](https://www.npmjs.com/package/@xmldom/xmldom) — Polyfills `DOMParser` in Node.js. Parses XML in a non-streaming fashion.
+* [`saxen`](https://www.npmjs.com/package/saxen) — Parses XML in a streaming fashion.
 
 ## GitHub
 

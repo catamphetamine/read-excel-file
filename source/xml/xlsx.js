@@ -1,18 +1,69 @@
 import { findChild, findChildren, forEach, map, getFirstElementChild, getTagName } from './dom.js'
 
-// Returns an array of cells,
-// each element being an XML DOM element representing a cell.
-export function getCellElements(document) {
+export function readSharedStrings(document, onOpenTag, onCloseTag, onText, state) {
+  const sst = document.documentElement
+  onOpenTag('sst', null, state)
+	// An `<si/>` element can contain a `<t/>` (simplest case) or a set of `<r/>` ("rich formatting") elements having `<t/>`.
+	// https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.sharedstringitem?redirectedfrom=MSDN&view=openxml-2.8.1
+	// http://www.datypic.com/sc/ooxml/e-ssml_si-1.html
+  map(sst, 'si', (si) => {
+    onOpenTag('si', null, state)
+    const t = findChild(si, 't')
+    if (t) {
+      onOpenTag('t', null, state)
+      onText(t.textContent, state)
+      onCloseTag('t', state)
+    } else {
+      forEach(si, 'r', (r) => {
+        onOpenTag('r', null, state)
+        onOpenTag('t', null, state)
+        onText(findChild(r, 't').textContent, state)
+        onCloseTag('t', state)
+        onCloseTag('r', state)
+      })
+    }
+    onCloseTag('si', state)
+  })
+  onCloseTag('sst', state)
+}
+
+export function readSheetDimensions(document, onOpenTag, onCloseTag, onText, state) {
   const worksheet = document.documentElement
+  onOpenTag('worksheet', null, state)
+  const dimensions = findChild(worksheet, 'dimension')
+  if (dimensions) {
+    onOpenTag('dimension', { ref: dimensions.getAttribute('ref') }, state)
+    onCloseTag('dimension', state)
+  }
+  onCloseTag('worksheet', state)
+}
+
+export function readCells(document, onOpenTag, onCloseTag, onText, state) {
+  const worksheet = document.documentElement
+  onOpenTag('worksheet', null, state)
+
   const sheetData = findChild(worksheet, 'sheetData')
 
-  const cells = []
   forEach(sheetData, 'row', (row) => {
+    onOpenTag('row', null, state)
     forEach(row, 'c', (cell) => {
-      cells.push(cell)
+      const attributes = {
+        r: cell.getAttribute('r'),
+        t: cell.getAttribute('t'),
+        s: cell.getAttribute('s')
+      }
+      onOpenTag('c', attributes, state)
+      // A cell could have either a value or an insline string value.
+      // * Cell value is stored as text content of a `<v>...</v>` element.
+      // * Inline string value is stored as text content of an `<is><t>...</t></is>` element.
+      readCellValueElement(document, cell, onOpenTag, onCloseTag, onText, state)
+      readCellInlineStringValue(document, cell, onOpenTag, onCloseTag, onText, state)
+      onCloseTag('c', state)
     })
+    onCloseTag('row', state)
   })
-  return cells
+
+  onCloseTag('worksheet', state)
 }
 
 export function getMergedCellCoordinates(document) {
@@ -27,29 +78,34 @@ export function getMergedCellCoordinates(document) {
   return mergedCellsInfo
 }
 
-export function getCellValueElement(document, element) {
-  return findChild(element, 'v')
+function readCellValueElement(document, element, onOpenTag, onCloseTag, onText, state) {
+  const v = findChild(element, 'v')
+  if (v) {
+    onOpenTag('v', null, state)
+    if (typeof v.textContent === 'string') {
+      onText(v.textContent, state)
+    }
+    onCloseTag('v', state)
+  }
 }
 
-export function getCellInlineStringValue(document, element) {
+function readCellInlineStringValue(document, element, onOpenTag, onCloseTag, onText, state) {
   // It seems as if in some weirdly-output "*.xlsx" files
   // there're non-element nodes of some weird nature.
   // https://gitlab.com/catamphetamine/read-excel-file/-/issues/109
   // This code filters out such weird non-element nodes.
   const firstElementChild = getFirstElementChild(element)
   if (firstElementChild && getTagName(firstElementChild) === 'is') {
+    onOpenTag('is', null, state)
     const firstElementChildFirstElementChild = getFirstElementChild(firstElementChild)
     if (firstElementChildFirstElementChild && getTagName(firstElementChildFirstElementChild) === 't') {
-      return firstElementChildFirstElementChild.textContent
+      onOpenTag('t', null, state)
+      if (typeof firstElementChildFirstElementChild.textContent === 'string') {
+        onText(firstElementChildFirstElementChild.textContent, state)
+      }
+      onCloseTag('t', state)
     }
-  }
-}
-
-export function getDimensions(document) {
-  const worksheet = document.documentElement
-  const dimensions = findChild(worksheet, 'dimension')
-  if (dimensions) {
-    return dimensions.getAttribute('ref')
+    onCloseTag('is', state)
   }
 }
 
@@ -79,25 +135,6 @@ export function getNumberFormats(document) {
     return findChildren(numFmts, 'numFmt')
   }
   return []
-}
-
-export function getSharedStrings(document) {
-	// An `<si/>` element can contain a `<t/>` (simplest case) or a set of `<r/>` ("rich formatting") elements having `<t/>`.
-	// https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.sharedstringitem?redirectedfrom=MSDN&view=openxml-2.8.1
-	// http://www.datypic.com/sc/ooxml/e-ssml_si-1.html
-
-  const sst = document.documentElement
-  return map(sst, 'si', string => {
-    const t = findChild(string, 't')
-    if (t) {
-      return t.textContent
-    }
-    let value = ''
-    forEach(string, 'r', (r) => {
-      value += findChild(r, 't').textContent
-    })
-    return value
-  })
 }
 
 export function getWorkbookProperties(document) {

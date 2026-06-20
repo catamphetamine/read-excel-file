@@ -32,9 +32,6 @@ export default function convertCellsToData2dArray(cells, dimensions) {
   }
 
   // Fill in spreadsheet `data`.
-  // (this code implies that `cells` aren't necessarily sorted by row and column:
-  //  maybe that's not correct, this piece code was initially copy-pasted
-  //  from some other library that used `XPath`)
   for (const cell of cells) {
     // Don't discard empty rows or columns at the start of the spreadsheet,
     // even when the `*.xlsx` file itself tells that the content starts at an offset.

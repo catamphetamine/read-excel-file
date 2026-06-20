@@ -1,5 +1,13 @@
-// `unzipper` uses Node.js native `zlib` module.
-// This means that most likely it's more performant than an equivalent javascript-only implementation.
+// Considerations:
+//
+// * `unzipper` unpacks a `.zip` file using Node.js's "native" `zlib` module.
+//   This means that it's more performant than any equivalent pure-javascript decompressor.
+//
+// * `unzipper` is a true "streaming" unpacker: it works in a "pull" fashion rather than a "push" one.
+//   New chunks of archived data are only read and decompressed as the receiver is ready to process them.
+//
+// * `unzipper` can completely skip a given compressed file entry if it's of no interest.
+//   This means that a `.zip` archive could be read in multiple passes without performance penalty.
 
 import { Parse } from 'unzipper-esm'
 

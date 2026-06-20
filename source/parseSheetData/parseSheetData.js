@@ -3,6 +3,8 @@ import StringType from './types/String.js'
 import BooleanType from './types/Boolean.js'
 import DateType from './types/Date.js'
 
+import isObject from '../utility/isObject.js'
+
 /**
  * Converts spreadsheet-alike data structure into an array of JSON objects.
  *
@@ -780,9 +782,3 @@ function applyDefaultOptions(options) {
 
 // This `value` marks the start of a tree structure that is parsed from a given data row.
 const PARSED_OBJECT_TREE_START = {}
-
-const objectConstructor = {}.constructor
-
-function isObject(object) {
-  return object !== undefined && object !== null && object.constructor === objectConstructor
-}

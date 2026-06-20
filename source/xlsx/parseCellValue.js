@@ -3,9 +3,8 @@ import isDateFormatStyle from './isDateFormatStyle.js'
 
 // Parses a string `value` of a cell.
 export default function parseCellValue(value, type, {
-  getInlineStringValue,
-  getInlineStringXml,
-  getStyleId,
+  inlineStringValue,
+  styleId,
   styles,
   sharedStrings,
   epoch1904,
@@ -36,9 +35,9 @@ export default function parseCellValue(value, type, {
     // Perhaps the specification doesn't force it to use one or another.
     // Example: `<sheetData><row r="1"><c r="A1" s="1" t="inlineStr"><is><t>Test 123</t></is></c></row></sheetData>`.
     case 'inlineStr':
-      value = getInlineStringValue()
+      value = inlineStringValue
       if (value === undefined) {
-        throw new Error(`Unsupported "inline string" cell value structure: ${getInlineStringXml()}`)
+        throw new Error('Couldn\'t read "inline string" cell value')
       }
       value = parseString(value, options)
       break
@@ -113,7 +112,6 @@ export default function parseCellValue(value, type, {
       }
       // XLSX does have "d" type for dates, but it's not commonly used.
       // Instead, it prefers using "n" type for storing dates as timestamps.
-      const styleId = getStyleId()
       if (styleId && isDateFormatStyle(styleId, styles, options)) {
         // Parse the number from string.
         value = parseNumberDefault(value)

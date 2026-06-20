@@ -8,10 +8,10 @@ import {
  * is `xl/_rels/workbook.xml.rels` file.
  * https://github.com/tidyverse/readxl/issues/104
  * @param  {string} content — `xl/_rels/workbook.xml.rels` file contents.
- * @param  {object} xml
+ * @param  {function} parseXmlTree — Parses an XML string into a DOM tree.
  * @return {object}
  */
-export default function parseFilePaths(content, xml) {
+export default function parseFilePaths(content, parseXmlTree) {
   // Example:
   // <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   //   ...
@@ -20,7 +20,7 @@ export default function parseFilePaths(content, xml) {
   //     Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"
   //     Target="worksheets/sheet1.xml"/>
   // </Relationships>
-  const document = xml.createDocument(content)
+  const document = parseXmlTree(content)
 
   const filePaths = {
     sheets: {},

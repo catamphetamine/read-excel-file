@@ -2,6 +2,8 @@ import unzipFromArrayBuffer from '../zip/unzipFromArrayBuffer.js'
 import convertValuesFromUint8ArraysToStrings from './convertValuesFromUint8ArraysToStrings.js'
 import filterZipArchiveEntry from './filterZipArchiveEntry.js'
 
+import checkpoint, { resetCheckpoint } from '../utility/checkpoint.js'
+
 /**
  * Unpacks `*.xlsx` file contents.
  * An `.xlsx` file is really just a `.zip` archive with `.xml` files inside.
@@ -9,6 +11,8 @@ import filterZipArchiveEntry from './filterZipArchiveEntry.js'
  * @return {Promise<Record<string,string>} Resolves to an object holding `*.xlsx` file entries.
  */
 export default function unpackXlsxFile(input) {
+	resetCheckpoint()
+	checkpoint('unpack files')
 	return getArrayBuffer(input)
 		.then(arrayBuffer => unzipFromArrayBuffer(arrayBuffer, { filter: filterZipArchiveEntry }))
 		.then(convertValuesFromUint8ArraysToStrings)

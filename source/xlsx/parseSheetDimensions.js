@@ -1,13 +1,14 @@
-import parseCellCoordinates from './parseCellCoordinates.js'
+import parseCellAddress from './parseCellAddress.js'
 
-import { getDimensions } from '../xml/xlsx.js'
-
-// `dimensions` defines the spreadsheet area containing all non-empty cells.
-// https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.sheetdimension?view=openxml-2.8.1
-export default function parseSheetDimensions(sheetDocument) {
-  let dimensions = getDimensions(sheetDocument)
-  if (dimensions) {
-    dimensions = dimensions.split(':').map(parseCellCoordinates).map(([row, column]) => ({
+/**
+ * Reads sheet `dimensions`, which defines the spreadsheet area containing all non-empty cells.
+ * https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.sheetdimension?view=openxml-2.8.1
+ * @param {object} state
+ * @returns {object[]} `undefined` or `[{ row, column }, { row, column }]` — "From row number and column number to row number and column number".
+ */
+export default function parseSheetDimensions(state) {
+  if (state.ref) {
+    let dimensions = state.ref.split(':').map(parseCellAddress).map(([row, column]) => ({
       row,
       column
     }))
@@ -24,3 +25,25 @@ export default function parseSheetDimensions(sheetDocument) {
     return dimensions
   }
 }
+
+export function createInitialState() {
+  return {
+    dimension: false,
+    ref: undefined
+  }
+}
+
+export function onOpenTag(tagName, attributes, state) {
+  if (tagName === 'dimension') {
+    state.dimension = true
+    state.ref = attributes.ref
+  }
+}
+
+export function onCloseTag(tagName, state) {
+  if (tagName === 'dimension') {
+    state.dimension = false
+  }
+}
+
+export function onText(text, state) {}

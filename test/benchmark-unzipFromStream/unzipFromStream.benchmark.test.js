@@ -19,7 +19,7 @@ describe('unzipFromStream (benchmark)', () => {
 			const startedAt = Date.now()
 			await unzipFromStream(stream)
 			const timeElapsed = Date.now() - startedAt
-			console.log(name, 'reads', archiveName, 'in', timeElapsed, 'ms')
+			console.log(name, 'read', archiveName, 'in', timeElapsed, 'ms')
 		}
 	})
 })

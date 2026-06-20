@@ -83,7 +83,8 @@ export function getFirstElementChild(element) {
   }
 }
 
-// This function is only used for occasional debug messages.
+// This function was only used for occasional debug messages during development.
+// It's not used in the actual code.
 export function getOuterXml(node) {
 	// `nodeType: 1` means "Element".
 	// https://www.w3schools.com/xml/prop_element_nodetype.asp

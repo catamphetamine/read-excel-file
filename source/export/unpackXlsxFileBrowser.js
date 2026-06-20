@@ -1,12 +1,30 @@
-// Uses an "async" function of the unzipper function
-// just because it feels more correct to use it over the "sync" one
-// because it isn't supposed to ever freeze the "main thread" (GUI).
+// Here it uses the "async" version of the unzipper function
+// just because it doesn't seem to be of any significant difference
+// when reading an `.xlsx` file.
+//
+// It did condict a couple of basic manual tests in a web browser
+// and the results showed that a `1 MB` `.xlsx` file is read in `100 ms`
+// both using "sync" and "async" versions of the unzipper function,
+// and reading a `200 KB` `.xlsx` file is done in `70 ms` when using
+// the "sync" version and in `80 ms" when using the "async" verison.
+//
+// So the "sync" version of the unzipper function is faster on smaller file sizes
+// of about < 1 MB. Still, the rest of the parsing code smoothes out this difference,
+// and the end result is not much different. Does the difference of `10 ms` justify
+// the mental overhead of choosing the right variant for a file of a given size?
+// I'd say "not really". Sure, performance fans wouldn't scuff on those `10 ms`
+// but it's literally "a blink of an eye" and about a duration of a single frame
+// on a 120 FPS screen.
+//
+// Hence, it simply uses the "async" variant of the unzipper function in any case.
 //
 // import unzipFromArrayBufferSync from '../zip/unzipFromArrayBufferSync.js'
 import unzipFromArrayBuffer from '../zip/unzipFromArrayBuffer.js'
 
 import convertValuesFromUint8ArraysToStrings from './convertValuesFromUint8ArraysToStrings.js'
 import filterZipArchiveEntry from './filterZipArchiveEntry.js'
+
+import checkpoint, { resetCheckpoint } from '../utility/checkpoint.js'
 
 /**
  * Unpacks `*.xlsx` file contents.
@@ -15,6 +33,8 @@ import filterZipArchiveEntry from './filterZipArchiveEntry.js'
  * @return {Promise<Record<string,string>} Resolves to an object holding `*.xlsx` file entries.
  */
 export default function unpackXlsxFile(input) {
+	resetCheckpoint()
+	checkpoint('unpack files')
 	if (input instanceof File || input instanceof Blob) {
 		return input.arrayBuffer().then(getResultFromArrayBuffer)
 	}
@@ -27,7 +47,7 @@ function getResultFromArrayBuffer(arrayBuffer) {
 	)
 }
 
-// function getResultFromArrayBufferSync(arrayBuffer) {
-//  const result = unzipFromArrayBufferSync(arrayBuffer, { filter: filterZipArchiveEntry })
-// 	return convertValuesFromUint8ArraysToStrings(result)
+// function getResultFromArrayBuffer(arrayBuffer) {
+// 	const result = unzipFromArrayBufferSync(arrayBuffer, { filter: filterZipArchiveEntry })
+// 	return Promise.resolve(convertValuesFromUint8ArraysToStrings(result))
 // }
