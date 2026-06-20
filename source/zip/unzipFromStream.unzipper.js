@@ -40,6 +40,7 @@ export default function unzipFromStream(stream, { filter } = {}) {
 
 	const onFileDataEnd = (filePath) => {
 		files[filePath] = Buffer.concat(filesChunks[filePath])
+		delete filesChunks[filePath]
 	}
 
 	return unzipFromStream_(stream, onFile, onFileData, onFileDataEnd).then(() => {
