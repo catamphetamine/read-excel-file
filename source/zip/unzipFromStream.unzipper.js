@@ -21,7 +21,35 @@ import { Buffer } from 'buffer'
 export default function unzipFromStream(stream, { filter } = {}) {
 	// The `files` object stores the files and their contents.
 	const files = {}
+	const filesChunks = {}
 
+	const onFile = (filePath) => {
+		// See if this file should be ignored.
+		// If it should, this entry won't be processed, i.e. `Unzip` will not try
+		// to decompress its data, and will just discard it.
+		if (filter && !filter({ path: filePath })) {
+			return false
+		}
+		filesChunks[filePath] = []
+		return true
+	}
+
+	const onFileData = (filePath, chunk) => {
+		filesChunks[filePath].push(chunk)
+	}
+
+	const onFileDataEnd = (filePath) => {
+		files[filePath] = Buffer.concat(filesChunks[filePath])
+	}
+
+	return unzipFromStream_(stream, onFile, onFileData, onFileDataEnd).then(() => {
+		return files
+	})
+}
+
+const PROMISE_RESOLVE_VALUE = undefined
+
+function unzipFromStream_(stream, onFile, onFileData, onFileDataEnd) {
 	return new Promise((resolve, reject) => {
 		const promises = []
 
@@ -65,7 +93,7 @@ export default function unzipFromStream(stream, { filter } = {}) {
 					// but I didn't remove it just to potentially prevent any potential silly bugs
 					// in case of some potential changes in some potential future.
 					Promise.all(promises).then(() => {
-						resolve(files)
+						resolve(PROMISE_RESOLVE_VALUE)
 					}, onError)
 				}
 			})
@@ -80,10 +108,8 @@ export default function unzipFromStream(stream, { filter } = {}) {
 				if (errored) {
 					ignore = true
 				}
-				if (filter) {
-					if (!filter({ path: entry.path })) {
-						ignore = true
-					}
+				if (!onFile(entry.path)) {
+					ignore = true
 				}
 
 				// If this file should be ignored.
@@ -95,8 +121,6 @@ export default function unzipFromStream(stream, { filter } = {}) {
 					return
 				}
 
-				const chunks = []
-
 				promises.push(new Promise((resolve) => {
 					// `entry` seems to be a generic Node.js stream.
 					// `entry.pipe()` pipes the file contents to a stream.
@@ -104,13 +128,13 @@ export default function unzipFromStream(stream, { filter } = {}) {
 					// `entry.buffer()` returns a promise that resolves to a `Buffer` with the file contents.
 					entry
 						.on('data', (data) => {
-							chunks.push(data)
+							onFileData(entry.path, data)
 						})
 						.on('error', (error) => {
 							onError(error)
 						})
 						.on('finish', () => {
-							files[entry.path] = Buffer.concat(chunks)
+							onFileDataEnd(entry.path)
 							resolve()
 						})
 				}))

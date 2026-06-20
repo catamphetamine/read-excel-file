@@ -3,14 +3,16 @@
 // * `fflate` uses a pure-javascript implementation of `.zip` compression/decompression by default.
 //   This pure-javascript implementation is about 2x slower than Node.js's "native" `zlib` module.
 //   This issue is worked around by "marrying" `fflate` with Node.js's `zlib` "native" module through some tinkering.
+//   https://github.com/101arrowz/fflate/issues/284
 //
-// * Even though `fflate` claims to support "streaming" mode, it's not a true "streaming" unpacker.
-//   It simply processes a `.zip` archive chunk-by-chunk rather than in a single bite,
-//   but that's not what called real "streaming". Real "streaming" is when an unpacker
-//   unpacks the data in a "pull" fashion, i.e. piece-by-piece upon request from the receiver,
-//   rather than in a "push" fashion when it can't hold on reading and decompressing the data
-//   even when the receiver is already full and can't really handle more. It causes "buffering"
-//   of the uncompressed/compressed data in RAM, which could become an issue for really large archives.
+// * Even though `fflate` implements a "streaming" mode of its own,
+//   it does not implement Node.js streams "contract", i.e. it just unzips the archive
+//   as fast as it can consume it from the input stream, without throttling the data throughput
+//   in cases when the input data flows faster than `fflate` can process it. This means that
+//   in the "worst case" scenario when `fflate`'s decompressor is unable to keep up with the
+//   data influx, it would "buffer" the entire `.zip` archive in RAM until it's processed.
+//   And while this is no big deal by any means, it's still not as elegant as adhering to
+//   Node.js streaming protocol.
 
 // This code was originally submitted by Stian Jensen.
 // https://github.com/catamphetamine/read-excel-file/pull/122
@@ -92,7 +94,35 @@ const USE_ASYNC_FFLATE_DECOMPRESSOR = false
 export default function unzipFromStream(stream, { filter } = {}) {
 	// The `files` object stores the files and their contents.
 	const files = {}
+	const filesChunks = {}
 
+	const onFile = (filePath) => {
+		// See if this file should be ignored.
+		// If it should, this entry won't be processed, i.e. `Unzip` will not try
+		// to decompress its data, and will just discard it.
+		if (filter && !filter({ path: filePath })) {
+			return false
+		}
+		filesChunks[filePath] = []
+		return true
+	}
+
+	const onFileData = (filePath, chunk) => {
+		filesChunks[filePath].push(chunk)
+	}
+
+	const onFileDataEnd = (filePath) => {
+		files[filePath] = Buffer.concat(filesChunks[filePath])
+	}
+
+	return unzipFromStream_(stream, onFile, onFileData, onFileDataEnd).then(() => {
+		return files
+	})
+}
+
+const PROMISE_RESOLVE_VALUE = undefined
+
+function unzipFromStream_(stream, onFile, onFileData, onFileDataEnd) {
 	return new Promise((resolve, reject) => {
 		let errored = false
 
@@ -112,7 +142,7 @@ export default function unzipFromStream(stream, { filter } = {}) {
 		let noMoreEntries = false
 		const resolveIfDone = () => {
 			if (!errored && noMoreEntries && stillDecompressingEntriesCount === 0) {
-				resolve(files)
+				resolve(PROMISE_RESOLVE_VALUE)
 			}
 		}
 
@@ -137,16 +167,11 @@ export default function unzipFromStream(stream, { filter } = {}) {
 				return
 			}
 
-			// See if this file should be ignored.
-			// If it should, this entry won't be processed, i.e. `Unzip` will not try
-			// to decompress its data, and will just discard it.
-			if (filter && !filter({ path: entry.name })) {
+			if (!onFile(entry.name)) {
 				return
 			}
 
 			stillDecompressingEntriesCount++
-
-			const chunks = []
 
 			// `entry.ondata` is called with each decompressed chunk of the entry,
 			// and then a final time with `isLast === true` once the entry is complete.
@@ -154,10 +179,10 @@ export default function unzipFromStream(stream, { filter } = {}) {
 				if (error) {
 					return onError(error)
 				}
-				chunks.push(chunk)
+				onFileData(entry.name, chunk)
 				if (isLast) {
-					files[entry.name] = Buffer.concat(chunks)
 					stillDecompressingEntriesCount--
+					onFileDataEnd(entry.name)
 					resolveIfDone()
 				}
 			}
