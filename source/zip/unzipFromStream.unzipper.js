@@ -31,7 +31,6 @@ export default function unzipFromStream(stream, { filter } = {}) {
 			return false
 		}
 		filesChunks[filePath] = []
-		return true
 	}
 
 	const onFileData = (filePath, chunk) => {
@@ -109,7 +108,7 @@ function unzipFromStream_(stream, onFile, onFileData, onFileDataEnd) {
 				if (errored) {
 					ignore = true
 				}
-				if (!onFile(entry.path)) {
+				if (onFile(entry.path) === false) {
 					ignore = true
 				}
 
