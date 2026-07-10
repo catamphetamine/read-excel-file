@@ -1,17 +1,13 @@
-import {
-  getRelationships
-} from '../xml/xlsx.js'
-
 /**
  * Returns sheet file paths.
  * Seems that the correct place to look for the `sheetId` -> `filename` mapping
  * is `xl/_rels/workbook.xml.rels` file.
  * https://github.com/tidyverse/readxl/issues/104
  * @param  {string} content — `xl/_rels/workbook.xml.rels` file contents.
- * @param  {function} parseXmlTree — Parses an XML string into a DOM tree.
- * @return {object}
+ * @param  {function} parseXmlStream — SAX XML parser.
+ * @return {object} — An object of shape `{ sheets: Record<string, string>, sharedStrings: string?, styles: string? }`
  */
-export default function parseFilePaths(content, parseXmlTree) {
+export default function parseFilePaths(content, parseXmlStream) {
   // Example:
   // <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   //   ...
@@ -20,43 +16,43 @@ export default function parseFilePaths(content, parseXmlTree) {
   //     Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"
   //     Target="worksheets/sheet1.xml"/>
   // </Relationships>
-  const document = parseXmlTree(content)
+  return parseXmlStream(content, {
+    createInitialState: createInitialStateInWorkbookRelationships,
+    onOpenTag: onOpenTagInWorkbookRelationships
+  }).then((state) => {
+    return state
+  })
+}
 
-  const filePaths = {
+function createInitialStateInWorkbookRelationships() {
+  return {
     sheets: {},
     sharedStrings: undefined,
     styles: undefined
   }
-
-  const addFilePathInfo = (relationship) => {
-    const filePath = relationship.getAttribute('Target')
-    const fileType = relationship.getAttribute('Type')
-    switch (fileType) {
-      case 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles':
-        filePaths.styles = getFilePath(filePath)
-        break
-      case 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings':
-        filePaths.sharedStrings = getFilePath(filePath)
-        break
-      case 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet':
-        filePaths.sheets[relationship.getAttribute('Id')] = getFilePath(filePath)
-        break
-    }
-  }
-
-  getRelationships(document).forEach(addFilePathInfo)
-
-  // Seems like "sharedStrings.xml" is not required to exist.
-  // For example, when the spreadsheet doesn't contain any strings.
-  // https://github.com/catamphetamine/read-excel-file/issues/85
-  // if (!filePaths.sharedStrings) {
-  //   throw new Error('"sharedStrings.xml" file not found in the *.xlsx file')
-  // }
-
-  return filePaths
 }
 
-function getFilePath(path) {
+function onOpenTagInWorkbookRelationships(tagName, attributes, state) {
+  if (tagName === 'Relationship') {
+    addFilePathForRelation(state, attributes.Id, attributes.Type, attributes.Target)
+  }
+}
+
+function addFilePathForRelation(state, id, type, target) {
+  switch (type) {
+    case 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles':
+      state.styles = getFilePathFromRelationTarget(target)
+      break
+    case 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings':
+      state.sharedStrings = getFilePathFromRelationTarget(target)
+      break
+    case 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet':
+      state.sheets[id] = getFilePathFromRelationTarget(target)
+      break
+  }
+}
+
+function getFilePathFromRelationTarget(path) {
   // Normally, `path` is a relative path inside the ZIP archive,
   // like "worksheets/sheet1.xml", or "sharedStrings.xml", or "styles.xml".
   // There has been one weird case when file path was an absolute path,

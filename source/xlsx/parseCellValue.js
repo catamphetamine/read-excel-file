@@ -1,9 +1,10 @@
 import parseExcelDate from './parseExcelDate.js'
+import parseNumber from './parseNumber.js'
 import isDateFormatStyle from './isDateFormatStyle.js'
 
 // Parses a string `value` of a cell.
 export default function parseCellValue(value, type, {
-  inlineStringValue,
+  inlineString,
   styleId,
   styles,
   sharedStrings,
@@ -35,7 +36,7 @@ export default function parseCellValue(value, type, {
     // Perhaps the specification doesn't force it to use one or another.
     // Example: `<sheetData><row r="1"><c r="A1" s="1" t="inlineStr"><is><t>Test 123</t></is></c></row></sheetData>`.
     case 'inlineStr':
-      value = inlineStringValue
+      value = inlineString
       if (value === undefined) {
         throw new Error('Couldn\'t read "inline string" cell value')
       }
@@ -114,15 +115,14 @@ export default function parseCellValue(value, type, {
       // Instead, it prefers using "n" type for storing dates as timestamps.
       if (styleId && isDateFormatStyle(styleId, styles, options)) {
         // Parse the number from string.
-        value = parseNumberDefault(value)
+        value = parseNumber(value)
         // Parse the number as a date timestamp.
         value = parseExcelDate(value, { epoch1904 })
       } else {
         // Parse the number from string.
         // Supports custom parsing function to work around javascript number encoding precision issues.
         // https://gitlab.com/catamphetamine/read-excel-file/-/issues/85
-        const parseNumber = options.parseNumber || parseNumberDefault
-        value = parseNumber(value)
+        value = (options.parseNumber || parseNumber)(value)
       }
       break
 
@@ -178,18 +178,4 @@ function parseString(value, options) {
     value = undefined
   }
   return value
-}
-
-// Parses a number from string.
-// Throws an error if the number couldn't be parsed.
-// When parsing floating-point number, is affected by
-// the javascript number encoding precision issues:
-// https://www.youtube.com/watch?v=2gIxbTn7GSc
-// https://www.avioconsulting.com/blog/overcoming-javascript-numeric-precision-issues
-function parseNumberDefault(stringifiedNumber) {
-  const parsedNumber = Number(stringifiedNumber)
-  if (isNaN(parsedNumber)) {
-    throw new Error(`Invalid "numeric" cell value: ${stringifiedNumber}`)
-  }
-  return parsedNumber
 }

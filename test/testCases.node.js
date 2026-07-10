@@ -3,11 +3,11 @@ import testCases from './testCases.js'
 export default [
 	...testCases,
 	{
-		name: 'input-blob-in-node',
+		name: 'node/input-blob',
 		description: 'should read from `Blob` input in Node.js'
 	},
 	{
-		name: 'input-buffer',
+		name: 'node/input-buffer',
 		description: 'should read from `Buffer` input in Node.js'
 	}
 ]

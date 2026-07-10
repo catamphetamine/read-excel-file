@@ -7,7 +7,7 @@
 import isDateFormat from './isDateFormat.js'
 
 export default function isDateFormatStyle(styleId, styles, options) {
-  if (styleId) {
+  if (styleId !== undefined) {
     const style = styles[styleId]
     if (!style) {
       throw new Error(`Cell style not found: ${styleId}`)
@@ -17,7 +17,7 @@ export default function isDateFormatStyle(styleId, styles, options) {
     }
     if (
       // Whether it's a "number format" that's conventionally used for storing date timestamps.
-      BUILT_IN_DATE_FORMAT_IDS.indexOf(Number(style.numberFormat.id)) >= 0 ||
+      BUILT_IN_DATE_FORMAT_IDS.indexOf(style.numberFormat.id) >= 0 ||
       // Whether it's a "number format" that uses a "formatting template"
       // that the developer is certain is a date formatting template.
       (options.dateFormat && style.numberFormat.template === options.dateFormat) ||

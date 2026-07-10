@@ -1,4 +1,7 @@
-# `read-excel-file`
+[![npm version](https://img.shields.io/npm/v/read-excel-file.svg?style=flat-square)](https://www.npmjs.com/package/read-excel-file)
+[![npm downloads](https://img.shields.io/npm/dm/read-excel-file.svg?style=flat-square)](https://www.npmjs.com/package/read-excel-file)
+
+# read-excel-file
 
 Read `.xlsx` files in a browser or Node.js.
 
@@ -176,7 +179,7 @@ This package provides a separate `import` path for each different environment, a
 
 It can read from a [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File), a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) or an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer).
 
-Example: User chooses a file and the web application reads it.
+Example 1: Read from a selected file.
 
 ```html
 <input type="file" id="input" />
@@ -188,65 +191,31 @@ import { readSheet } from 'read-excel-file/browser'
 const input = document.getElementById('input')
 
 input.addEventListener('change', () => {
-  const data = await readSheet(input.files[0])
+  const data = await readSheet(event.target.files[0])
 })
 ```
 
-Note: Internet Explorer 11 is an old browser that doesn't support [`Promise`](https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Promise), and hence requires a [polyfill](https://www.npmjs.com/package/promise-polyfill).
+<!-- Note: Internet Explorer 11 is an old browser that doesn't support [`Promise`](https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Promise), and hence requires a [polyfill](https://www.npmjs.com/package/promise-polyfill). -->
 
-<details>
-<summary>Example 2: Reading from a URL</summary>
-
-######
+Example 2: Read from a URL.
 
 ```js
+import { readSheet } from 'read-excel-file/browser'
+
 const response = await fetch('https://example.com/spreadsheet.xlsx')
-const block = await response.blob()
+const blob = await response.blob()
 const data = await readSheet(blob)
 ```
-</details>
 
+<!--
 <details>
 <summary>Example 3: Using <code>read-excel-file</code> in a Web Worker</summary>
 
 ######
 
-All exports of `read-excel-file` already use a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) under the hood when reading `.xlsx` file contents. This is in order to avoid freezing the UI when reading large files. So using an additional Web Worker on top of that isn't really necessary. Still, for those who require it, this example shows how a user chooses a file and the web application reads it in a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) using `read-excel-file/web-worker` import path.
-
-```js
-// Step 1: Initialize Web Worker.
-
-const worker = new Worker('web-worker.js')
-
-worker.onmessage = function(event) {
-  // `event.data` is a `File`.
-  console.log(event.data)
-}
-
-worker.onerror = function(event) {
-  console.error(event.message)
-}
-
-// Step 2: User chooses a file and the application sends it to the Web Worker.
-
-const input = document.getElementById('input')
-
-input.addEventListener('change', () => {
-  worker.postMessage(input.files[0])
-})
-```
-
-##### `web-worker.js`
-
-```js
-import { readSheet } from 'read-excel-file/web-worker'
-
-onmessage = async function(event) {
-  const sheetData = await readSheet(event.data)
-  postMessage(sheetData)
-}
-```
+`read-excel-file` already uses [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) internally when reading `.xlsx` file contents. This is in order to avoid freezing the UI when reading large files. So using an additional Web Worker on top of that isn't really necessary. But for those who still prefer to manually run `read-excel-file` in their own Web Worker, there's `read-excel-file/web-worker` import path which is same as `read-excel-file/browser` except that it doesn't spawn any Web Workers.
 </details>
+-->
 
 ### Node.js
 
@@ -281,6 +250,106 @@ import { readSheet } from 'read-excel-file/universal'
 
 const data = await readSheet(blob)
 ```
+
+Note: the `/universal` export can't use [workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) so it's inherently "single-threaded" and "blocking".
+
+## Worker
+
+<!-- XML parser currently doesn't use "workers" and hence it "blocks" the main thread. -->
+
+<!-- Previous inaccurate statement: All exports of `read-excel-file` already use a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) under the hood when reading `.xlsx` file contents. This is in order to avoid freezing the UI when reading large files. So using an additional Web Worker on top of that isn't really necessary. Still, for those who require it, this example shows how a user chooses a file and the web application reads it in a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) using `read-excel-file/web-worker` import path. -->
+
+When reading extremely large `.xlsx` files — say, starting from a [few megabytes](#performance) in size — there's a slight inconvenience of freezing the application during the "XML parsing" phase or "[schema parsing](#schema)" phase while reading the file.
+
+To work around this minor issue in a web browser, one could read `.xlsx` files in a separate [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) using `read-excel-file/web-worker` export.
+
+<details>
+<summary>Example: Read a file using <code>read-excel-file/web-worker</code> in a Web Worker in a browser.</summary>
+
+######
+
+```js
+const worker = new Worker(new URL('worker.js', import.meta.url))
+
+worker.onmessage = (event) => {
+  // File has been read.
+  console.log('Sheet data', event.data)
+}
+
+worker.onerror = (event) => {
+  // Handle errors here.
+  console.error(event.error)
+}
+
+// "Choose file" button.
+const input = document.getElementById('input')
+
+// When user chooses a file, send it to the Web Worker.
+input.addEventListener('change', async () => {
+  const file = await event.target.files[0].arrayBuffer()
+  // Send the `.xlsx` file to the worker.
+  // (advanced) One could also pass `transferList` argument here.
+  worker.postMessage(file)
+})
+```
+
+##### `./worker.js`
+
+```js
+import { readSheet } from 'read-excel-file/web-worker'
+
+onmessage = async (event) => {
+  postMessage(await readSheet(event.data))
+}
+```
+</details>
+
+<!--
+######
+
+In Node.js, a very similar API called [Worker Threads](https://nodejs.org/api/worker_threads.html) could be used to prevent "blocking" of the main thread while reading a huge file.
+
+<details>
+<summary>Example: Read a file using <code>read-excel-file/node</code> in a Worker Thread in Node.js.</summary>
+
+######
+
+```js
+import { Worker } from 'node:worker_threads'
+
+const worker = new Worker(new URL('worker.js', import.meta.url))
+
+worker.on('message', (sheetData) => {
+  // File has been read.
+  console.log('Sheet data', sheetData)
+})
+
+worker.on('error', (error) => {
+  // Handle errors here.
+  console.error(error)
+})
+
+// The server receives an `.xlsx` file.
+const file = fs.readFileSync('./spreadsheet.xlsx')
+
+// Send the `.xlsx` file to the worker.
+// (advanced) One could also pass `transferList` argument here.
+worker.postMessage(file)
+```
+
+##### `./worker.js`
+
+```js
+import { parentPort } from 'node:worker_threads'
+
+import { readSheet } from 'read-excel-file/node'
+
+parentPort.on('message', async (file) => {
+  parentPort.postMessage(await readSheet(file))
+})
+```
+</details>
+-->
 
 ## Strings
 
@@ -328,7 +397,19 @@ Here're the results of reading [sample `.xlsx` files](https://examplefile.com/do
 |  10 MB  | 0.5 sec. | 0.6 sec. |
 |  50 MB  | 2.6 sec. | 3.0 sec. |
 
-To run the benchmark yourself, clone the repository, download the sample `.xlsx` files to `./test/benchmark` folder, run `npm install` and then `npm run test:benchmark`.
+To run the benchmark in Node.js, clone the repository, download the sample `.xlsx` files to `./test/benchmark` folder, run `npm install` and then `npm run test:benchmark`.
+
+To run the benchmark in a web browser, open the demo page, open the console and choose an `.xlsx` file.
+
+#### Under the Hood
+
+How it works is it first unzips an `.xlsx` file into a tree of `.xml` files and then parses those `.xml` files into spreadsheet data.
+
+The unzipping part is "asynchronous" in Node.js and conditionally "asychronous" in web browsers (i.e. it is "asynchronous" only for `.xlsx` files larger than `512 KB`).
+
+The XML parsing part is "synchronous" and is written using a [SAX parser](https://en.wikipedia.org/wiki/Simple_API_for_XML).
+
+If `schema` parameter was passed, it will perform an additional last step of parsing sheet data using a schema. This part is "synchronous", and could be performed separately using `parseSheetData()` function.
 
 ## Schema
 
@@ -709,7 +790,7 @@ To include this library directly via a `<script/>` tag on a page, one can use an
 <script>
   var input = document.getElementById('input')
   input.addEventListener('change', function() {
-    readXlsxFile(input.files[0]).then(function(rows) {
+    readXlsxFile(event.target.files[0]).then(function(rows) {
       // `rows` is an array of rows
       // each row being an array of cells.
     })
@@ -735,7 +816,6 @@ Finally, one could go even further with the "streaming" approach and output not 
 
 * [`fflate`](https://www.npmjs.com/package/fflate) — Unzips `.zip` archives in web browsers.
 * [`unzipper-esm`](https://www.npmjs.com/package/unzipper-esm) — Unzips `.zip` archives in Node.js using `stream` API.
-* [`@xmldom/xmldom`](https://www.npmjs.com/package/@xmldom/xmldom) — Polyfills `DOMParser` in Node.js. Parses XML in a non-streaming fashion.
 * [`saxen`](https://www.npmjs.com/package/saxen) — Parses XML in a streaming fashion.
 
 ## GitHub

@@ -2,7 +2,7 @@ import { describe, it } from 'mocha'
 
 import path from 'node:path'
 
-import readXlsxFile from '../../source/export/readXlsxFileNode.js'
+import readSheet from '../../source/export/readSheetNode.js'
 
 // Enables the console output in `checkpoint.js`.
 global.READ_EXCEL_FILE_CHECKPOINTS = true
@@ -14,6 +14,35 @@ const FILES = [
 	'50mb.xlsx'
 ]
 
+const USE_SCHEMA = false
+
+const SCHEMA = {
+	name: {
+		column: 'Name'
+	},
+	email: {
+		column: 'Email'
+	},
+	phone: {
+		column: 'Phone'
+	},
+	address: {
+		column: 'Address'
+	},
+	company: {
+		column: 'Company'
+	},
+	text: {
+		column: 'Text'
+	},
+	description: {
+		column: 'Description'
+	},
+	jobTitle: {
+		column: 'Job Title'
+	}
+}
+
 describe('readXlsxFile (benchmark)', () => {
 	// This test case is not written using `async`/`await` syntax to work around the error:
 	// "Error: Timeout of 2000ms exceeded."
@@ -23,7 +52,14 @@ describe('readXlsxFile (benchmark)', () => {
 			console.log('Read', '"' + fileName + '"')
 			console.log()
 			const startedAt = Date.now()
-			return readXlsxFile(path.resolve('./test/benchmark/' + fileName)).then((sheets) => {
+			return readSheet(
+				path.resolve('./test/benchmark/' + fileName),
+				{ schema: USE_SCHEMA ? SCHEMA : undefined }
+			).catch((error) => {
+				// Don't let any potential errors, such as `schema` mismatch,
+				// to interrupt the execution of the benchmark.
+				console.error(error)
+			}).finally(() => {
 				const timeElapsed = Date.now() - startedAt
 				console.log()
 				console.log('Finished', 'in', timeElapsed, 'ms')

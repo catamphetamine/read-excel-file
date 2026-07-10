@@ -1,8 +1,11 @@
-import parseXmlTree from '../xml/parseXmlTreeBrowser.js'
-import parseXmlStream from '../xml/parseXmlStream.js'
+// import createWorkerFunction from 'worker-f/browser'
 
+import parseXmlStream from '../xml/parseXmlStream.js'
 import unpackXlsxFile from './unpackXlsxFileBrowser.js'
+
 import parseSpreadsheetContents from '../xlsx/parseSpreadsheetContents.js'
+
+const createWorkerFunction = undefined
 
 /**
  * Reads an `.xlsx` file.
@@ -12,5 +15,5 @@ import parseSpreadsheetContents from '../xlsx/parseSpreadsheetContents.js'
  */
 export default function readXlsxFile(input, options) {
 	return unpackXlsxFile(input)
-		.then((contents) => parseSpreadsheetContents(contents, parseXmlTree, parseXmlStream, options))
+		.then((contents) => parseSpreadsheetContents(createWorkerFunction, parseXmlStream, contents, options))
 }

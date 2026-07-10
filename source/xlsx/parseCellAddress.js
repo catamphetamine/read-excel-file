@@ -17,7 +17,7 @@ export default function parseCellAddress(coordinatesString) {
 }
 
 // Maps "A1"-like coordinates to `{ row, column }` numeric coordinates.
-const LETTERS = ["", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+const LETTERS = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
 // Converts a letter coordinate to a digit coordinate.
 // Examples: "A" -> 1, "B" -> 2, "Z" -> 26, "AA" -> 27, etc.

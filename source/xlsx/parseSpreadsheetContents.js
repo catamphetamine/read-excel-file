@@ -3,9 +3,9 @@ import parseFilePaths from './parseFilePaths.js'
 import parseStyles from './parseStyles.js'
 import parseSharedStrings from './parseSharedStrings.js'
 import parseSheet from './parseSheet.js'
+import parseNumberDefault from './parseNumber.js'
 
-import checkpoint from '../utility/checkpoint.js'
-
+import checkpoint, { latestCheckpointTimestamp } from '../utility/checkpoint.js'
 import isPromise from '../utility/isPromise.js'
 
 // For an introduction in reading `.xlsx` files see "The minimum viable XLSX reader":
@@ -13,13 +13,12 @@ import isPromise from '../utility/isPromise.js'
 
 /**
  * Reads data from an `.xlsx` file.
+ * @param  {function} parseXmlStream — SAX XML parser.
  * @param  {Record<string,string>} contents - A map of `.xml` files inside the `.xlsx` file (which itself is just a zipped directory).
- * @param  {function} parseXmlTree — Parses an XML string into a DOM tree.
- * @param  {function} [parseXmlStream] — (optional) "streaming" XML parser. Using "streaming" also requires Node.js because it uses Node.js streams.
  * @param  {object} [options]
  * @return {Promise<Sheet[]>}
  */
-export default function parseSpreadsheetContents(contents, parseXmlTree, parseXmlStream, options = {}) {
+function parseSpreadsheetContents(parseXmlStream, contents, options = {}) {
   // Because of how `.xlsx` file contents are defined in the specification,
   // it will have to be read in 3 passes:
   // * First pass — read the actual file paths
@@ -29,48 +28,136 @@ export default function parseSpreadsheetContents(contents, parseXmlTree, parseXm
   checkpoint('parse spreadsheet info and file paths')
 
   // Get spreadsheet info and the paths to files.
-  const { spreadsheetInfo, filePaths } = readFiles(
-    FILES_INFO_AT_FIXED_PATHS,
-    contents,
-    parseXmlTree,
-    parseXmlStream
-  )
-
-  checkpoint('parse "shared strings" and "styles"')
-
-  // Parse "shared strings" and "styles".
   return readFiles(
-    getFilesInfoAtNonFixedPaths(filePaths),
+    getXmlFilesAtFixedPaths(),
     contents,
-    parseXmlTree,
     parseXmlStream
-  ).then(({ sharedStrings, styles }) => {
-    checkpoint('parse sheets data')
+  ).then(({ spreadsheetInfo, filePaths }) => {
+    checkpoint('parse "shared strings" and "styles"')
 
-    const sheetRelationIdsToRead = options.sheets
-      ? options.sheets.map(sheet => getSheetRelationId(sheet, spreadsheetInfo.sheets))
-      : spreadsheetInfo.sheets.map(_ => _.relationId)
-
-    // Parse sheets data.
+    // Parse "shared strings" and "styles".
     return readFiles(
-      getSheetFilesInfoAtNonFixedPaths(filePaths, sheetRelationIdsToRead, {
-        sharedStrings,
-        styles,
-        epoch1904: spreadsheetInfo.epoch1904,
-        options
-      }),
+      getXmlFilesAtNonFixedPaths(filePaths),
       contents,
-      parseXmlTree,
       parseXmlStream
-    ).then((sheetsData) => {
-      checkpoint('end')
-      // Return sheets data.
-      return sheetRelationIdsToRead.map((sheetRelationId) => ({
-        sheet: getSheetNameByRelationId(sheetRelationId, spreadsheetInfo.sheets),
-        data: sheetsData[sheetRelationId]
-      }))
+    ).then(({ sharedStrings, styles }) => {
+      const sheetRelationIdsToRead = options.sheets
+        ? options.sheets.map(sheet => getSheetRelationId(sheet, spreadsheetInfo.sheets))
+        : spreadsheetInfo.sheets.map(_ => _.relationId)
+
+      checkpoint(`parse sheet${sheetRelationIdsToRead.length === 1 ? '' : 's'} data`)
+
+      // Parse sheets data.
+      return readFiles(
+        getSheetDataXmlFiles(filePaths, sheetRelationIdsToRead, {
+          sharedStrings,
+          styles,
+          epoch1904: spreadsheetInfo.epoch1904,
+          options
+        }),
+        contents,
+        parseXmlStream
+      ).then((sheetsData) => {
+        checkpoint('end')
+        // Return sheets data.
+        return sheetRelationIdsToRead.map((sheetRelationId) => ({
+          sheet: getSheetNameByRelationId(sheetRelationId, spreadsheetInfo.sheets),
+          data: sheetsData[sheetRelationId]
+        }))
+      })
     })
   })
+}
+
+/**
+ * Reads data from an `.xlsx` file in a worker.
+ * @param  {function} [createWorkerFunction] — Creates a worker function.
+ * @param  {function} parseXmlStream — SAX XML parser.
+ * @param  {Record<string,string>} contents - A map of `.xml` files inside the `.xlsx` file (which itself is just a zipped directory).
+ * @param  {object} [options]
+ * @return {Promise<Sheet[]>}
+ */
+export default function parseSpreadsheetContentsInWorker(createWorkerFunction, parseXmlStream, contents, options) {
+  // Assign the default `parseNumber()` function in the `options`.
+  // The reason is that the worker code requires it to be non-`undefined`.
+  // Otherwise, it would throw "parseNumber is not defined".
+  if (!(options && options.parseNumber)) {
+    options = {
+      ...options,
+      parseNumber: parseNumberDefault
+    }
+  }
+
+  // Using a worker requires specifying all the top-level variables or functions that it uses.
+  // Currently, that list looks a little bit too long so for now workers aren't used for parsing sheet data.
+  // See the comment in `createWorkerFunction()` call for more details.
+  // createWorkerFunction = undefined
+
+  // If the environment doesn't support "workers", parse spreadsheet contents "synchronously".
+  // This will "block" the main thread while parsing.
+  if (!createWorkerFunction) {
+    return parseSpreadsheetContents(parseXmlStream, contents, options)
+  }
+
+  // Any functions have to be removed from the `options` in order for them to be "serializable"
+  // before sending them to the worker thread.
+  const { parseNumber, ...optionsJson } = options
+
+  // Create a worker.
+  const workerFn = createWorkerFunction(
+    (data) => {
+      // Reconstruct the `options`.
+      const options = {
+        ...data.optionsJson,
+        parseNumber
+      }
+      // Parse sheet data from the `.xml` files.
+      return parseSpreadsheetContents(parseXmlStream, data.contents, options)
+    }
+  )
+
+  workerFn.addDependencies(
+    // Any "outside" dependencies that're referenced in the function (below).
+    () => [
+      parseXmlStream,
+      parseNumber,
+      parseSpreadsheetContents,
+      getSheetRelationId,
+      getSheetNameByRelationId,
+      getXmlFilesAtFixedPaths,
+      getXmlFilesAtNonFixedPaths,
+      getSheetDataXmlFiles,
+      readFiles,
+      checkpoint,
+      latestCheckpointTimestamp,
+      isPromise,
+      // parseSheet,
+      //
+      // This is not the full list by any means. There's more. Quite a lot more of them.
+      // It started looking a bit too much so I stopped adding the dependencies here.
+      // Now I understand why `fflate`'s source code is all written in a single
+      // multi-thousand-line `index.ts` file. The thing is, once one starts splitting
+      // the code into modules, they'd have to manually export any top-level variables
+      // or functions from those modules and import them here in order to specify them
+      // in the list of dependencies. And even if doing so for every top-level variable
+      // or function in every imported module doesn't seem like an impossible task,
+      // imagine someone refactoring the code later and extracting new top-level
+      // variables or functions. Without 100% code coverage requirement, it won't be caught
+      // at build time and can only be caught in production, which isn't ideal to say the least.
+      // So it seems like users of this package will have to just deal with the "blocking"
+      // nature of the sheet data parser, because I won't follow into `fflate`'s steps
+      // and rewrite this package as a single `index.js` file.
+      // Users of this package will have to manually put their code in a worker
+      // in case they'd prefer it to run in a separate thread to prevent "blocking"
+      // the main thread when parsing sheet data.
+    ]
+  )
+
+  // Post a message with some data to the worker
+  // so that it starts processing the data
+  // and later posts a message back to the main thread
+  // with the result of the calculation.
+  return workerFn.callOnce({ optionsJson, contents }) // (optional) add `transferList` argument.
 }
 
 function getSheetRelationId(sheet, sheets) {
@@ -98,29 +185,34 @@ function getSheetNameByRelationId(sheetRelationId, sheets) {
   throw new Error(`Sheet relation ID not found: ${sheetRelationId}`)
 }
 
-const FILES_INFO_AT_FIXED_PATHS = {
-  // Read the paths to certain files inside the `.xlsx` file, which is itself just a `.zip` archive.
-  // These paths aren't standardized between different spreadsheet editors.
-  // https://github.com/tidyverse/readxl/issues/104
-  'xl/_rels/workbook.xml.rels': {
-    name: 'filePaths',
-    parse: parseFilePaths
-  },
+function getXmlFilesAtFixedPaths() {
+  return {
+    // Read the paths to certain files inside the `.xlsx` file, which is itself just a `.zip` archive.
+    // These paths aren't standardized between different spreadsheet editors.
+    // https://github.com/tidyverse/readxl/issues/104
+    'xl/_rels/workbook.xml.rels': {
+      name: 'filePaths',
+      parse: parseFilePaths
+    },
 
-  // General info on the spreadsheet.
-  'xl/workbook.xml': {
-    name: 'spreadsheetInfo',
-    parse: parseSpreadsheetInfo
+    // General info on the spreadsheet.
+    'xl/workbook.xml': {
+      name: 'spreadsheetInfo',
+      parse: parseSpreadsheetInfo
+    }
   }
 }
 
-function getFilesInfoAtNonFixedPaths(filePaths) {
+function getXmlFilesAtNonFixedPaths(filePaths) {
   return {
     // The usual file path for "shared strings" is "xl/sharedStrings.xml".
     [filePaths.sharedStrings || 'xl/sharedStrings.xml']: {
       name: 'sharedStrings',
       // `parseSharedStrings()` returns a `Promise`.
       parse: parseSharedStrings,
+      // It seems that "sharedStrings.xml" is not required to exist.
+      // For example, that could be the case when a spreadsheet doesn't contain any strings.
+      // https://github.com/catamphetamine/read-excel-file/issues/85
       fallback: []
     },
 
@@ -133,7 +225,8 @@ function getFilesInfoAtNonFixedPaths(filePaths) {
   }
 }
 
-function getSheetFilesInfoAtNonFixedPaths(filePaths, sheetRelationIdsToRead, sheetDataParserParameters) {
+// Returns the list of sheet data `.xml` files.
+function getSheetDataXmlFiles(filePaths, sheetRelationIdsToRead, sheetDataParserParameters) {
   return Object.keys(filePaths.sheets)
     .filter((sheetRelationId) => sheetRelationIdsToRead.includes(sheetRelationId))
     .reduce((filesInfo, sheetRelationId) => ({
@@ -141,14 +234,13 @@ function getSheetFilesInfoAtNonFixedPaths(filePaths, sheetRelationIdsToRead, she
       [filePaths.sheets[sheetRelationId]]: {
         name: sheetRelationId,
         // `parseSheet()` returns a `Promise`.
-        parse: (content, parseXmlTree, parseXmlStream) => parseSheet(content, parseXmlTree, parseXmlStream, sheetDataParserParameters)
+        parse: (content, parseXmlStream) => parseSheet(content, parseXmlStream, sheetDataParserParameters)
       }
     }), {})
 }
 
 // In case of converting `.zip` file reader from a "read-and-return" one to a "streaming" one,
 // this function could be modified to process the files as they come rather than all-at-once.
-
 
 // Reads files from inside an `.xlsx` archive by file paths.
 //
@@ -169,7 +261,7 @@ function getSheetFilesInfoAtNonFixedPaths(filePaths, sheetRelationIdsToRead, she
 // * If none of the `parse()` functions returned a `Promise`, it returns a map of files' contents.
 // * If any of the `parse()` functions returned a `Promise`, it returns a `Promise` that resolves to a map of files' contents.
 //
-function readFiles(filesInfo, contents, parseXmlTree, parseXmlStream) {
+function readFiles(filesInfo, contents, parseXmlStream) {
   // Get files' contents.
   const results = {}
   for (const filePath of Object.keys(filesInfo)) {
@@ -177,10 +269,10 @@ function readFiles(filesInfo, contents, parseXmlTree, parseXmlStream) {
     results[fileInfo.name] = contents[filePath] === undefined
       ? (
         fileInfo.fallback === undefined
-          ? throwFileNotFoundError(filePath)
+          ? (() => { throw new Error(`"${filePath}" file not found inside the \`.xlsx\` file`) })()
           : fileInfo.fallback
       )
-      : fileInfo.parse(contents[filePath], parseXmlTree, parseXmlStream)
+      : fileInfo.parse(contents[filePath], parseXmlStream)
   }
   // Resolve any `Promise`s.
   const promises = []
@@ -195,8 +287,4 @@ function readFiles(filesInfo, contents, parseXmlTree, parseXmlStream) {
     return Promise.all(promises).then(() => results)
   }
   return results
-}
-
-function throwFileNotFoundError(filePath) {
-  throw new Error(`"${filePath}" file not found inside the \`.xlsx\` file`)
 }

@@ -1,3 +1,8 @@
+9.3.0 / 25.06.2026
+==================
+
+* Replaced DOM XML parser with SAX XML parser. This increased the performance of XML parsing.
+
 9.2.0 / 11.06.2026
 ==================
 

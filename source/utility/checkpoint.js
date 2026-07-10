@@ -3,27 +3,32 @@
 // To enable the logs with the timing, set a global variable
 // called `READ_EXCEL_FILE_CHECKPOINTS` in Node.js or web browser.
 
-let latestTimestamp
+// This global variable is only exported to be added in the dependencies of a worker function.
+// See `worker-f` package for more info.
+export let latestCheckpointTimestamp
 
 export default function checkpoint(name) {
 	const now = Date.now()
-	if (shouldOutputLog()) {
-		if (latestTimestamp) {
-			console.log('  -', now - latestTimestamp, 'ms')
+
+	// See if the global flag for "should output log" is set to `true`.
+	const shouldOutputLog = typeof global !== 'undefined'
+		? Boolean(global.READ_EXCEL_FILE_CHECKPOINTS)
+		: (
+			typeof window !== 'undefined'
+				? Boolean(window.READ_EXCEL_FILE_CHECKPOINTS)
+				: false
+		)
+
+	if (shouldOutputLog) {
+		if (latestCheckpointTimestamp) {
+			console.log('  -', now - latestCheckpointTimestamp, 'ms')
 		}
 		console.log('*', name)
 	}
-	latestTimestamp = now
+
+	latestCheckpointTimestamp = now
 }
 
 export function resetCheckpoint() {
-	latestTimestamp = undefined
-}
-
-function shouldOutputLog() {
-	if (typeof global !== 'undefined') {
-		return Boolean(global.READ_EXCEL_FILE_CHECKPOINTS)
-	} else if (typeof window !== 'undefined') {
-		return Boolean(window.READ_EXCEL_FILE_CHECKPOINTS)
-	}
+	latestCheckpointTimestamp = undefined
 }

@@ -4,6 +4,7 @@ import BooleanType from './types/Boolean.js'
 import DateType from './types/Date.js'
 
 import isObject from '../utility/isObject.js'
+import checkpoint from '../utility/checkpoint.js'
 
 /**
  * Converts spreadsheet-alike data structure into an array of JSON objects.
@@ -34,6 +35,8 @@ import isObject from '../utility/isObject.js'
  * @return {object} — An object of shape `{ objects, errors }`. Either `objects` or `errors` is going to be `undefined`.
  */
 export default function parseSheetData(data, schema, optionsCustom) {
+  checkpoint('parse sheet data using schema')
+
   const objects = []
   let errors = []
 
@@ -52,6 +55,8 @@ export default function parseSheetData(data, schema, optionsCustom) {
     }
     parsedRowIndex++
   }
+
+  checkpoint('end')
 
   if (errors.length > 0) {
     return { errors }

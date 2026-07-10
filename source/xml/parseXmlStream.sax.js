@@ -36,28 +36,34 @@ export default function parseXmlStream(xml, {
 
 		// got some text. `text` is the string of text.
 		const ontext = (text) => {
-			onText(text, state)
+			if (onText) {
+				onText(text, state)
+			}
 		}
 
 		// opened a tag. `node` has "name" and "attributes"
 		const onopentag = (node) => {
-			if (xmlns) {
-				prefixedTagNameToUnprefixedTagName[node.name] = node.local
+			if (onOpenTag) {
+				if (xmlns) {
+					prefixedTagNameToUnprefixedTagName[node.name] = node.local
+				}
+				onOpenTag(
+					xmlns ? node.local : node.name,
+					xmlns ? getAttributesWithoutXmlnsPrefixes(node.attributes) : node.attributes,
+					state
+				)
 			}
-			onOpenTag(
-				xmlns ? node.local : node.name,
-				xmlns ? getAttributesWithoutXmlnsPrefixes(node.attributes) : node.attributes,
-				state
-			)
 		}
 
 		// closed a tag.
 		const onclosetag = (name) => {
-			const tagName = xmlns ? prefixedTagNameToUnprefixedTagName[name] : name
-			if (xmlns && !tagName) {
-				throw new Error(`Unknown closing tag: ${name}`)
+			if (onCloseTag) {
+				const tagName = xmlns ? prefixedTagNameToUnprefixedTagName[name] : name
+				if (xmlns && !tagName) {
+					throw new Error(`Unknown closing tag: ${name}`)
+				}
+				onCloseTag(tagName, state)
 			}
-			onCloseTag(tagName, state)
 		}
 
 		// an attribute. `attribute` has "name" and "value"

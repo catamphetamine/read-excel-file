@@ -1,17 +1,16 @@
 import parseCell, {
-  readChildElements,
-  createInitialState as createInitialStateInsideCell,
-  onOpenTag as onOpenTagInsideCell,
-  onCloseTag as onCloseTagInsideCell,
-  onText as onTextInsideCell
+  createInitialStateInCell,
+  onOpenTagInCell,
+  onCloseTagInCell,
+  onTextInCell
 } from './parseCell.js'
 
-export default function parseCells(state, sharedStrings, styles, epoch1904, options) {
-  return state.cells.map(({ attributes, value, inlineStringValue }) => {
+export default function parseSheetData(state, sharedStrings, styles, epoch1904, options) {
+  return state.cells.map(({ attributes, value, inlineString }) => {
     return parseCell(
       attributes,
       value,
-      inlineStringValue,
+      inlineString,
       sharedStrings,
       styles,
       epoch1904,
@@ -20,43 +19,38 @@ export default function parseCells(state, sharedStrings, styles, epoch1904, opti
   })
 }
 
-export function createInitialState() {
+export function createInitialStateInSheetData() {
   return {
-    c: false,
-    attributes: undefined,
-    stateForCell: undefined,
+    c: undefined,
     cells: []
   }
 }
 
-export function onOpenTag(tagName, attributes, state) {
+export function onOpenTagInSheetData(tagName, attributes, state) {
   if (tagName === 'c') {
-    state.c = true
-    state.attributes = attributes
-    state.stateForCell = createInitialStateInsideCell()
+    state.c = createInitialStateInCell()
+    state.c.attributes = attributes
   } else if (state.c) {
-    onOpenTagInsideCell(tagName, attributes, state.stateForCell)
+    onOpenTagInCell(tagName, attributes, state.c)
   }
 }
 
-export function onCloseTag(tagName, state) {
+export function onCloseTagInSheetData(tagName, state) {
   if (tagName === 'c') {
     state.cells.push({
-      attributes: state.attributes,
-      value: state.stateForCell.value,
-      inlineStringValue: state.stateForCell.inlineStringValue
+      attributes: state.c.attributes,
+      value: state.c.value,
+      inlineString: state.c.inlineString
     })
-    state.c = false
-    state.attributes = undefined
-    state.stateForCell = undefined
+    state.c = undefined
   } else if (state.c) {
-    onCloseTagInsideCell(tagName, state.stateForCell)
+    onCloseTagInCell(tagName, state.c)
   }
 }
 
-export function onText(text, state) {
+export function onTextInSheetData(text, state) {
   if (state.c) {
-    onTextInsideCell(text, state.stateForCell)
+    onTextInCell(text, state.c)
   }
 }
 

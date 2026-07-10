@@ -6,6 +6,14 @@ export default function parseXmlStream(xml, {
 	onCloseTag,
 	onText
 }) {
+	// This function was put inside the `parseXmlStream()` function body
+	// in order to prevent it from becoming an "external dependency"
+	// when using `worker-f` package to run this code in a worker.
+	const TAG_NAME_PREFIX = /.+:/
+	function trimXmlnsPrefix(tagName) {
+		return tagName.replace(TAG_NAME_PREFIX, '')
+	}
+
 	return new Promise((resolve, reject) => {
 		let errored = false
 
@@ -24,26 +32,32 @@ export default function parseXmlStream(xml, {
 
 		// got some text. `text` is the string of text.
 		const ontext = (text) => {
-			onText(text, state)
+			if (onText) {
+				onText(text, state)
+			}
 		}
 
 		// opened a tag. `node` has "name" and "attributes"
 		const onopentag = (element, decodeEntities, selfClosing, getContext) => {
-			// * `element.originalName` — The tag name as written in the XML string, retaining the original prefix regardless of the list of pre-configured namespace mappings.
-			// * `element.name` — The tag name with the namespace prefix resolved against the list of pre-configured namespace mappings. I.e. the namespace prefix will potentially be replaced with one from the pre-configured namespace map.
-			onOpenTag(
-				xmlns ? trimXmlnsPrefix(element.originalName) : element.name,
-				element.attrs,
-				state
-			)
+			if (onOpenTag) {
+				// * `element.originalName` — The tag name as written in the XML string, retaining the original prefix regardless of the list of pre-configured namespace mappings.
+				// * `element.name` — The tag name with the namespace prefix resolved against the list of pre-configured namespace mappings. I.e. the namespace prefix will potentially be replaced with one from the pre-configured namespace map.
+				onOpenTag(
+					xmlns ? trimXmlnsPrefix(element.originalName) : element.name,
+					element.attrs,
+					state
+				)
+			}
 		}
 
 		// closed a tag.
 		const onclosetag = (element) => {
-			// * `element.originalName` — The tag name as written in the XML string, retaining the original prefix regardless of the list of pre-configured namespace mappings.
-			// * `element.name` — The tag name with the namespace prefix resolved against the list of pre-configured namespace mappings. I.e. the namespace prefix will potentially be replaced with one from the pre-configured namespace map.
-			const tagName = xmlns ? trimXmlnsPrefix(element.originalName) : element.name
-			onCloseTag(tagName, state)
+			if (onCloseTag) {
+				// * `element.originalName` — The tag name as written in the XML string, retaining the original prefix regardless of the list of pre-configured namespace mappings.
+				// * `element.name` — The tag name with the namespace prefix resolved against the list of pre-configured namespace mappings. I.e. the namespace prefix will potentially be replaced with one from the pre-configured namespace map.
+				const tagName = xmlns ? trimXmlnsPrefix(element.originalName) : element.name
+				onCloseTag(tagName, state)
+			}
 		}
 
 		// `proxy: true` option enables "proxy" mode.
@@ -71,9 +85,4 @@ export default function parseXmlStream(xml, {
 		}
 		resolve(state)
 	})
-}
-
-const TAG_NAME_PREFIX = /.+:/
-function trimXmlnsPrefix(tagName) {
-	return tagName.replace(TAG_NAME_PREFIX, '')
 }

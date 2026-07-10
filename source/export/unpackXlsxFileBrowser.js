@@ -1,6 +1,7 @@
 // Here it uses the "async" version of the unzipper function
-// just because it doesn't seem to be of any significant difference
-// when reading an `.xlsx` file.
+// just because it unzips the files inside an archive in parallel
+// rather than sequentially. It uses web workers for that.
+// Smaller files are still handled synchronously under the hood.
 //
 // It did condict a couple of basic manual tests in a web browser
 // and the results showed that a `1 MB` `.xlsx` file is read in `100 ms`

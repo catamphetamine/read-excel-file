@@ -4,8 +4,8 @@ export default [
 		description: 'should allow control of value trimming'
 	},
 	{
-		name: '1904',
-		description: 'should parse 1904 macOS dates'
+		name: '1904-based-dates',
+		description: 'should parse 1904-based macOS dates'
 	},
 	{
 		name: 'boolean',
@@ -70,5 +70,9 @@ export default [
 	{
 		name: 'xml-namespace',
 		description: 'should correctly parse XML namespaces'
+	},
+	{
+		name: 'invalid-file-structure',
+		description: '`workbook.xml` file is not present in the archive'
 	}
 ]
