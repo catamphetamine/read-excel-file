@@ -1,4 +1,10 @@
-import { Parser } from 'saxen'
+// Starting from version `11.x`, `saxen` dropped CommonJS export.
+// CommonJS compatibility was requested by one of the users of this package:
+// https://gitlab.com/catamphetamine/read-excel-file/-/work_items/115
+// Because of that, `saxen` source code had to be copy-pasted.
+//
+// import { Parser } from 'saxen'
+import Parser from '../saxen/parser.js'
 
 export default function parseXmlStream(xml, {
 	createInitialState,
