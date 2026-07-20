@@ -37,20 +37,28 @@ export default function parseXmlStream(xml, {
 		}
 
 		// got some text. `text` is the string of text.
-		const ontext = (text) => {
+		const ontext = (text, decodeEntities) => {
 			if (onText) {
-				onText(text, state)
+				// `saxen` doesn't decode character references (`&#233;`, `&amp;`, etc) in text:
+				// instead, it provides a `decodeEntities()` function for the consumer to call.
+				onText(decodeEntities(text), state)
 			}
 		}
 
 		// opened a tag. `node` has "name" and "attributes"
 		const onopentag = (element, decodeEntities, selfClosing, getContext) => {
 			if (onOpenTag) {
+				// `saxen` doesn't decode character references (`&#233;`, `&amp;`, etc)
+				// in attribute values either, so decode them here.
+				const attributes = element.attrs
+				for (const name in attributes) {
+					attributes[name] = decodeEntities(attributes[name])
+				}
 				// * `element.originalName` — The tag name as written in the XML string, retaining the original prefix regardless of the list of pre-configured namespace mappings.
 				// * `element.name` — The tag name with the namespace prefix resolved against the list of pre-configured namespace mappings. I.e. the namespace prefix will potentially be replaced with one from the pre-configured namespace map.
 				onOpenTag(
 					xmlns ? trimXmlnsPrefix(element.originalName) : element.name,
-					element.attrs,
+					attributes,
 					state
 				)
 			}

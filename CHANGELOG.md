@@ -1,3 +1,8 @@
+9.3.3 / 20.07.2026
+==================
+
+* Merged a [bugfix](https://gitlab.com/catamphetamine/read-excel-file/-/merge_requests/10) by [Etienne Prothon](https://github.com/EtienneProthon). If fixes a rather critical bug when non-ASCII characters were incorrectly interpreted when reading `.xlsx` files, resulting in gibberish instead of human-readable letters.
+
 9.3.0 / 25.06.2026
 ==================
 

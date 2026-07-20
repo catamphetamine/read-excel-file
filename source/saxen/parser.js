@@ -1,6 +1,6 @@
-export default function Parser_(options) {
+// See `README.md` for more info
 
-return Parser(options);
+export default function Parser_(options) {
 
 // `decode.js` file contents
 
@@ -1216,5 +1216,7 @@ function Parser(options) {
   } /** end parse */
 
 }
+
+return Parser(options);
 
 }
