@@ -93,6 +93,13 @@ export default function parseSheet(content, parseXml, { sharedStrings, styles, e
   }
 
   function onProgress(end) {
+    // A worksheet can contain enough metadata before `<sheetData/>` to span
+    // multiple XML parsing chunks. There are no rows to finalize until the
+    // parser has reached that element.
+    if (!state.sheetData) {
+      return
+    }
+
     // Here, it could look at `state.dimension?` in order to avoid reading unused cells.
     // For example, there could be a sheet with a million rows and a million columns
     // but only the top-left cell in that sheet would be not an empty cell.

@@ -52,6 +52,10 @@ export default [
 		description: 'should read the entire sheet when dimensions aren\'t specified'
 	},
 	{
+		name: 'large-metadata-before-sheet-data',
+		description: 'should read a sheet when its metadata spans multiple XML parsing chunks'
+	},
+	{
 		name: 'read-sheet',
 		description: 'should read a single sheet'
 	},
