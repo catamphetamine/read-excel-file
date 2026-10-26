@@ -20,6 +20,10 @@ export default [
 		description: 'should parse inline strings'
 	},
 	{
+		name: 'escaped-characters',
+		description: 'should decode `_xHHHH_` escape sequences in shared strings and inline strings'
+	},
+	{
 		name: 'made-in-macos-excel-2011',
 		description: 'should read basic file'
 	},

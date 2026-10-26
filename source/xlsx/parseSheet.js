@@ -1,6 +1,7 @@
 import parseCell, { EMPTY_CELL } from './parseCell.js'
 import parseCellAddress from './parseCellAddress.js'
 import InvalidSpreadsheetError from './InvalidSpreadsheetError.js'
+import unescapeXstring from './unescapeXstring.js'
 
 // An empty cell has `null` value.
 const EMPTY_CELL_VALUE = null
@@ -539,6 +540,8 @@ export default function parseSheet(content, parseXml, { sharedStrings, styles, e
       state.vText ||= ''
     } else if (tagName === 'is') {
       state.is = false
+      // Decode `_xHHHH_` escapes after all the `<t/>` chunks of the string have been concatenated.
+      state.inlineString = unescapeXstring(state.inlineString)
     } else if (tagName === 't') {
       state.t = false
     } else if (tagName === 'r') {
