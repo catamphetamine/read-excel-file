@@ -48,8 +48,10 @@ export default function parseSpreadsheetInfo(content, parseXml) {
         // Read `<workbookPr/>` element attributes to detect whether dates are 1900-based or 1904-based.
         // https://support.microsoft.com/en-gb/help/214330/differences-between-the-1900-and-the-1904-date-system-in-excel
         // http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/workbookPr.html
+        // `date1904` is an `xsd:boolean`, so both `"1"` and `"true"` mean `true`.
+        // https://www.w3.org/TR/xmlschema-2/#boolean
         state.workbookPr = {
-          epoch1904: attributes.date1904 === '1'
+          epoch1904: attributes.date1904 === '1' || attributes.date1904 === 'true'
         }
       }
     } else if (tagName === 'sheet') {
