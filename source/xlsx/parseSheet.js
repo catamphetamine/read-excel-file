@@ -12,11 +12,12 @@ const EMPTY_CELL_VALUE = null
  * @param {object} options
  * @returns {Promise<SheetData>}
  */
-export default function parseSheet(content, parseXml, { sharedStrings, styles, epoch1904, options }) {
+export default function parseSheet(content, parseXml, { sharedStrings, styles, epoch1904, dateFormatDetectionCache, options }) {
   const parseCellParameters = [
     sharedStrings,
     styles,
     epoch1904,
+    dateFormatDetectionCache,
     options.dateFormat, // defaultDateFormat
     options.smartDateParser !== false, // dateTemplateParser
     options.parseNumber // parseNumberCustom
@@ -93,9 +94,10 @@ export default function parseSheet(content, parseXml, { sharedStrings, styles, e
   }
 
   function onProgress(end) {
-    // A worksheet can contain enough metadata before `<sheetData/>` to span
-    // multiple XML parsing chunks. There are no rows to finalize until the
-    // parser has reached that element.
+    // A `sheet{id}.xml` file could contain enough metadata before `<sheetData/>` element
+    // to span multiple XML parsing chunks, meaning that `state.sheetData` might be `undefined`
+    // until a few leading chunks of `sheet{id}.xml` file have been parsed.
+    // https://github.com/catamphetamine/read-excel-file/pull/125
     if (!state.sheetData) {
       return
     }

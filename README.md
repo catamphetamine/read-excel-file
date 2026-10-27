@@ -1,11 +1,9 @@
+# read-excel-file
+
 [![npm version](https://img.shields.io/npm/v/read-excel-file.svg?style=flat-square)](https://www.npmjs.com/package/read-excel-file)
 [![npm downloads](https://img.shields.io/npm/dm/read-excel-file.svg?style=flat-square)](https://www.npmjs.com/package/read-excel-file)
 
-# read-excel-file
-
 Read `.xlsx` files in a browser or Node.js.
-
-It also supports parsing spreadsheet rows into JSON objects using a [schema](#schema).
 
 [Demo](https://catamphetamine.gitlab.io/read-excel-file/)
 
@@ -107,23 +105,58 @@ Also check out [`write-excel-file`](https://www.npmjs.com/package/write-excel-fi
 ## Install
 
 ```js
-npm install read-excel-file --save
+npm install read-excel-file
 ```
 
 Alternatively, it could be included on a web page [directly](#cdn) via a `<script/>` tag.
 
-## Use
+## How to Use
 
-If your `.xlsx` file only has a single "sheet", or if you only need to read a single "sheet", or if you don't care what a "sheet" is, use `readSheet()` function.
-
-For example, consider the following `.xlsx` file:
+Suppose there's an `.xlsx` file:
 
 | Name       | Date of Birth | Married | Kids |
 | ---------- | ------------- | ------- | ---- |
 | John Smith | 1/1/1995      | TRUE    | 3    |
 | Kate Brown | 3/1/2010      | FALSE   | 0    |
 
-Here's how to read it using `readSheet()` function:
+That file could be represented as an array of rows, each row being an array of cells — they call it a "2D array":
+
+```js
+[
+  ['Name', 'Date of Birth', 'Married', 'Kids'],
+  ['John Smith', 1995-01-01T00:00:00.000Z, true, 3],
+  ['Kate Brown', 2010-03-01T00:00:00.000Z, false, 0]
+]
+```
+
+Or it could be represented as an array of JSON objects:
+
+```js
+[
+  {
+    name: 'John Smith',
+    dateOfBirth: 1995-01-01T00:00:00.000Z,
+    married: true,
+    kids: 3
+  },
+  {
+    name: 'Kate Brown',
+    dateOfBirth: 2010-03-01T00:00:00.000Z,
+    married: false,
+    kids: 0
+  }
+]
+```
+
+So we could read it both ways.
+
+First, we'll look at the first approach, then the second.
+
+## Read as 2D Array
+
+Let's say you prefer reading an `.xlsx` file as a 2D array.
+
+Here's how to do it using `readSheet()` function:
 
 ```js
 import { readSheet } from 'read-excel-file/node'
@@ -136,13 +169,20 @@ await readSheet(file) ===
 ]
 ```
 
+\* We `import` the function from `read-excel-file/node` because we plan to run it in Node.js. See [all supported environments](#import).
+
 The result is an array of rows. Each row is an array of values — `string`, `number`, `boolean` or `Date`.
 
 <!-- It's same as the default exported function shown above with the only difference that it returns just `data` instead of `[{ name: 'Sheet1', data }]`, so it's just a bit simpler to use. It has an optional second argument — `sheet` — which could be a sheet number (starting from `1`) or a sheet name. By default, it reads the first sheet. -->
 
-It also has an optional second argument — `sheet` — which could be a sheet number (starting from `1`) or a sheet name. By default, it reads the first sheet.
+If an `.xlsx` file has multiple sheets, then you could pass a second argument — `sheet` — which could be a sheet number (starting from `1`) or a sheet name. By default, it always reads the first sheet.
 
-But if you need to read all available "sheets" in a file, use the default exported function:
+If an `.xlsx` file has multiple sheets and you need to read all of them, use the default exported function instead of `readSheet()`.
+
+<details>
+<summary>Example: Reading all sheets.</summary>
+
+######
 
 ```js
 import readExcelFile from 'read-excel-file/node'
@@ -151,33 +191,83 @@ await readExcelFile(file) ===
 [{
   sheet: 'Sheet1',
   data: [
-    ['Name', 'Age'],
-    ['John Smith', 30],
-    ['Kate Brown', 15]
+    ['Name', ...],
+    ['John Smith', ...],
+    ['Kate Brown', ...]
   ]
 }, {
   sheet: 'Sheet2',
   data: ...
 }]
 ```
+</details>
 
+<!--
 The result is a non-empty array of "sheets". Each "sheet" is an object with properties:
 * `sheet` — Sheet name.
   * Example: `"Sheet1"`
 * `data` — Sheet data. An array of rows. Each row is an array of values — `string`, `number`, `boolean` or `Date`.
   * Example: `[ ['Name','Age'], ['John Smith',30], ['Kate Brown',15] ]`
+-->
 
-Also, a very common use case is to read a list of JSON objects from an `.xlsx` file. To do that, pass a [`schema`](#schema) parameter to `readSheet()` function.
+## Read as Objects
+
+Reading an `.xlsx` file as a 2D array is perfectly fine for a machine or an AI agent but not really  convenient for a human. Humans are more comfortable accessing the data in the form of JSON objects with named properties rather than just "raw" 2D arrays.
+
+So let's say that a sheet that you'd like to read has a simple "table" structure:
+* The first row is a "header" row (column titles)
+* The other rows are "data" rows (values for those columns)
+
+Like this:
+
+| Name       | Date of Birth | Married | Kids |
+| ---------- | ------------- | ------- | ---- |
+| John Smith | 1/1/1995      | TRUE    | 3    |
+| Kate Brown | 3/1/2010      | FALSE   | 0    |
+
+Then you just define a "schema" for the desired JSON object, i.e. you outline the shape of the desired object, telling it to pull each property from a specific column. Like this:
+
+```js
+const schema = {
+  name: { column: 'Name' },
+  dateOfBirth: { column: 'Date of Birth' },
+  married: { column: 'Married' },
+  kids: { column: 'Kids' }
+}
+```
+
+And then pass that `schema` to the <!-- [aforementioned](#read-as-2d-array) --> `readSheet()` function, making it return the data as JSON objects:
+
+```js
+const { objects } = await readSheet(file, { schema })
+```
+
+```js
+objects === [
+  {
+    name: 'John Smith',
+    dateOfBirth: 1995-01-01T00:00:00.000Z,
+    married: true,
+    kids: 3
+  },
+  {
+    name: 'Kate Brown',
+    dateOfBirth: 2010-03-01T00:00:00.000Z,
+    married: false,
+    kids: 0
+  }
+]
+```
+
+There're also a few more "advanced" features to `schema` such as: support for nested objects, required property validation, value type validation, etc. [Read more](#schema) if you're interested.
 
 ## Import
 
 This package provides a separate `import` path for each different environment, as described below.
 
-### Browser
+### `read-excel-file/browser`
 
-`read-excel-file/browser`
-
-It can read from a [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File), a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) or an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer).
+Reads an `.xlsx` file in a browser from a [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File), a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) or an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer).
 
 Example 1: Read from a selected file.
 
@@ -194,8 +284,6 @@ input.addEventListener('change', () => {
   const data = await readSheet(event.target.files[0])
 })
 ```
-
-<!-- Note: Internet Explorer 11 is an old browser that doesn't support [`Promise`](https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Promise), and hence requires a [polyfill](https://www.npmjs.com/package/promise-polyfill). -->
 
 Example 2: Read from a URL.
 
@@ -217,11 +305,9 @@ const data = await readSheet(blob)
 </details>
 -->
 
-### Node.js
+### `read-excel-file/node`
 
-`read-excel-file/node`
-
-It can read from a file path, a [`Stream`](https://nodejs.org/api/stream.html), a [`Buffer`](https://nodejs.org/api/buffer.html) or a [`Blob`](https://developer.mozilla.org/docs/Web/API/Blob).
+Reads an `.xlsx` file in Node.js from a file path, a [`Stream`](https://nodejs.org/api/stream.html), a [`Buffer`](https://nodejs.org/api/buffer.html) or a [`Blob`](https://developer.mozilla.org/docs/Web/API/Blob).
 
 Example 1: Read from a file path.
 
@@ -239,11 +325,9 @@ import { readSheet } from 'read-excel-file/node'
 const data = await readSheet(fs.createReadStream('/path/to/file'))
 ```
 
-### Universal
+### `read-excel-file/universal`
 
-`read-excel-file/universal`
-
-This one works both in a web browser and Node.js. It can only read from a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) or an [`ArrayBuffer`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer), which could be a bit less convenient for general use.
+Reads an `.xlsx` file in any supported environment, such as a browser or Node.js, but comes with a limitation: it can only read from a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) or an [`ArrayBuffer`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer), which could be a bit less convenient for general use.
 
 ```js
 import { readSheet } from 'read-excel-file/universal'
@@ -251,17 +335,15 @@ import { readSheet } from 'read-excel-file/universal'
 const data = await readSheet(blob)
 ```
 
-Note: the `/universal` export can't use [workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) so it's inherently "single-threaded" and "blocking".
-
 ## Worker
 
 <!-- XML parser currently doesn't use "workers" and hence it "blocks" the main thread. -->
 
 <!-- Previous inaccurate statement: All exports of `read-excel-file` already use a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) under the hood when reading `.xlsx` file contents. This is in order to avoid freezing the UI when reading large files. So using an additional Web Worker on top of that isn't really necessary. Still, for those who require it, this example shows how a user chooses a file and the web application reads it in a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) using `read-excel-file/web-worker` import path. -->
 
-When reading extremely large `.xlsx` files — say, starting from a [few megabytes](#performance) in size — there's a slight inconvenience of freezing the application during the "XML parsing" phase or "[schema parsing](#schema)" phase while reading the file.
+When reading extremely large `.xlsx` files — say, starting from a [few megabytes](#performance) in size — there's a slight inconvenience of freezing the application while parsing the `.xlsx` file contents.
 
-To work around this minor issue in a web browser, one could read `.xlsx` files in a separate [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) using `read-excel-file/web-worker` export.
+If your app is designed to deal with such huge files on a regular basis, and the user interface must always stay responsive, then I'd suggest reading `.xlsx` files in a separate [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) using `read-excel-file/web-worker` export.
 
 <details>
 <summary>Example: Read a file using <code>read-excel-file/web-worker</code> in a Web Worker in a browser.</summary>
@@ -353,7 +435,7 @@ parentPort.on('message', async (file) => {
 
 ## Strings
 
-By default, it automatically trims all string values. To disable this behavior, pass `trim: false` option.
+By default, text cell values will be trimmed. To prevent that, pass `trim: false` option.
 
 ```js
 readExcelFile(file, { trim: false })
@@ -361,11 +443,21 @@ readExcelFile(file, { trim: false })
 
 ## Dates
 
+`.xlsx` file format has no type for dates. It simply stores dates as regular numbers, and then assigns a date-specific formatting template to those numbers. So telling a number from a date is not always a trivial task, but so far it seems to work correctly.
+
+<!-- So any `.xlsx` file reader, including this one, has to simply guess if it's a number or a date by analyzing the template. So far, this package seems to guess correctly. -->
+
+<!-- Back in late 2006, when `.xlsx` file format first debuted with Microsoft Office 2007, it had no dedicated "date" type (not until late 2008), so the "date" type was rushed out as just a number with a date-specific formatting style. I guess that it simply copied the way its predecessor — the `.xls` file format — encoded dates. -->
+
+<!-- Now, 20 years later, we're in 2026 and everyone still uses the numeric date format. And the software still has to perform the guesswork to tell if it's a number or a date. -->
+
+<!--
 `.xlsx` file format originally had no dedicated "date" type, so dates are in almost all cases stored simply as numbers, equal to the count of days since `01/01/1900` (with a few [quirks](https://www.reddit.com/r/AskStatistics/comments/7uk40z/excel_calculates_dates_wrong_so_please_be_careful/)). To correctly interpret such numbers as dates, each date cell in an `.xlsx` file specifies a certain ["format"](https://xlsxwriter.readthedocs.io/format.html#format-set-num-format) — for example, `"d mmm yyyy"` — that instructs a spreadsheet viewer application to interpret the numeric value in the cell as a date rather than a number, and display it using the specified format.
 
 Being no different from a generic spreadsheet viewer application, this package follows the same practice: it attempts to guess whether a given cell value is a date or a number by looking at the cell's "format" — if the "format" is one of the known [standard date formats](https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.numberingformat?view=openxml-2.8.1) then the cell value is interpreted as a date rather than a number. So usually there's no need to configure anything and it usually "just works" out-of-the-box.
 
 Although there's still a possibility for an `.xlsx` file to specify a totally-custom non-standard date format. In such case, a developer could pass a `dateFormat` parameter to tell this package to parse cells having that specific "format" as date ones rather than numeric ones: `readExcelFile(file, { dateFormat: 'mm/dd/yyyy' })`.
+-->
 
 ## Numbers
 
@@ -376,17 +468,17 @@ When reading an `.xlsx` file, any numeric values are parsed from a string to a j
 
 ######
 
-"So aren't javascript numbers already 100% precise?", you ask. Here're some rather contrived examples:
+"So aren't javascript numbers already 100% precise?", you ask. Here're some rather contrived examples when they aren't:
 
-* `1.0000000000000001` becomes `1`
-* `88259496234518.57` becomes `88259496234518.56`
-* `99999999999999999999` becomes `100000000000000000000`
+* `1.0000000000000001` will be rounded to `1`
+* `88259496234518.57` will be rounded to `88259496234518.56`
+* `99999999999999999999` will be rounded to `100000000000000000000`
 
 You see, javascript numbers inherently come with a limited [floating-point precision](https://www.youtube.com/watch?v=2gIxbTn7GSc), which is apparently not enough in the examples shown above.
 
 So what can one do then? For values that you know absolutely need to be 100% precise, use a custom implementation of "decimal" data type such as [`decimal.js`](https://www.npmjs.com/package/decimal.js). Specifically, pass a custom `parseNumber(string)` function as an option when reading an `.xlsx` file, and it will parse any number from string exactly the way you tell it.
 
-Example 1: Parse any numbers as "decimals", exactly as they are specified in the `.xlsx` file.
+Example 1: Parse any numbers as "decimals", i.e. exactly as they are written in the `.xlsx` file.
 
 ```js
 import Decimal from 'decimal.js'
@@ -409,11 +501,11 @@ readExcelFile(file, {
 
 ## Formulas
 
-When reading cells that use formulas to calculate their value, it doesn't really calculate the formula. Instead, it "cheats" by returning the value that is already pre-computed by the spreadsheet editor application. And that works for everyone.
+When reading cells that use formulas to calculate their value, it doesn't really evaluate the formula. Instead, it "cheats" by returning the value that is already pre-computed by the spreadsheet editor application. And because this pre-computed value always exists, it just works.
 
-Although I could hypothetically imagine a situation when a file is created not by a spreadsheet editor application, but rather by some hand-made script that doesn't bother pre-computing formulas, which is totally allowed by the specification, in which case such cells will simply be interpreted as empty ones.
+Although I could hypothetically imagine a situation when a file is created not by a spreadsheet editor application, but rather by some hand-made script that doesn't respect this convention and doesn't bother pre-computing formulas, which is totally allowed by the specification, in which case it will simply read such cells as empty ones.
 
-Also, sometimes formulas can't be precomputed by a spreadsheet editor application due to an error, such as invalid syntax, or division by zero, or trying to add text to a number, or referenced row or column not found, etc. Such errors will be silently ignored and the cells will be interpreted as empty ones.
+Finally, if a formula can't be evaluated due to an error, such as invalid syntax, or division by zero, or trying to add text to a number, or referenced row or column not found, etc, then such error will be ignored and the cell will be read as empty.
 
 ## Errors
 
@@ -443,145 +535,153 @@ Will be thrown if a requested sheet doesn't exist.
 * `sheet` — Sheet name or sheet number
 * `sheets` — Available sheet names
 
-## Performance
-
-Here're the results of reading [sample `.xlsx` files](https://examplefile.com/document/xlsx) of different size:
-
-|File Size| Browser  | Node.js  |
-|---------|----------|----------|
-|   1 MB  | 0.1 sec. | 0.1 sec. |
-|  10 MB  | 0.5 sec. | 0.5 sec. |
-|  50 MB  | 2.5 sec. | 2.5 sec. |
-
-To run the benchmark in Node.js, clone the repository, download sample `.xlsx` files to `./test/benchmark` folder, run `npm install` and then `npm run test:benchmark:node`.
-
-To run the benchmark in a web browser, open the demo page, open the console and choose an `.xlsx` file.
-
-<details>
-<summary>Performance tips</summary>
-
-######
-
-Reading an `.xlsx` file is performed in 3 steps:
-
-* Step 1. Unzip an `.xlsx` file into a tree of `.xml` files.
-* Step 2. Parse sheet data from those `.xml` files.
-* Step 3. If `schema` option was passed, use it to transform sheet data rows into JSON objects.
-
-When running in Node.js, the unzip step is outsourced to [`unzipper-esm`](https://www.npmjs.com/package/unzipper-esm) and is "asynchronous" — it uses Node.js "native" `zlib` module which unzips data in a separate thread.
-
-When running in a web browser, the unzip step is outsourced to [fflate](https://npmjs.com/package/fflate) which does it "asynchronously" only for `.xlsx` files larger than `512 KB` (the threshold is [hardcoded](https://github.com/101arrowz/fflate/blob/dcb3714a6c25db3a2748641019c5277413d09714/src/index.ts#L3797-L3804) in `fflate` code).
-
-The XML parsing step is written using [saxen](https://www.npmjs.com/package/saxen) which is a [SAX parser](https://en.wikipedia.org/wiki/Simple_API_for_XML). This step is "synchronous".
-
-The last step of converting sheet rows to JSON objects is only performed when `schema` option is passed. It is also "synchronous".
-</details>
-
 ## Schema
 
-Oftentimes, the task is not just to read the "raw" spreadsheet data but also to convert each row of that data to a JSON object having a certain structure. Because it's such a common task, this package provides an easy way to do that — just pass a `schema` parameter when calling `readSheet()` function and it will automatically parse sheet data into an array of JSON objects according to that `schema` (which basically describes all properties of the object and which column should be mapped to which property).
+### Mapping
 
-The only requirement is that the sheet data should adhere to a simple structure: the first row should be a header row with just column titles, and each following row should specify the values for those columns.
+In its most basic form, a `schema` just maps column titles to property names.
 
-| Name       | Date of Birth | Married | Kids |
-| ---------- | ------------- | ------- | ---- |
-| John Smith | 1/1/1995      | TRUE    | 3    |
-| Kate Brown | 3/1/2010      | FALSE   | 0    |
+For example, to read a file `dogs.xlsx`:
+
+| Name | Breed           | Gender | Owner Name | Owner Phone  | Owner Address    |
+| ---- | --------------- | ------ | ---------- | ------------ | ---------------- |
+| Rex  | German Shepherd | M      | John Smith | +12133734253 | East 26th Street |
+| Luna | Siberian Husky  | F      | Kate Brown | +19177568000 | West 42nd Street |
+
+One could use the following `schema`:
 
 ```js
-import { readSheet } from 'read-excel-file/node'
-
 const schema = {
-  name: {
-    column: 'Name',
-    type: String
-  },
-  dateOfBirth: {
-    column: 'Date of Birth',
-    type: Date
-  },
-  married: {
-    column: 'Married',
-    type: Boolean
-  },
-  kids: {
-    column: 'Kids',
-    type: Number
-  }
-}
-
-const { objects, errors } = await readSheet(file, { schema })
-
-if (errors) {
-  console.error(errors)
-} else {
-  objects === [
-    {
-      name: 'John Smith',
-      dateOfBirth: 1995-01-01T00:00:00.000Z,
-      married: true,
-      kids: 3
-    },
-    {
-      name: 'Kate Brown',
-      dateOfBirth: 2010-03-01T00:00:00.000Z,
-      married: false,
-      kids: 0
+  name: { column: 'Name' },
+  breed: { column: 'Breed' },
+  gender: { column: 'Gender' },
+  // the owner's info will be put in a nested object, with its own schema
+  owner: {
+    schema: {
+      name: { column: 'Owner Name' },
+      phone: { column: 'Owner Phone' },
+      address: { column: 'Owner Address' }
     }
-  ]
+  }
 }
 ```
 
-The result is `{ objects, errors }`
+Just pass it to `readSheet()` function:
+
+```js
+const { objects } = await readSheet('dogs.xlsx', { schema })
+```
+
+And it will return the following `objects`:
+
+```js
+objects === [
+
+  // objects[0]:
+  {
+    name: 'Rex',
+    breed: 'German Shepherd',
+    gender: 'M',
+
+    owner: {
+      name: 'John Smith',
+      phone: '+12133734253',
+      address: 'East 26th Street'
+    }
+  },
+
+  // objects[1]:
+  {
+    name: 'Luna',
+    breed: 'Siberian Husky',
+    gender: 'F',
+
+    owner: {
+      name: 'Kate Brown',
+      phone: '+19177568000',
+      address: 'West 42nd Street'
+    }
+  }
+
+]
+```
+
+For a given column, the mapping algorithm is:
+
+* If a cell is not empty, cell value becomes the propery value.
+
+* If a cell is empty, the property is set to `null`.
+  * This can be overridden by passing `propertyValueWhenCellIsEmpty` option, which is `null` by default.
+
+* If the column is missing, the property is set to `undefined`.
+  * This can be overridden by passing `propertyValueWhenColumnIsMissing` option, which is `undefined` by default.
+
+For any object:
+
+* If all properties of such object are `undefined` or `null` then the object itself will be set to `null`.
+  * This can be overridden by passing `transformEmptyObject(object, { path? })` function as an option, which by default always returns `null`.
+  * This rule applies both to the top-level object, and any of its nested objects.
+
+### Validation
+
+Aside from just mapping, there're also "advanced" features of `schema` such as data validation.
+
+In that case, `readSheet()` returns an object of shape `{ objects, errors }`:
 * If there were any errors, `objects` will be `undefined` and `errors` will be a list of errors.
 * If there were no errors, `errors` will be `undefined` and `objects` will be a list of objects.
 
-`schema` should describe the structure of the resulting JSON objects. A slightly more complex example of a `schema` is provided at the end of this section.
+For example, suppose that we'd like to validate that all cell values have the correct type, and all required cells are filled in. All these validation rules will be specified in the `schema`:
 
-Specifically, a `schema` should be an object having the same keys as a resulting JSON object, with values being nested objects having the following properties:
+```js
+const schema = {
+  name: {
+    column: 'Name',
+    type: String, // must be a string
+    required: true // is required
+  },
+  gender: {
+    column: 'Gender',
+    oneOf: ['M', 'F'] // must be "M" or "F"
+  },
+  dateOfBirth: {
+    column: 'Date of Birth',
+    type: Date // must be a date
+  }
+}
+```
 
-* `column` — The title of the column to read the value from.
-  * If the column does not exist, the property value will be `undefined`.
-    * This can be overridden by passing `propertyValueWhenColumnIsMissing` option. Is `undefined` by default.
-  * If the column exists but is empty, the property value will be `null`.
-    * This can be overridden by passing `propertyValueWhenCellIsEmpty` option. Is `null` by default.
+The following properties are supported:
+
+* `column` — Column title.
+* `type` — (optional) The expected type of the value.
+  * Basic types:
+    * `String`
+    * `Number`
+    * `Boolean`
+    * `Date`
+  * "Utility" types that're exported from this package:
+    * `Integer`
+    * `Email`
+    * `URL`
+  * Custom type:
+    * A function that takes a cell value and returns any kind of a parsed value.
+    * Returning `undefined` will have same effect as returning `null`.
+    * It should throw an error if it finds the value invalid.
+* `oneOf` — (optional) A list of possible values.
+* `validate(value)` — (optional) A function that will be called on the parsed value, when the value is present. It should throw if it finds the value invalid.
 * `required` — (optional) Is the value required? Could be one of:
   * `true` — The column must exist and the cell value must not be empty.
   * `false` — The column can be missing and the cell value can be empty.
-  * `(object) => boolean` — A function returning `true` or `false` depending on the other properties.
+  * `(object) => boolean` — Could be required or not, depending on the other properties of the object. Must be resolved at runtime.
   <!-- * To skip `required` validation for a column that is missing from a spreadsheet, one could pass `shouldSkipRequiredValidationWhenColumnIsMissing` option. It should be a function: `(columnTitle, { object }) => boolean`. By default it always returns `false` meaning that when `columnTitle` is missing from the spreadsheet, it will not skip performing the `required` validation for it. -->
-* `validate(value)` — (optional) Validates the value. Is only called for non-empty cells. If the value is invalid, this function should throw an error.
-* `schema` — (optional) If the value is going to be a nested object, `schema` should describe that nested object.
-  * If when parsing such nested object, all of its properties are parsed as `undefined` or `null` then the nested object itself will be set to `null`.
-    * This can be overridden by passing `transformEmptyObject(object, { path? })` function as an option. By default, it returns `null`.
-    * This applies both to nested objects and to the top-level object itself.
-  * A nested object could be marked as `required: false` — this will allow it to be completely absent from the spreadsheet, even if some of its properties are defined with `required: true` flag. But if at least one property of such object is found in the spreadsheet then the `required: false` flag on the object has no longer any effect and any `required: true` properties of the object are now required to exist.
-    * Any other value except `false` is not allowed.
-* `type` — (optional) If the value is not going to be a nested object, the expected type of the value could be specified in the `type` property, and then it will parse/validate the value according to that type.
-  * Valid `type`s:
-    * Standard types:
-      * `String`
-      * `Number`
-      * `Boolean`
-      * `Date`
-    * One of the "utility" types that're exported from this package:
-      * `Integer`
-      * `Email`
-      * `URL`
-    * Custom type:
-      * A function that receives a cell value and returns any kind of a parsed value. Returning `undefined` will have same effect as returning `null`. If the value is invalid, it should throw an error.
-  * If the cell value is comprised of comma-separated values (example: `"a, b, c"`) and if it should be parsed as an array of such values, then the property `type` could be specified as an array — `type: [elementType]` — where `elementType` could be any valid `type` described above. For example, if a property is defined as `{ type: [String] }` and the cell value is `"a, b, c"` then the property value will be parsed as `["a", "b", "c"]`.
-    * If the cell is empty, or if every element of the parsed array is `null` or `undefined`, then the property value itself will be set to `null`.
-      * This can be overridden by passing `transformEmptyArray(array, { path })` function as an option. By default, it returns `null`.
-    * The separator could be specified by passing `arrayValueSeparator` option. By default, it's `","`.
-    * The separated parts of a cell value will be trimmed.
+<!-- * `validate(value)` — (optional) Validates the value. Is only called for non-empty cells. If the value is invalid, this function should throw an error. -->
 
-If there're any errors during the conversion process, the `errors` property returned from the function will be a non-empty array (by default, it's an empty array). Each `error` object has properties:
+If it finds any errors when validating the data, the `errors` property returned from the function will be a non-empty array, with each `error` having properties:
 
-* `error` (string) — Error code. Examples: `"required"`, `"invalid"`.
-  * If a custom `validate()` function is defined and it throws a `new Error(message)` then the `error` property will be the same as the `message` argument.
-  * If a custom `type()` function is defined and it throws a `new Error(message)` then the `error` property will be the same as the `message` argument.
-* `reason?: string` — An optional secondary error code providing more details about the error. I.e. "`error.error` happened specifically because of `error.reason`". Currently, it could only be returned for the standard `type`s.
+* `error` (string) — Error code. Possible values (for a non-custom type): `"required"`, `"invalid"`.
+  * If the column uses a custom `type`, then the `error` will be same as the `message` of the error that was thrown by the `type`.
+  * If the column uses a custom `validate` function, then the `error` will be same as the `message` of the error that was thrown by the `validate` function.
+* `reason` (string) — An optional secondary error code that provides some more details about the error. I.e. "`error.error` happened specifically because of `error.reason`". Currently, it could only be returned from non-custom `type`s.
   * Example: `{ error: "invalid", reason: "not_a_number" }` for a `type: Number` property means that "the cell value is _invalid_ **because** it's _not a number_".
 * `row` (number) — Data row number, starting from `1`.
   * `row: 1` means "first row of data", etc.
@@ -589,126 +689,11 @@ If there're any errors during the conversion process, the `errors` property retu
 * `column` (string) — Column title.
 * `columnIndex` (number) — Column index.
   * `columnIndex: 0` means "first column", etc.
-* `value` — Cell value, when present.
+* `value` — Cell value.
 * `type` — The `type` of the property, as defined in the `schema`.
 
-Example:
-
-```js
-// An example .xlsx document:
-// --------------------------------------------------------------------------------------------------------
-// | START DATE | SEATS |   STATUS  |    CONTACT     | COURSE TITLE  | COURSE CATEGORY   | COURSE IS FREE |
-// --------------------------------------------------------------------------------------------------------
-// | 03/24/2018 |   10  | SCHEDULED | (123) 456-7890 | Basic Algebra | Math, Arithmetic  |     TRUE       |
-// --------------------------------------------------------------------------------------------------------
-
-const schema = {
-  startDate: {
-    column: 'START DATE',
-    type: Date
-  },
-  seats: {
-    column: 'SEATS',
-    type: Number,
-    required: true
-  },
-  status: {
-    column: 'STATUS',
-    type: String,
-    // An example of using `oneOf`
-    oneOf: [
-      'SCHEDULED',
-      'STARTED',
-      'FINISHED'
-    ]
-  },
-  contact: {
-    column: 'CONTACT',
-    required: true,
-    // An example of using a custom `type`
-    type: PhoneNumber
-  },
-  // Nested object example
-  course: {
-    // A nested object could be declared as completely optional by specifying `required: false`.
-    // In that case, when all of its properties are missing from the input data, it wouldn't throw any error
-    // regardless of whether some of its properties are declared as `required: true` or not.
-    required: false,
-    schema: {
-      title: {
-        column: 'COURSE TITLE',
-        type: String,
-        // When course data is present, the course title must be specified.
-        required: true
-      },
-      categories: {
-        column: 'COURSE CATEGORY',
-        // An example of parsing comma-separated values.
-        type: [String]
-      },
-      isFree: {
-        column: 'COURSE IS FREE',
-        type: Boolean
-      }
-    }
-  }
-}
-
-// If this code was written in TypeScript, `schema` would've been declared as:
-// const schema: Schema<Object, ColumnTitle> = { ... }
-
-// Read `data` from an `.xlsx` file and parse it using a `schema`.
-const { objects, errors } = await readSheet(file, { schema })
-
-// There have been no errors when parsing the sheet data, so `errors` is `undefined`.
-// Should there have been any errors when parsing the sheet data, `errors` would've been
-// an array of items having shape: `{ row, column, error, reason?, value?, type? }`.
-errors === undefined
-
-// There's one data row in the `.xlsx` file.
-objects.length === 1
-
-// The parsed data row.
-objects[0] === {
-  startDate: new Date(Date.UTC(2018, 3 - 1, 24)),
-  seats: 10,
-  status: 'SCHEDULED',
-  contact: '+11234567890',
-  course: {
-    title: 'Basic Algebra',
-    categories: ['Math', 'Arithmetic']
-    isFree: true
-  }
-}
-
-// An example of a custom `type` parser function.
-// It will parse the cell value when it's not empty.
-function PhoneNumber(value) {
-  const number = parsePhoneNumber(value)
-  if (!number) {
-    throw new Error('invalid')
-  }
-  return number
-}
-```
-
-Also, for convenience, this package exports the same feature as a separate function — `parseSheetData(sheetData, schema)`.
-
-```js
-import { readSheet, parseSheetData } from 'read-excel-file/node'
-
-const schema = { ... }
-const sheetData = await readSheet(file)
-const { objects, errors } = parseSheetData(sheetData, schema)
-if (errors) {
-  console.error(errors)
-} else {
-  console.log(objects)
-}
-```
-
 <details>
-<summary>An example of defining a <strong>custom <code>type</code></strong> in <strong>TypeScript</strong></summary>
+<summary>TypeScript example</summary>
 
 #####
 
@@ -784,62 +769,155 @@ if (errors) {
 ```
 </details>
 
-<!-- A schema entry for a column may also define an optional `validate(value)` function for validating the parsed value: in that case, it must `throw` an `Error` if the `value` is invalid. The `validate(value)` function is only called when `value` is not empty (not `null` / `undefined`). -->
+### Validation of Nested Objects
 
-<details>
-<summary>An example of a <strong>React component to output <code>errors</code></strong></summary>
+A nested object can be marked as `required: false`. This will allow it to be absent from the sheet, even if some of its properties are defined as `required: true`.
 
-#####
+For example, a `schema` could define an optional `secondOwner` nested object using `required: false` flag. If there's no second owner info, that's ok. But if there is, then the second owner's name must be specified, which is expressed by adding `required: true` flag on that property. This will guard against the cases when, for example, the second owner's `phone` is filled in their `name` is left blank — in such case it will throw an error.
 
 ```js
-function ErrorsList({ errors }) {
-  return (
-    <ul>
-      {errors.map((error, i) => (
-        <li key={i}>
-          <ErrorItem error={error}>
-        </li>
-      ))}
-    </ul>
-  )
-}
+const schema = {
+  name: { column: 'Name', type: String, required: true },
+  breed: { column: 'Breed', type: String },
 
-function ErrorItem({ error }) {
-  const {
-    error: errorMessage,
-    reason,
-    row,
-    column,
-    columnIndex,
-    value,
-    type
-  } = error
+  owner: {
+    schema: {
+      name: { column: 'Owner Name', type: String, required: true },
+      phone: { column: 'Owner Phone', type: String }
+    }
+  },
 
-  // Error summary.
-  return (
-    <div>
-      <code>"{errorMessage}"</code>
-      {reason && ' '}
-      {reason && <code>("{reason}")</code>}
-      {' for value '}
-      <code>{stringifyValue(value)}</code>
-      {' in column '}
-      <code>"{column}"</code>
-      {' in data row '}
-      <code>{row}</code>
-      {' of the spreadsheet'}
-    </div>
-  )
-}
-
-function stringifyValue(value) {
-  // Wrap strings in quotes.
-  if (typeof value === 'string') {
-    return '"' + value + '"'
+  secondOwner: {
+    required: false,
+    schema: {
+      name: { column: 'Second Owner Name', type: String, required: true },
+      phone: { column: 'Second Owner Phone', type: String }
+    }
   }
-  return String(value)
 }
 ```
+
+While a nested object can be defined as `required: false`, it can't be defined as `required: true` because it wouldn't really make sense — just mark the relevant properties of the nested object as `required: true` and that will make the nested object itself required as well.
+
+### Parsing Comma-Separated Values
+
+If some column includes comma-separated values — such as `"a, b, c"` — then you could specify the `type` of the column as an array, and it will first split the value into substrings, and then parse each substring using the specified type.
+
+For example, if a property is defined as `{ type: [String] }` and the cell value is `"a, b, c"` then the property value will become `["a", "b", "c"]`.
+
+Tips:
+
+* If a cell is empty, or if every element of the parsed array is `null` or `undefined`, then the property value itself will be set to `null`.
+  * This can be overridden by passing `transformEmptyArray(array, { path })` function as an option. By default, it returns `null`.
+* The separator could be specified by passing `arrayValueSeparator` option. By default, it's `","`.
+* The separated parts will be trimmed.
+
+### Advanced Validation
+
+This package adheres to the [Unix-way](https://en.wikipedia.org/wiki/Unix_philosophy) philosophy in that it intentionally focuses on a single task — reading an `.xlsx` file — and doesn't wander too far. That's why it only includes the basic validation features, leaving the rest to specialized packages — such as [zod](https://npmjs.com/package/zod) — without leaning toward any particular one.
+
+For example, one could first use `read-excel-file` with a `schema` to read the contents of an `.xlsx` file into an array of JSON objects, and then pass those JSON objects to `zod` for data validation.
+
+<details>
+<summary>Example: using <code>read-excel-file</code> with <code>zod</code></summary>
+
+######
+
+```js
+import { readSheet } from 'read-excel-file'
+import * as z from 'zod'
+
+// `read-excel-file` mapping schema
+const schema = {
+  name: 'NAME',
+  age: 'AGE'
+}
+
+// `zod` schema, which repeats `read-excel-file` mapping schema
+const Person = z.object({
+  name: z.string(),
+  age: z.number()
+})
+
+// Read the contents of an `.xlsx` file into an array of JSON objects
+const { objects, errors } = await readSheet('persons.xlsx', { schema })
+
+// If there were any errors while reading JSON objects from the `.xlsx` file
+if (errors) {
+  // Report just the first error (for simplicity)
+  const { code, row, column } = errors[0]
+  throw new Error(`Invalid value. Row ${row}. Column "${column}". Code: "${code}"`)
+}
+
+// Validate the JSON objects using `zod` schema
+let row = 1
+for (const object of objects) {
+  try {
+    Person.parse(object)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      // Report just the first error (for simplicity)
+      const { code, path } = error.issues[0]
+      if (column) {
+        throw new Error(`Invalid value. Row ${row}. Property "${path.join('.')}". Code: "${code}"`)
+      }
+    }
+    throw error
+  }
+  row++
+}
+```
+</details>
+
+### Standalone API
+
+For convenience, this package exports the `schema` transformation feature as a separate function called `parseSheetData(sheetData, schema)`.
+
+```js
+import { readSheet, parseSheetData } from 'read-excel-file/node'
+
+const schema = { ... }
+const sheetData = await readSheet(file)
+const { objects, errors } = parseSheetData(sheetData, schema)
+if (errors) {
+  console.error(errors)
+} else {
+  console.log(objects)
+}
+```
+
+## Performance
+
+Here're the results of reading [sample `.xlsx` files](https://examplefile.com/document/xlsx) of different size:
+
+|File Size| Browser  | Node.js  |
+|---------|----------|----------|
+|   1 MB  | 0.1 sec. | 0.1 sec. |
+|  10 MB  | 0.5 sec. | 0.5 sec. |
+|  50 MB  | 2.5 sec. | 2.5 sec. |
+
+To run the benchmark in Node.js, clone the repository, download any sample `.xlsx` files to `./test/benchmark` folder, run `npm install` and then `npm run test:benchmark:node`.
+
+To run the benchmark in a web browser, open the demo page, open the console and choose an `.xlsx` file.
+
+<details>
+<summary>Performance tips</summary>
+
+######
+
+Reading an `.xlsx` file is performed in 3 steps:
+
+* Step 1. Unzip an `.xlsx` file into a tree of `.xml` files.
+* Step 2. Parse sheet data from those `.xml` files.
+* Step 3. If `schema` option was passed, use it to transform sheet data rows into JSON objects.
+
+When running in Node.js, the unzip step is outsourced to [`unzipper-esm`](https://www.npmjs.com/package/unzipper-esm) and is "asynchronous" — it uses Node.js "native" `zlib` module which unzips data in a separate thread.
+
+When running in a web browser, the unzip step is outsourced to [fflate](https://npmjs.com/package/fflate) which does it "asynchronously" only for `.xlsx` files larger than `512 KB` (the threshold is [hardcoded](https://github.com/101arrowz/fflate/blob/dcb3714a6c25db3a2748641019c5277413d09714/src/index.ts#L3797-L3804) in `fflate` code).
+
+The XML parsing step is written using [saxen](https://www.npmjs.com/package/saxen) which is a [SAX parser](https://en.wikipedia.org/wiki/Simple_API_for_XML). This step "synchronous".
+
+The last step of transforming sheet data rows to JSON objects is also "synchronous".
 </details>
 
 ## Browser Support
@@ -851,7 +929,7 @@ An `.xlsx` file is just a `.zip` archive with an `.xslx` file extension. This pa
 To include this library directly via a `<script/>` tag on a page, one can use any npm CDN service, e.g. [unpkg.com](https://unpkg.com) or [jsdelivr.com](https://jsdelivr.com)
 
 ```html
-<script src="https://unpkg.com/read-excel-file@9.x/bundle/read-excel-file.min.js"></script>
+<script src="https://unpkg.com/read-excel-file@[version]/bundle/read-excel-file.min.js"></script>
 
 <script>
   var input = document.getElementById('input')

@@ -21,7 +21,7 @@ export default function parseStyles(content, parseXml) {
 
   function createInitialState() {
     return {
-      numberFormats: {},
+      numberFormats: [],
       baseStyles: [],
       // The first `164` elements of the `styles` array are going to be `undefined`
       // because those represent the built-in "default" styles in `.xlsx` specification.
@@ -51,10 +51,27 @@ export default function parseStyles(content, parseXml) {
       // `<numFmts/>` element contains `<numFmt/>` elements.
       // `<numFmt/>` defines a "number format" template.
       // The value of `numFmtId` attribute is a (numeric) ID of this "number format".
-      state.numberFormats[attributes.numFmtId] = {
-        id: Number(attributes.numFmtId),
-        template: attributes.formatCode
+      const numFmtId = Number(attributes.numFmtId)
+      const numberFormat = { id: numFmtId }
+      //
+      // If (and only if) `numFmtId` is >= 164, it is supposed to specify a `formatCode` (a template).
+      //
+      // For some reason, Microsoft Excel 2007 doesn't allow to redefine `numFmtId="99"`
+      // but at the same time does allow redefining `numFmtId="100"`.
+      //
+      // Google AI says:
+      //
+      // "Standard built-in Excel formats use IDs from 0 to 49 (and some regional ones up to 81).
+      //  IDs 164 and above are officially reserved for custom formats, but third-party spreadsheet
+      //  generators or older templates frequently assign custom IDs starting at 100 (or lower)"
+      //
+      // Because of such "non-strict" behavior of Microsoft Excel 2007 regarding overwriting
+      // number formats with ID >= 100, this package mimicks such "non-strict" approach.
+      //
+      if (numFmtId >= 100) {
+        numberFormat.template = attributes.formatCode
       }
+      state.numberFormats[numFmtId] = numberFormat
     } else if (tagName === 'cellStyleXfs') {
       // `<cellStyleXfs/>` contains "base styles" that could be extended by `<cellXfs/>`.
       // These styles don't apply to individual cells directly. They can only be extended.
@@ -93,8 +110,8 @@ export default function parseStyles(content, parseXml) {
     // `numFmtId` in `<cellStyleXfs/>` and `<cellXfs/>` is a numerical ID
     // referencing the cell's "number format". Values from `0` to `163` are built-in formats,
     // while values `164` and above are custom formats defined in the `<numFmts/>` element.
-    const { numFmtId } = attributes
-    if (numFmtId) {
+    if (attributes.numFmtId) {
+      const numFmtId = Number(attributes.numFmtId)
       // Built-in number formats don't have a `<numFmt/>` element in `styles.xml`.
       // https://hexdocs.pm/xlsxir/number_styles.html
       if (numberFormats && numberFormats[numFmtId]) {
@@ -102,7 +119,7 @@ export default function parseStyles(content, parseXml) {
         style.numberFormat = numberFormats[numFmtId]
       } else {
         // Built-in number format.
-        style.numberFormat = { id: Number(numFmtId) }
+        style.numberFormat = { id: numFmtId }
       }
     }
     return style

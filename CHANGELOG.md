@@ -1,4 +1,19 @@
-9.3.9 / 26.08.2026
+9.3.12 / 07.10.2026
+==================
+
+* Merged a [fix](https://github.com/catamphetamine/read-excel-file/pull/125) by [Sam Hindess](https://github.com/sohcah). It fixes a bug when it would throw an error — "Cannot read properties of undefined (reading 'rows')" — when reading an `.xlsx` file in which `<sheetData/>` element is not close the the start of a `sheet{id}.xml` file.
+
+9.3.11 / 07.10.2026
+==================
+
+* Incorrectly-published package
+
+9.3.10 / 10.08.2026
+==================
+
+* Rewrote the detection algorithm for values of type `Date`.
+
+9.3.9 / 10.08.2026
 ==================
 
 * Fixed a [bug](https://github.com/catamphetamine/read-excel-file/issues/124) reported by [Julien Herr](https://github.com/juherr) when it threw an error `readFiles(...).then is not a function` when reading an `.xlsx` file that doesn't use shared strings.

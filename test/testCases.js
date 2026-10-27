@@ -20,6 +20,18 @@ export default [
 		description: 'should parse inline strings'
 	},
 	{
+		name: 'number-formats',
+		description: 'should correctly interpret cells that use various number formats as numbers'
+	},
+	{
+		name: 'date-formats',
+		description: 'should correctly interpret cells that use various date formats as dates'
+	},
+	{
+		name: 'time-formats',
+		description: 'should correctly interpret cells that use various time formats as time'
+	},
+	{
 		name: 'made-in-macos-excel-2011',
 		description: 'should read basic file'
 	},
