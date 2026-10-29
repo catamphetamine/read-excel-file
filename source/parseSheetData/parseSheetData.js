@@ -62,10 +62,10 @@ export default function parseSheetData(data, schema, optionsCustom) {
   checkpoint('end')
 
   if (errors.length > 0) {
-    return { errors }
+    return { errors, columns: data[0] }
   }
 
-  return { objects }
+  return { objects, columns: data[0] || [] }
 }
 
 // This one is only used in tests.
@@ -173,7 +173,7 @@ function parseDataRow(dataRow, schema, columns, options) {
 
   // Return the parsed object.
   return {
-    object: transformValue(value, isEmptyValue, undefined, options)
+    object: transformValue(value, isEmptyValue, false, undefined, options)
   }
 }
 
@@ -192,7 +192,7 @@ function parseObject(row, schema, path, columns, options) {
     if (child.errors) {
       errors = errors.concat(child.errors)
     } else {
-      object[key] = transformValue(child.value, child.isEmptyValue, getPropertyPath(key, path), options)
+      object[key] = transformValue(child.value, child.isEmptyValue, Array.isArray(schema[key].type), getPropertyPath(key, path), options)
       // Potentially unmark the object as "empty".
       if (isEmptyObject && !child.isEmptyValue) {
         isEmptyObject = false
@@ -577,11 +577,11 @@ export function parseSeparatedSubstrings(string, separatorCharacter) {
   return elements
 }
 
-function transformValue(value, isEmptyValue, path, options) {
+function transformValue(value, isEmptyValue, isArrayType, path, options) {
   if (isEmptyValue) {
     if (isObject(value)) {
       return options.transformEmptyObject(value, { path })
-    } else if (Array.isArray(value)) {
+    } else if (isArrayType) {
       return options.transformEmptyArray(value, { path })
     }
   }

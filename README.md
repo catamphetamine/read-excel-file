@@ -335,12 +335,13 @@ import { readSheet } from 'read-excel-file/universal'
 const data = await readSheet(blob)
 ```
 
-## Worker
+<!-- ## Worker -->
 
 <!-- XML parser currently doesn't use "workers" and hence it "blocks" the main thread. -->
 
 <!-- Previous inaccurate statement: All exports of `read-excel-file` already use a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) under the hood when reading `.xlsx` file contents. This is in order to avoid freezing the UI when reading large files. So using an additional Web Worker on top of that isn't really necessary. Still, for those who require it, this example shows how a user chooses a file and the web application reads it in a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) using `read-excel-file/web-worker` import path. -->
 
+<!--
 When reading extremely large `.xlsx` files — say, starting from a [few megabytes](#performance) in size — there's a slight inconvenience of freezing the application while parsing the `.xlsx` file contents.
 
 If your app is designed to deal with such huge files on a regular basis, and the user interface must always stay responsive, then I'd suggest reading `.xlsx` files in a separate [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) using `read-excel-file/web-worker` export.
@@ -385,6 +386,7 @@ onmessage = async (event) => {
 }
 ```
 </details>
+-->
 
 <!--
 ######
@@ -816,7 +818,20 @@ Tips:
 
 This package adheres to the [Unix-way](https://en.wikipedia.org/wiki/Unix_philosophy) philosophy in that it intentionally focuses on a single task — reading an `.xlsx` file — and doesn't wander too far. That's why it only includes the basic validation features, leaving the rest to specialized packages — such as [zod](https://npmjs.com/package/zod) — without leaning toward any particular one.
 
-For example, one could first use `read-excel-file` with a `schema` to read the contents of an `.xlsx` file into an array of JSON objects, and then pass those JSON objects to `zod` for data validation.
+For example, one could first use `read-excel-file` with a `schema` to read the contents of an `.xlsx` file into an array of JSON objects, and then pass those JSON objects to something like `zod` for data validation. Decoupling validation logic from the task of reading an `.xlsx` file not only unties your hands in using advanced validation features but also opens new possibilities, such as reusing the validation logic on the server side for non-`.xlsx` input.
+
+And in order to map those validation errors back to the spreadsheet's rows and columns, one could use the exported function called `getColumnTitleForProperty(path, schema)` which transforms a property `path` into a column title, such as: `path: ["owner", "name"]` → `column: "Owner Name"`. A column title could then be transformed to column index by looking it up in the `columns` array that is returned from `readSheet()` function.
+
+<!--
+  // Tell it to read empty cells as `undefined` rather than `null`.
+  // This synergizes better with `zod` because now optional properties can be
+  // defined as just `.optional()` rather than `.optional().nullable()`.
+  // Or, you could skip these settings, but then you'd have to define any optional
+  // `zod` properties as `.optional().nullable()`, which is just a bit more verbose.
+  propertyValueWhenCellIsEmpty: undefined,
+  transformEmptyObject: () => undefined,
+  transformEmptyArray: () => undefined
+-->
 
 <details>
 <summary>Example: using <code>read-excel-file</code> with <code>zod</code></summary>
@@ -824,44 +839,53 @@ For example, one could first use `read-excel-file` with a `schema` to read the c
 ######
 
 ```js
-import { readSheet } from 'read-excel-file'
+import { readSheet, getColumnTitleForProperty } from 'read-excel-file'
 import * as z from 'zod'
 
 // `read-excel-file` mapping schema
 const schema = {
-  name: 'NAME',
-  age: 'AGE'
+  name: { column: 'NAME' },
+  age: { column: 'AGE' }
 }
 
 // `zod` schema, which repeats `read-excel-file` mapping schema
 const Person = z.object({
   name: z.string(),
-  age: z.number()
+  age: z.number().optional().nullable()
 })
 
 // Read the contents of an `.xlsx` file into an array of JSON objects
-const { objects, errors } = await readSheet('persons.xlsx', { schema })
+const { objects, errors, columns } = await readSheet('persons.xlsx', { schema })
 
 // If there were any errors while reading JSON objects from the `.xlsx` file
 if (errors) {
   // Report just the first error (for simplicity)
-  const { code, row, column } = errors[0]
-  throw new Error(`Invalid value. Row ${row}. Column "${column}". Code: "${code}"`)
+  const { error: code, row, column, columnTitle } = errors[0]
+  reportError(code, row, column, columnTitle)
+}
+
+// Reports an error
+function reportError(code, row, column, columnTitle) {
+  throw new Error(`Row ${row}. Column ${column}. Column Title "${columnTitle}". Code: "${code}"`)
 }
 
 // Validate the JSON objects using `zod` schema
-let row = 1
+let row = 2 // skips the header row
 for (const object of objects) {
   try {
     Person.parse(object)
   } catch (error) {
     if (error instanceof z.ZodError) {
+      // Convert `zod` error to `read-excel-file` error.
       // Report just the first error (for simplicity)
       const { code, path } = error.issues[0]
-      if (column) {
-        throw new Error(`Invalid value. Row ${row}. Property "${path.join('.')}". Code: "${code}"`)
+      const columnTitle = getColumnTitleForProperty(path, schema)
+      if (columnTitle) {
+        const column = columns[columnTitle] + 1 // column number
+        reportError(code, row, column, columnTitle)
       }
     }
+    // For any other errors
     throw error
   }
   row++

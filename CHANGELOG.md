@@ -1,3 +1,13 @@
+9.3.14 / 29.10.2026
+==================
+
+* Added a new exported function — `getColumnTitleForProperty()`. This allows for easier integration with data validation packages like `zod`. See the readme for more details.
+
+* `readSheet(file, { schema })` function now returns an additional property — `columns`, which is an array of column titles. This allows for easier integration with data validation packages like `zod`. See the readme for more details.
+  * Same property is returned from `parseSheetData()` function.
+
+* `/web-worker` export is now marked as deprecated because as of recently it is same as the `/browser` export.
+
 9.3.12 / 07.10.2026
 ==================
 

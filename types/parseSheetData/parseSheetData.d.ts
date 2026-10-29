@@ -1,15 +1,21 @@
 import type { ParseSheetDataError } from './parseSheetDataError.d.js'
 
-interface ParseSheetDataResultSuccess<Object> {
+interface ParseSheetDataResultSuccess<
+	Object,
+	ColumnTitle extends string
+> {
 	objects: Object[];
 	errors: undefined;
+	columns: ColumnTitle[];
 }
 
 interface ParseSheetDataResultError<
-	Error extends ParseSheetDataError
+	Error extends ParseSheetDataError,
+	ColumnTitle extends string
 > {
 	objects: undefined;
 	errors: Error[];
+	columns: ColumnTitle[];
 }
 
 export type ParseSheetDataResult<
@@ -17,8 +23,8 @@ export type ParseSheetDataResult<
 	ColumnTitle extends string,
 	Error extends ParseSheetDataError = ParseSheetDataError<ColumnTitle>
 > =
-	| ParseSheetDataResultSuccess<Object>
-	| ParseSheetDataResultError<Error>
+	| ParseSheetDataResultSuccess<Object, ColumnTitle>
+	| ParseSheetDataResultError<Error, ColumnTitle>
 
 export interface ParseSheetDataOptions {
 	propertyValueWhenColumnIsMissing?: any;
