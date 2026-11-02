@@ -11,48 +11,6 @@ import isPromise from '../utility/isPromise.js'
 import InvalidSpreadsheetError from './InvalidSpreadsheetError.js'
 import SheetNotFoundError from './SheetNotFoundError.js'
 
-// These exports are only used in `worker-f` dependencies:
-// import parseXmlStream '../xml/parseXmlStream.js'
-// import { decodeUtf8String, strFromU8 } from '../utility/convertValuesFromUint8ArraysToStrings.js'
-// import parseExcelDate from './parseExcelDate.js'
-// import parseExcelTimestamp from './parseExcelTimestamp.js'
-// import isDateFormat, { DATE_FORMAT_SPECIFIC_LOCALE_PREFIX, DATE_FORMAT_ALLOW_ANY_OTHER_TEXT_SUFFIX, IS_DATE_FORMAT_CACHE, DATE_TEMPLATE_TOKENS } from './isDateFormat.js'
-// import isDateFormatStyle, { BUILT_IN_DATE_FORMAT_IDS } from './isDateFormatStyle.js'
-// import parseCell, { EMPTY_CELL } from './parseCell.js'
-// import parseCellAddress, { LETTERS } from './parseCellAddress.js'
-// import convertArrayOfCellsTo2dArrayOfValues from './convertArrayOfCellsTo2dArrayOfValues.js'
-// import dropEmptyTrailingRows from './dropEmptyTrailingRows.js'
-// import dropEmptyTrailingColumns from './dropEmptyTrailingColumns.js'
-// import { latestCheckpointTimestamp } from '../utility/checkpoint.js'
-
-// `worker-f` is not used because passing cells data from the worker thread
-// to the main thread was a lengthy-enough operation. For example, when running
-// the benchmark, the output latency was: `10` ms on "1mb.xlsx", `70` ms on "10mb.xlsx"
-// and `500` ms on "50mb.xlsx", meaning that it would still have issues with
-// blocking the main thread when passing the result back to it from the worker thread,
-// negating the effect of using `worker-f` in the first place.
-//
-// As a way to work around the slow "structured clone" algorithm for input/output data,
-// I played around with implementing a `serializeCells()` function that would serialize
-// sheet data into an `ArrayBuffer` in order for it to be "transferred" instantly
-// to the main thread, but this serialization itself was even slower, meaning that it would
-// still block the main thread when deserializing that `ArrayBuffer` back to sheet data,
-// so the entire idea of using `worker-f` was eventually dismissed.
-//
-// Instead of that, I submitted a PR in `saxen` repo that added "streaming mode" to the XML parser.
-// https://github.com/nikku/saxen/pull/27
-// That PR got merged, so a simple alternative now is to parse sheet data chunk-by-chunk,
-// spacing it out with `setTimeout(0)` interrupts.
-//
-// In case of re-enabling `worker-f`, uncomment the relevant code above and below,
-// and also replace `import { Parser } from 'saxen'` with an copy-paste of `saxen`'s code
-// in `parseXmlStream.saxen.js`, otherwise it'll throw: "Parser is not defined".
-// Also, in `convertValuesFromUint8ArraysToStrings.js`, replace `import { strFromU8 } from 'fflate'`
-// with a copy-paste of the `strFromU8()` function code from `fflate`'s repo,
-// because otherwise it'd throw: "td is not defined".
-//
-const CAN_USE_WORKER = false
-
 /**
  * Reads data from an `.xlsx` file.
  * @param  {function} parseXml — SAX XML parser.
@@ -106,12 +64,15 @@ function parseSpreadsheetContents(parseXml, contents_, options = {}) {
 
       checkpoint(`parse sheet${sheetRelationIdsToRead.length === 1 ? '' : 's'} data`)
 
+      const dateFormatDetectionCache = []
+
       // Parse sheets data.
       return readFiles(
         getSheetDataXmlFiles(filePaths, sheetRelationIdsToRead, {
           sharedStrings,
           styles,
           epoch1904: spreadsheetInfo.epoch1904,
+          dateFormatDetectionCache,
           options
         }),
         contents,
@@ -130,7 +91,7 @@ function parseSpreadsheetContents(parseXml, contents_, options = {}) {
 
 /**
  * Reads data from an `.xlsx` file in a worker.
- * @param  {function} [createWorkerFunction] — Creates a worker function.
+ * @param  {function} [createWorkerFunction] — Creates a worker function. Not used.
  * @param  {function} parseXml — SAX XML parser.
  * @param  {Record<string,Uint8Array>} contents - A map of `.xml` files inside the `.xlsx` file (which itself is just a zipped directory).
  * @param  {object} [options]
@@ -147,79 +108,7 @@ export default function parseSpreadsheetContentsInWorker(createWorkerFunction, p
     }
   }
 
-  // If the environment doesn't support "workers", parse spreadsheet contents "synchronously".
-  // This will "block" the main thread while parsing.
-  if (!createWorkerFunction || !CAN_USE_WORKER) {
-    return parseSpreadsheetContents(parseXml, contents, options)
-  }
-
-  // // Any functions have to be removed from the `options` in order for them to be "serializable"
-  // // before sending them to the worker thread.
-  // const { parseNumber: parseNumber_, ...optionsJson } = options
-  //
-  // // Create a worker from a function.
-  // const workerFn = createWorkerFunction(
-  //   (data) => {
-  //     // Reconstruct the `options`.
-  //     const options = {
-  //       ...data.optionsJson,
-  //       parseNumber: parseNumber_
-  //     }
-  //     // Parse sheet data from the `.xml` files.
-  //     return parseSpreadsheetContents(parseXml, data.contents, options)
-  //   }
-  // )
-  //
-  // workerFn.addDependencies(
-  //   // Any "outside" dependencies that're referenced from the function body.
-  //   () => [
-  //     parseXml,
-  //     parseXmlStream,
-  //     parseNumber,
-  //     parseNumber_,
-  //     parseExcelDate,
-  //     parseExcelTimestamp,
-  //     parseCell,
-  //     EMPTY_CELL,
-  //     parseCellAddress,
-  //     LETTERS,
-  //     convertArrayOfCellsTo2dArrayOfValues,
-  //     convertValuesFromUint8ArraysToStrings,
-  //     strFromU8,
-  //     decodeUtf8String,
-  //     dropEmptyTrailingRows,
-  //     dropEmptyTrailingColumns,
-  //     isDateFormat,
-  //     DATE_FORMAT_SPECIFIC_LOCALE_PREFIX,
-  //     DATE_FORMAT_ALLOW_ANY_OTHER_TEXT_SUFFIX,
-  //     IS_DATE_FORMAT_CACHE, DATE_TEMPLATE_TOKENS,
-  //     isDateFormatStyle,
-  //     BUILT_IN_DATE_FORMAT_IDS,
-  //     parseSpreadsheetContents,
-  //     parseFilePaths,
-  //     parseSpreadsheetInfo,
-  //     parseSharedStrings,
-  //     parseStyles,
-  //     parseSheet,
-  //     getSheetRelationId,
-  //     getSheetNameByRelationId,
-  //     getXmlFilesAtFixedPaths,
-  //     getXmlFilesAtNonFixedPaths,
-  //     getSheetDataXmlFiles,
-  //     readFiles,
-  //     checkpoint,
-  //     latestCheckpointTimestamp,
-  //     isPromise
-  //   ]
-  // )
-  //
-  // workerFn.inputTransferList(({ optionsJson, contents }) => Object.keys(contents).map(key => contents[key].buffer))
-  //
-  // return workerFn.callOnce({ optionsJson, contents }).then((result) => {
-  //   console.log('~ Input latency', workerFn.inputLatency)
-  //   console.log('~ Output latency', workerFn.outputLatency)
-  //   return result
-  // })
+  return parseSpreadsheetContents(parseXml, contents, options)
 }
 
 function getSheetRelationId(sheet, sheets) {

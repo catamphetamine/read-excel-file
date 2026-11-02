@@ -1,8 +1,14 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-import readXlsxFileBrowser, { parseSheetData as parseSheetDataBrowser, readSheet as readSheetBrowser, InvalidInputError as InvalidInputErrorBrowser } from '../../browser/index.js'
-import readXlsxFileWebWorker, { parseSheetData as parseSheetDataWebWorker, readSheet as readSheetWebWorker, InvalidInputError as InvalidInputErrorWebWorker } from '../../web-worker/index.js'
+import readXlsxFileBrowser, {
+	parseSheetData as parseSheetDataBrowser,
+	readSheet as readSheetBrowser,
+	InvalidInputError as InvalidInputErrorBrowser
+} from '../../browser/index.js'
+
+import readXlsxFileWebWorker, {
+	parseSheetData as parseSheetDataWebWorker, readSheet as readSheetWebWorker, InvalidInputError as InvalidInputErrorWebWorker } from '../../web-worker/index.js'
 import readXlsxFileNode, { parseSheetData as parseSheetDataNode, readSheet as readSheetNode, InvalidInputError as InvalidInputErrorNode } from '../../node/index.js'
 import readXlsxFileUniversal, { parseSheetData as parseSheetDataUniversal, readSheet as readSheetUniversal, InvalidInputError as InvalidInputErrorUniversal } from '../../universal/index.js'
 

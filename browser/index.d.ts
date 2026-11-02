@@ -121,3 +121,12 @@ export function parseSheetData<
 	schema: Schema<Object, ColumnTitle>,
 	options?: ParseSheetDataOptions
 ): ParseSheetDataResult<Object, ColumnTitle, Error>;
+
+export function getColumnTitleForProperty<
+	Object extends object,
+	ColumnTitle extends string = string,
+	PropertyPath extends string[] = string[]
+>(
+	path: PropertyPath,
+	schema: Schema<Object, ColumnTitle>
+): ColumnTitle | undefined;

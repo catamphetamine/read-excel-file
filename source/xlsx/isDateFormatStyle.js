@@ -9,7 +9,8 @@ import isDateFormat from './isDateFormat.js'
 export default function isDateFormatStyle(
   style,
   defaultDateFormat,
-  shouldGuessDateFormatFromNumberFormatTemplate
+  shouldGuessDateFormatFromNumberFormatTemplate,
+  dateFormatDetectionCache
 ) {
   if (!style.numberFormat) {
     return false
@@ -22,7 +23,7 @@ export default function isDateFormatStyle(
     (defaultDateFormat && style.numberFormat.template === defaultDateFormat) ||
     // Whether the "smart formatting template" feature is not disabled
     // and it has detected that it's a date formatting template by looking at it.
-    (shouldGuessDateFormatFromNumberFormatTemplate && style.numberFormat.template && isDateFormat(style.numberFormat.template))
+    (shouldGuessDateFormatFromNumberFormatTemplate && style.numberFormat.template && isDateFormat(style.numberFormat.id, style.numberFormat.template, dateFormatDetectionCache))
     ) {
     return true
   }

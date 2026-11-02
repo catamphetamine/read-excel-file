@@ -11,7 +11,14 @@ import parseSheetData from '../parseSheetData/parseSheetData.js'
  * @return {Promise<SheetData>}
  */
 export default function parseSheet(createWorkerFunction, parseXml, contents, sheet, optionsWithSchema) {
-	// `schema` has to be excluded from the `options`
+	// Extract `schema` property from the `options`.
+	//
+	// It could also extract properties like:
+	// * `transformEmptyObject`
+	// * `transformEmptyArray`
+	// * `propertyValueWhenColumnIsMissing`
+	// * `propertyValueWhenCellIsEmpty`
+	//
 	const { schema, ...options } = optionsWithSchema || {}
 	return parseSpreadsheetContents(createWorkerFunction, parseXml, contents, {
 		...options,
@@ -19,7 +26,7 @@ export default function parseSheet(createWorkerFunction, parseXml, contents, she
 	}).then((sheets) => {
 		const sheetData = sheets[0].data
 		if (schema) {
-			return parseSheetData(sheetData, schema)
+			return parseSheetData(sheetData, schema, options)
 		}
 		return sheetData
 	})

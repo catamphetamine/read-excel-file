@@ -9,3 +9,4 @@ export { default as parseSheetData } from '../modules/parseSheetData/parseSheetD
 export { default as Integer } from '../modules/parseSheetData/types/additional/Integer.js'
 export { default as Email } from '../modules/parseSheetData/types/additional/Email.js'
 export { default as URL } from '../modules/parseSheetData/types/additional/URL.js'
+export { default as getColumnTitleForProperty } from '../modules/parseSheetData/getColumnTitleForProperty.js'

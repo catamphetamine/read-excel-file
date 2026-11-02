@@ -12,7 +12,7 @@ const date = new Date(Date.UTC(2018, 3 - 1, 24))
 
 describe('parseSheetData', () => {
 	it('should include data row number in error objects', () => {
-		const { errors, objects } = parseSheetData([
+		const { errors, objects, columns } = parseSheetData([
 			['NUMBER'],
 			[null],
 			[null]
@@ -26,6 +26,7 @@ describe('parseSheetData', () => {
 
 		expect(objects).to.be.undefined
 		expect(errors).to.not.be.undefined
+		expect(columns).to.deep.equal(['NUMBER'])
 
 		expect(errors).to.deep.equal([{
 			error: 'required',
@@ -45,7 +46,7 @@ describe('parseSheetData', () => {
 	})
 
 	it('should include column index in error objects', () => {
-		const { errors, objects } = parseSheetData([
+		const { errors, objects, columns } = parseSheetData([
 			['IRRELEVANT COLUMN 1', 'IRRELEVANT COLUMN 2', 'NUMBER'],
 			[null, null, null]
 		], {
@@ -63,6 +64,7 @@ describe('parseSheetData', () => {
 
 		expect(objects).to.be.undefined
 		expect(errors).to.not.be.undefined
+		expect(columns).to.deep.equal(['IRRELEVANT COLUMN 1', 'IRRELEVANT COLUMN 2', 'NUMBER'])
 
 		expect(errors).to.deep.equal([{
 			error: 'required',
@@ -1307,5 +1309,100 @@ describe('getNextSubstring', () => {
 		// Custom separator and trimming.
 		// Should ignore commas inside quotes.
 		// expect(parseSeparatedSubstrings(' abc"de,f"g  , h ', ',')).to.deep.equal(['abcde,fg', 'h'])
+	})
+
+	it('should support passing a custom `transformEmptyObject()` function', () => {
+		const { errors, objects } = parseSheetData([
+			['NUMBER 1', 'NUMBER 2'],
+			[1000, null],
+			[null, null]
+		], {
+			number1: {
+				column: 'NUMBER 1',
+				type: Number
+			},
+			object: {
+				schema: {
+					number2: {
+						column: 'NUMBER 2',
+						type: Number
+					}
+				}
+			}
+		}, {
+			transformEmptyObject: (object, { path }) => {
+				if (!path) {
+					return 1
+				}
+				return 2
+			}
+		})
+
+		expect(objects).to.not.be.undefined
+		expect(errors).to.be.undefined
+
+		expect(objects).to.deep.equal([{ number1: 1000, object: 2 }, 1])
+	})
+
+	it('should support passing a custom `transformEmptyArray()` function', () => {
+		const { errors, objects } = parseSheetData([
+			['STRING', 'NUMBER'],
+			[null, 1]
+		], {
+			string: {
+				column: 'STRING',
+				type: [String]
+			},
+			number: {
+				column: 'NUMBER',
+				type: Number
+			}
+		}, {
+			transformEmptyArray: (array, { path }) => {
+				if (path === 'string') {
+					return 'd'
+				}
+				return 'e'
+			}
+		})
+
+		expect(objects).to.not.be.undefined
+		expect(errors).to.be.undefined
+
+		expect(objects).to.deep.equal([
+			{ string: 'd', number: 1 }
+		])
+	})
+
+	it('should support passing custom `propertyValueWhenColumnIsMissing` / `propertyValueWhenCellIsEmpty` options', () => {
+		const { errors, objects } = parseSheetData([
+			['NUMBER 1', 'NUMBER 2'],
+			[1000, null]
+		], {
+			number2: {
+				column: 'NUMBER 2',
+				type: Number
+			},
+			number3: {
+				column: 'NUMBER 3',
+				type: Number
+			}
+		}, {
+			propertyValueWhenColumnIsMissing: '-',
+			propertyValueWhenCellIsEmpty: ' ',
+			// Even when `propertyValueWhenColumnIsMissing` or `propertyValueWhenCellIsEmpty`
+			// are defined as non-`undefined` and non-`null` values, the enclosing object
+			// will still be considered empty. To work around that type of "gotcha",
+			// here it also specifies a custom `transformEmptyObject()` function
+			// that doesn't discard the enclosing object.
+			transformEmptyObject(object, { path }) {
+				return object
+			}
+		})
+
+		expect(objects).to.not.be.undefined
+		expect(errors).to.be.undefined
+
+		expect(objects).to.deep.equal([{ number2: ' ', number3: '-' }])
 	})
 })

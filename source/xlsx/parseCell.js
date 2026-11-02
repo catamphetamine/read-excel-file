@@ -26,6 +26,7 @@ export default function parseCell(
     sharedStrings,
     styles,
     epoch1904,
+    dateFormatDetectionCache,
     defaultDateFormat,
     dateTemplateParser,
     parseNumberCustom
@@ -232,7 +233,7 @@ export default function parseCell(
         }
         // Whether it's a date cell or just a numeric cell could only be determined
         // by looking at the formatting style.
-        if (isDateFormatStyle(styles[styleId], defaultDateFormat, dateTemplateParser)) {
+        if (isDateFormatStyle(styles[styleId], defaultDateFormat, dateTemplateParser, dateFormatDetectionCache)) {
           const timestamp = Number(v)
           if (isNaN(timestamp)) {
             return 'VALUE_INVALID'
