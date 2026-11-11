@@ -4,6 +4,8 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
+import { zipSync, strToU8 } from 'fflate'
+
 import { Readable } from 'node:stream'
 
 import InvalidInputError from '../xlsx/file/InvalidInputError.js'
@@ -132,6 +134,17 @@ describe('unpackXlsxFileNode', () => {
 		}
 		expect(thrown).to.be.an.instanceof(InvalidInputError)
 		expect(thrown.code).to.equal('XLS_FILE_NOT_SUPPORTED')
+	})
+
+	// https://github.com/101arrowz/fflate/issues/311
+	it('should not allocate memory based on the declared uncompressed size of a file', async () => {
+		const zip = zipSync({ 'xl/workbook.xml': strToU8('<workbook/>') })
+		// Overwrite the uncompressed size that is declared in the "local file header"
+		// at the start of the archive with 1 gigabyte.
+		new DataView(zip.buffer).setUint32(22, 1024 * 1024 * 1024, true)
+
+		const files = await unpackXlsxFileNode(createStreamFromBuffer(Buffer.from(zip)))
+		expect(files['xl/workbook.xml'].buffer.byteLength).to.equal('<workbook/>'.length)
 	})
 })
 

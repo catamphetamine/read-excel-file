@@ -152,9 +152,7 @@ export default function unzipFromStream_(stream, onFile, onFileData, onFileDataE
 				return
 			}
 
-			// `entry.originalSize` property will not be present for `.zip` archives
-			// that were created in a streaming fashion.
-			if (onFile(entry.name, entry.originalSize) === false) {
+			if (onFile(entry.name) === false) {
 				return
 			}
 

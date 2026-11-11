@@ -85,13 +85,7 @@ export default function unzipFromStream_(stream, onFile, onFileData, onFileDataE
 				if (errored) {
 					ignore = true
 				}
-				// `entry.vars.uncompressedSize` will be `0` for `.zip` archives
-				// that were created in a streaming fashion.
-				// The `const fileSizeKnown = ...` code was copy-pasted from `node-unzipper` source code:
-				// https://github.com/ZJONSSON/node-unzipper/blob/master/lib/Open/unzip.js
-				const uncompressedFileSizeIsKnown = !(entry.vars.flags & 0x08) || entry.vars.compressedSize > 0
-				const uncompressedFileSize = uncompressedFileSizeIsKnown ? entry.vars.uncompressedSize : undefined
-				if (onFile(entry.path, uncompressedFileSize) === false) {
+				if (onFile(entry.path) === false) {
 					ignore = true
 				}
 

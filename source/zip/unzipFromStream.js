@@ -76,52 +76,28 @@ export default function unzipFromStream(stream, { filter } = {}) {
 	const files = {}
 	const filesData = {}
 
-	// `fileSize` is optional and will not be present for `.zip` archives
-	// that were created in a streaming fashion.
-	const onFile = (filePath, fileSize) => {
+	const onFile = (filePath) => {
 		// See if this file should be ignored.
 		// If it should, this entry won't be processed, i.e. `Unzip` will not try
 		// to decompress its data, and will just discard it.
 		if (filter && !filter({ path: filePath })) {
 			return false
 		}
-		// filesData[filePath] = []
-		filesData[filePath] = {
-			size: fileSize,
-			chunks: [],
-			buffer: fileSize === undefined ? undefined : Buffer.alloc(fileSize),
-			position: 0
-		}
+		// The uncompressed size of the file that is declared in the archive is not used
+		// to allocate the buffer for the file in advance because it can't be trusted:
+		// a tiny malformed archive could declare that one of its files is gigabytes in size.
+		// https://github.com/101arrowz/fflate/issues/311
+		// Instead, it collects the chunks of data and then allocates a buffer
+		// for the data that has actually been received.
+		filesData[filePath] = []
 	}
 
 	const onFileData = (filePath, chunk) => {
-		// filesData[filePath].push(chunk)
-		if (filesData[filePath].size === undefined) {
-			filesData[filePath].chunks.push(chunk)
-		} else {
-			filesData[filePath].position += chunk.copy(filesData[filePath].buffer, filesData[filePath].position)
-		}
+		filesData[filePath].push(chunk)
 	}
 
 	const onFileDataEnd = (filePath) => {
-		if (filesData[filePath].size === undefined) {
-			// // `Buffer.concat()` will produce a pooled buffer if it's <= 4KB.
-			// let buffer = Buffer.concat(filesData[filePath].chunks)
-			// if (isBufferPooled(buffer)) {
-			// 	// Here it uses `Buffer.allocUnsafeSlow()` instead of the regular `Buffer.alloc()`.
-			// 	// The reason is that `Buffer.allocUnsafeSlow()` doesn't bother resetting the memory
-			// 	// that is being allocated, which is fine because it will be overwritten anyway.
-			// 	// It could also have used `Buffer.allocUnsafe()` if it wasn't returning pooled buffers,
-			// 	// which is what is being avoided here in the first place.
-			// 	const pooledBuffer = buffer
-			// 	buffer = Buffer.allocUnsafeSlow(buffer.byteLength)
-			// 	pooledBuffer.copy(buffer)
-			// }
-			// files[filePath] = buffer
-			files[filePath] = concatChunksToNonPooledBuffer(filesData[filePath].chunks)
-		} else {
-			files[filePath] = filesData[filePath].buffer
-		}
+		files[filePath] = concatChunksToNonPooledBuffer(filesData[filePath])
 		delete filesData[filePath]
 	}
 

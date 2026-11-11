@@ -4,6 +4,8 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
+import { zipSync, strToU8 } from 'fflate'
+
 import InvalidInputError from '../xlsx/file/InvalidInputError.js'
 
 import unpackXlsxFileUniversal from './unpackXlsxFileUniversal.js'
@@ -73,6 +75,24 @@ describe('unpackXlsxFileUniversal', () => {
 		}
 		expect(thrown).to.be.an.instanceof(InvalidInputError)
 		expect(thrown.code).to.equal('XLS_FILE_NOT_SUPPORTED')
+	})
+
+	// https://github.com/101arrowz/fflate/issues/311
+	it('should reject a file that declares an impossible uncompressed size', async () => {
+		const zip = zipSync({ 'xl/workbook.xml': strToU8('<workbook/>') })
+		// Overwrite the uncompressed size that is declared in the "central directory"
+		// of the archive (signature "PK\x01\x02") with 1 gigabyte.
+		const offset = zip.findIndex((_, i) => zip[i] === 0x50 && zip[i + 1] === 0x4B && zip[i + 2] === 1 && zip[i + 3] === 2)
+		new DataView(zip.buffer).setUint32(offset + 24, 1024 * 1024 * 1024, true)
+
+		let thrown
+		try {
+			await unpackXlsxFileUniversal(getArrayBuffer(Buffer.from(zip)))
+		} catch (caught) {
+			thrown = caught
+		}
+		expect(thrown).to.be.an.instanceof(InvalidInputError)
+		expect(thrown.code).to.equal('INVALID_ZIP')
 	})
 })
 

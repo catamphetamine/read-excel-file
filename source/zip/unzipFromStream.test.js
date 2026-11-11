@@ -60,6 +60,18 @@ describe('unzipFromStream', () => {
 		expect(convertValuesFromBufferToString(files)).to.deep.equal({ 'keep.xml': '<keep/>' })
 	})
 
+	// https://github.com/101arrowz/fflate/issues/311
+	it('should not allocate memory based on the declared uncompressed size of a file', async () => {
+		const zip = createZip({ 'a.xml': '<a>Hello</a>' })
+		// Overwrite the uncompressed size that is declared in the "local file header"
+		// at the start of the archive with 1 gigabyte.
+		zip.writeUInt32LE(1024 * 1024 * 1024, 22)
+		const files = await unzipFromStream(createStreamFromBuffer(zip))
+		expect(files['a.xml'].length).to.equal('<a>Hello</a>'.length)
+		expect(files['a.xml'].buffer.byteLength).to.equal('<a>Hello</a>'.length)
+		expect(convertValuesFromBufferToString(files)).to.deep.equal({ 'a.xml': '<a>Hello</a>' })
+	})
+
 	it('should reject when the source stream errors', async () => {
 		const stream = new Readable({ read() {} })
 		const error = new Error('Stream read failure')
