@@ -1,3 +1,5 @@
+import unescapeXstring from './unescapeXstring.js'
+
 /**
  * Parses `sharedStrings.xml` file.
  * @param {string} content
@@ -38,7 +40,8 @@ export default function parseSharedStrings(content, parseXml) {
 
   function onCloseTag(tagName, state) {
     if (tagName === 'si') {
-      state.strings.push(state.si.string)
+      // Decode `_xHHHH_` escapes after all the `<t/>` chunks of the string have been concatenated.
+      state.strings.push(unescapeXstring(state.si.string))
       state.si = undefined
     } else if (state.si) {
       onCloseTagInSharedString(tagName, state.si)
