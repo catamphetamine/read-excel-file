@@ -3,7 +3,7 @@ import { expect } from 'chai'
 
 import { isDateFormatTemplate } from './isDateFormat.js'
 
-describe('xlsx/isDateFormat', () => {
+describe('isDateFormat', () => {
 	it('should detect date format', () => {
 		expect(isDateFormatTemplate('dd/mm/yyyy')).to.equal(true)
 		expect(isDateFormatTemplate('dd/mm/yy;@')).to.equal(true)

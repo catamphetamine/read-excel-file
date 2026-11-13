@@ -1,3 +1,5 @@
+import normalizeSchemaEntry from './normalizeSchemaEntry.js'
+
 import NumberType from './types/Number.js'
 import StringType from './types/String.js'
 import BooleanType from './types/Boolean.js'
@@ -187,12 +189,13 @@ function parseObject(row, schema, path, columns, options) {
 
   // For each property of the object.
   for (const key of Object.keys(schema)) {
-    const child = parseProperty(row, schema[key], getPropertyPath(key, path), columns, options)
+    const schemaEntry = normalizeSchemaEntry(schema[key])
+    const child = parseProperty(row, schemaEntry, getPropertyPath(key, path), columns, options)
 
     if (child.errors) {
       errors = errors.concat(child.errors)
     } else {
-      object[key] = transformValue(child.value, child.isEmptyValue, Array.isArray(schema[key].type), getPropertyPath(key, path), options)
+      object[key] = transformValue(child.value, child.isEmptyValue, Array.isArray(schemaEntry.type), getPropertyPath(key, path), options)
       // Potentially unmark the object as "empty".
       if (isEmptyObject && !child.isEmptyValue) {
         isEmptyObject = false
@@ -202,7 +205,7 @@ function parseObject(row, schema, path, columns, options) {
     children.push({
       ...child,
       // `schemaEntry` will be used when running `required` validation of this property (later),
-      schemaEntry: schema[key]
+      schemaEntry
     })
   }
 
@@ -724,7 +727,7 @@ function createError({
 
 function validateSchema(schema) {
   for (const key of Object.keys(schema)) {
-    const schemaEntry = schema[key]
+    const schemaEntry = normalizeSchemaEntry(schema[key])
     // Validate that the `schema` is not using a deprecated `type: nestedSchema` format.
     if (typeof schemaEntry.type === 'object' && !Array.isArray(schemaEntry.type)) {
       throw new Error('When defining a nested schema, use a `schema` property instead of a `type` property')

@@ -229,10 +229,10 @@ Then you just define a "schema" for the desired JSON object, i.e. you outline th
 
 ```js
 const schema = {
-  name: { column: 'Name' },
-  dateOfBirth: { column: 'Date of Birth' },
-  married: { column: 'Married' },
-  kids: { column: 'Kids' }
+  name: 'Name',
+  dateOfBirth: 'Date of Birth',
+  married: 'Married',
+  kids: 'Kids'
 }
 ```
 
@@ -477,8 +477,14 @@ When reading an `.xlsx` file, any numeric values are parsed from a string to a j
 * `99999999999999999999` will be rounded to `100000000000000000000`
 
 You see, javascript numbers inherently come with a limited [floating-point precision](https://www.youtube.com/watch?v=2gIxbTn7GSc), which is apparently not enough in the examples shown above.
+</details>
 
-So what can one do then? For values that you know absolutely need to be 100% precise, use a custom implementation of "decimal" data type such as [`decimal.js`](https://www.npmjs.com/package/decimal.js). Specifically, pass a custom `parseNumber(string)` function as an option when reading an `.xlsx` file, and it will parse any number from string exactly the way you tell it.
+<details>
+<summary>How to read 100% precise numbers</summary>
+
+######
+
+If you absolutely need to read any numbers with 100% precision, then you could tell it to use a custom implementation of "decimal" number type such as [`decimal.js`](https://www.npmjs.com/package/decimal.js) instead of the standard javascript `number` type. Specifically, pass a custom `parseNumber(string)` function as an option when reading an `.xlsx` file, and it will parse any number from string exactly the way you tell it.
 
 Example 1: Parse any numbers as "decimals", i.e. exactly as they are written in the `.xlsx` file.
 
@@ -554,16 +560,14 @@ One could use the following `schema`:
 
 ```js
 const schema = {
-  name: { column: 'Name' },
-  breed: { column: 'Breed' },
-  gender: { column: 'Gender' },
-  // the owner's info will be put in a nested object, with its own schema
+  name: 'Name',
+  breed: 'Breed',
+  gender: 'Gender',
+  // the owner's info will be put in a nested object
   owner: {
-    schema: {
-      name: { column: 'Owner Name' },
-      phone: { column: 'Owner Phone' },
-      address: { column: 'Owner Address' }
-    }
+    name: 'Owner Name',
+    phone: 'Owner Phone',
+    address: 'Owner Address'
   }
 }
 ```
@@ -652,7 +656,7 @@ const schema = {
 }
 ```
 
-The following properties are supported:
+In other words, where it has previously been just a column title, it's now an object with the following properties:
 
 * `column` — Column title.
 * `type` — (optional) The expected type of the value.
@@ -667,7 +671,7 @@ The following properties are supported:
     * `URL`
   * Custom type:
     * A function that takes a cell value and returns any kind of a parsed value.
-    * Returning `undefined` will have same effect as returning `null`.
+    * If it returns `null` or `undefined`, no property value will be set.
     * It should throw an error if it finds the value invalid.
 * `oneOf` — (optional) A list of possible values.
 * `validate(value)` — (optional) A function that will be called on the parsed value, when the value is present. It should throw if it finds the value invalid.
@@ -680,9 +684,12 @@ The following properties are supported:
 
 If it finds any errors when validating the data, the `errors` property returned from the function will be a non-empty array, with each `error` having properties:
 
-* `error` (string) — Error code. Possible values (for a non-custom type): `"required"`, `"invalid"`.
-  * If the column uses a custom `type`, then the `error` will be same as the `message` of the error that was thrown by the `type`.
+* `error` (string) — Error code.
+  * `"required"` — when the property is required but the value is missing.
+  * `"invalid"` — when the property `type` doesn't match the observed cell value type.
+  * `"invalid"` — when the value doesn't pass `oneOf` validation.
   * If the column uses a custom `validate` function, then the `error` will be same as the `message` of the error that was thrown by the `validate` function.
+  * If the column uses a custom `type`, then the `error` will be same as the `message` of the error that was thrown by the `type`.
 * `reason` (string) — An optional secondary error code that provides some more details about the error. I.e. "`error.error` happened specifically because of `error.reason`". Currently, it could only be returned from non-custom `type`s.
   * Example: `{ error: "invalid", reason: "not_a_number" }` for a `type: Number` property means that "the cell value is _invalid_ **because** it's _not a number_".
 * `row` (number) — Data row number, starting from `1`.
@@ -783,10 +790,8 @@ const schema = {
   breed: { column: 'Breed', type: String },
 
   owner: {
-    schema: {
-      name: { column: 'Owner Name', type: String, required: true },
-      phone: { column: 'Owner Phone', type: String }
-    }
+    name: { column: 'Owner Name', type: String, required: true },
+    phone: { column: 'Owner Phone', type: String }
   },
 
   secondOwner: {
@@ -798,6 +803,8 @@ const schema = {
   }
 }
 ```
+
+Note how in order to be able to define a nested object as `required: false`, its structure has to be moved to a separate property called `schema`.
 
 While a nested object can be defined as `required: false`, it can't be defined as `required: true` because it wouldn't really make sense — just mark the relevant properties of the nested object as `required: true` and that will make the nested object itself required as well.
 
@@ -844,8 +851,8 @@ import * as z from 'zod'
 
 // `read-excel-file` mapping schema
 const schema = {
-  name: { column: 'NAME' },
-  age: { column: 'AGE' }
+  name: 'NAME',
+  age: 'AGE'
 }
 
 // `zod` schema, which repeats `read-excel-file` mapping schema
@@ -860,8 +867,8 @@ const { objects, errors, columns } = await readSheet('persons.xlsx', { schema })
 // If there were any errors while reading JSON objects from the `.xlsx` file
 if (errors) {
   // Report just the first error (for simplicity)
-  const { error: code, row, column, columnTitle } = errors[0]
-  reportError(code, row, column, columnTitle)
+  const { error: code, row, columnIndex, column: columnTitle } = errors[0]
+  reportError(code, row, columnIndex + 1, columnTitle)
 }
 
 // Reports an error
@@ -990,6 +997,7 @@ Finally, one could go even further with the "streaming" approach and output not 
 
 * [Stian Jensen](https://github.com/stianjensen) — Use `fflate` unzipper on server side ([1](https://github.com/catamphetamine/read-excel-file/pull/122), [2](https://github.com/catamphetamine/read-excel-file/pull/123))
 * [Etienne Prothon](https://github.com/EtienneProthon) — Reject non `.xlsx` files, including the legacy binary `.xls` files ([1](https://gitlab.com/catamphetamine/read-excel-file/-/merge_requests/11)). Fix parsing of "encoded" characters ([1](https://gitlab.com/catamphetamine/read-excel-file/-/merge_requests/10)).
+* [Osama Ansar](https://github.com/OsamaAnsar) — Decode `_x`-encoded strings ([1](https://github.com/catamphetamine/read-excel-file/pull/126))
 
 ## GitHub
 

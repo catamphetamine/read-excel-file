@@ -1,7 +1,7 @@
 import parseCell, { EMPTY_CELL } from './parseCell.js'
 import parseCellAddress from './parseCellAddress.js'
 import InvalidSpreadsheetError from './InvalidSpreadsheetError.js'
-import unescapeXstring from './unescapeXstring.js'
+import unescapeXlsxString from './unescapeXlsxString.js'
 
 // An empty cell has `null` value.
 const EMPTY_CELL_VALUE = null
@@ -226,6 +226,8 @@ export default function parseSheet(content, parseXml, { sharedStrings, styles, e
       state.row = []
     } else if (tagName === 'c') {
       state.c = createInitialStateInCell()
+      // See if this cell contains a formula.
+      state.c.f = attributes.t === 'str'
       state.c.attributes = attributes
     } else if (state.c) {
       onOpenTagInCell(tagName, attributes, state.c)
@@ -495,6 +497,7 @@ export default function parseSheet(content, parseXml, { sharedStrings, styles, e
   function createInitialStateInCell() {
     return {
       v: false,
+      f: false,
       is: false,
       t: false,
       r: false,
@@ -508,6 +511,13 @@ export default function parseSheet(content, parseXml, { sharedStrings, styles, e
   function onOpenTagInCell(tagName, attributes, state) {
     if (tagName === 'v') {
       state.v = true
+      // Initialize `vText` to an empty string.
+      // This way, it will be able to detect a situation when the `<v/>` element is present
+      // but is empty, because in that case it will be an empty string `""` rather than `undefined`.
+      // This approach makes it possible to differentiate between the two separate cases:
+      // * When `<f/>` formula is present but its result is not pre-computed (`<v/>` is absent)
+      // * When `<f/>` formula is present and its result is an empty string (`<v/>` is present but empty)
+      state.vText = ''
     } else if (tagName === 'is') {
       // The possible children of <is> are:
       // * <t> (Text): The standard child to hold plain, simple text.
@@ -534,16 +544,20 @@ export default function parseSheet(content, parseXml, { sharedStrings, styles, e
   function onCloseTagInCell(tagName, state) {
     if (tagName === 'v') {
       state.v = false
-      // If the `<v/>` element is present but is empty,
-      // reassign `vText` property from `undefined` to an empty string `""`.
-      // This is to differentiate between two separate cases:
-      // * When `<f/>` formula is present but its result is not pre-computed (`<v/>` is absent)
-      // * When `<f/>` formula is present and its result is an empty string (`<v/>` is present but empty)
-      state.vText ||= ''
+      // There can only be one `<v/>` element inside a given `<c/>` element.
+      // Hence, if a `<v/>` element is closed, the `vText` is finalized.
+      //
+      // If this cell contains a formula, `vText` should be checked for any potential
+      // `_xHHHH_`-encoded characters.
+      if (state.f) {
+        // Decode any potential `_xHHHH_`-encoded characters in the formula.
+        state.vText = unescapeXlsxString(state.vText)
+      }
     } else if (tagName === 'is') {
       state.is = false
-      // Decode `_xHHHH_` escapes after all the `<t/>` chunks of the string have been concatenated.
-      state.inlineString = unescapeXstring(state.inlineString)
+      // Decode any potential `_xHHHH_`-encoded characters in an inline string.
+      // Do it after all the `<t/>` chunks of the string have been concatenated.
+      state.inlineString = unescapeXlsxString(state.inlineString)
     } else if (tagName === 't') {
       state.t = false
     } else if (tagName === 'r') {

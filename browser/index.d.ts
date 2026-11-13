@@ -53,7 +53,7 @@ export type {
 	Integer,
 	Email,
 	URL
-} from '../types/parseSheetData/parseSheetDataValueType.d.js'
+} from '../types/parseSheetData/parseSheetDataSchemaPropertyType.d.js'
 
 export type {
 	ParseSheetDataCustomTypeErrorMessage,

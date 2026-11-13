@@ -20,8 +20,8 @@ export default [
 		description: 'should parse inline strings'
 	},
 	{
-		name: 'escaped-characters',
-		description: 'should decode `_xHHHH_` escape sequences in shared strings and inline strings'
+		name: 'x-escaped-characters',
+		description: 'should decode `_xHHHH_` escape sequences in shared strings, inline strings and sheet names'
 	},
 	{
 		name: 'number-formats',

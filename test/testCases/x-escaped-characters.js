@@ -1,7 +1,12 @@
-export default async function({ readSheetFromFile, expect }) {
-	const data = await readSheetFromFile()
+// This file was originally submitted by Osama Ansar.
+// https://github.com/catamphetamine/read-excel-file/pull/126
 
-	expect(data).to.deep.equal([
+export default async function({ readSheetsFromFile, expect }) {
+	const sheets = await readSheetsFromFile()
+
+	expect(sheets[0].sheet).to.equal('Café')
+
+	expect(sheets[0].data).to.deep.equal([
 		[
 			// `_x000D_`, `_x000A_` and `_x0009_` are CR, LF and TAB.
 			'a\r\nb\tc',
@@ -15,7 +20,9 @@ export default async function({ readSheetFromFile, expect }) {
 			'smile \u{1F600} !',
 			// Inline strings, plain and rich text.
 			'inl\r\nine_x0041_',
-			'r1\tr2'
+			'r1\tr2',
+			// Formulas
+			'="Café"'
 		]
 	])
 }

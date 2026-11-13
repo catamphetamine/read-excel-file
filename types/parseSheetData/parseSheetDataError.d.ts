@@ -9,8 +9,8 @@ import type {
 	Email,
 	URL,
 	ParseSheetDataCustomType,
-	ParseSheetDataValueType
-} from './parseSheetDataValueType.d.js'
+	ParseSheetDataSchemaPropertyType
+} from './parseSheetDataSchemaPropertyType.d.js'
 
 export interface ParseSheetDataValueRequiredError<
 	ColumnTitle extends string = string,
@@ -26,7 +26,7 @@ export interface ParseSheetDataValueRequiredError<
 	// * `undefined` means "column is missing"
 	value: null | undefined;
 	// When `type` is not specified, it assumes `type: String`.
-	type?: ParseSheetDataValueType<CustomType>;
+	type?: ParseSheetDataSchemaPropertyType<CustomType>;
 }
 
 interface ParseSheetDataError_<
@@ -39,7 +39,7 @@ interface ParseSheetDataError_<
 	// The answer is that `type` could only be `undefined` in case of `parseSheetData()` errors
 	// that originate from `type: String` parser while other type parsers can't have `type` be `undefined`.
 	//
-	ValueType extends ParseSheetDataValueType<unknown> | undefined,
+	ValueType extends ParseSheetDataSchemaPropertyType<unknown> | undefined,
 	ErrorMessage extends string,
 	ErrorReason extends string | undefined
 > {
@@ -261,7 +261,7 @@ interface ParseSheetDataArrayValueNotAStringError<
 	ParseSheetDataCustomType_ extends ParseSheetDataCustomType<unknown> = ParseSheetDataCustomType<unknown>
 > extends ParseSheetDataError_<
 	ColumnTitle,
-	ParseSheetDataValueType<ParseSheetDataCustomType_>,
+	ParseSheetDataSchemaPropertyType<ParseSheetDataCustomType_>,
 	'not_a_string',
 	undefined
 > {}
@@ -271,7 +271,7 @@ interface ParseSheetDataArrayValueSyntaxError<
 	ParseSheetDataCustomType_ extends ParseSheetDataCustomType<unknown> = ParseSheetDataCustomType<unknown>
 > extends ParseSheetDataError_<
 	ColumnTitle,
-	ParseSheetDataValueType<ParseSheetDataCustomType_>,
+	ParseSheetDataSchemaPropertyType<ParseSheetDataCustomType_>,
 	'invalid',
 	'syntax'
 > {}
@@ -283,12 +283,12 @@ export type ParseSheetDataError<
 	ErrorReason extends ParseSheetDataCustomTypeErrorReason<CustomType, ErrorMessage> = string | undefined
 > =
 	| ParseSheetDataBuiltInValueTypeError<ColumnTitle>
-	| ParseSheetDataValueRequiredError<ColumnTitle, ParseSheetDataValueType<CustomType>>
-	| ParseSheetDataArrayValueNotAStringError<ColumnTitle, ParseSheetDataValueType<CustomType>>
-	| ParseSheetDataArrayValueSyntaxError<ColumnTitle, ParseSheetDataValueType<CustomType>>
+	| ParseSheetDataValueRequiredError<ColumnTitle, ParseSheetDataSchemaPropertyType<CustomType>>
+	| ParseSheetDataArrayValueNotAStringError<ColumnTitle, ParseSheetDataSchemaPropertyType<CustomType>>
+	| ParseSheetDataArrayValueSyntaxError<ColumnTitle, ParseSheetDataSchemaPropertyType<CustomType>>
 	| ParseSheetDataErrorCustomType<
 		ColumnTitle,
-		ParseSheetDataValueType<CustomType>,
+		ParseSheetDataSchemaPropertyType<CustomType>,
 		ErrorMessage,
 		ErrorReason
 	>;

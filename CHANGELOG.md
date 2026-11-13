@@ -1,3 +1,19 @@
+9.3.16 / 13.11.2026
+==================
+
+* Merged a [pull request](https://github.com/catamphetamine/read-excel-file/pull/126) by [Osama Ansar](https://github.com/OsamaAnsar) that adds support for correctly interpreting `_x`-encoded strings.
+  * In shared strings
+  * In inline strings
+  * In formulas
+  * In sheet names
+
+9.3.15 / 11.11.2026
+==================
+
+* Added a shorter form of specifying schema properties:
+  * `{ a: { column: 'A' } }` → `{ a: 'A' }`
+  * `{ object: { schema: { a: ... } } }` → `{ object: { a: ... } }`
+
 9.3.14 / 29.10.2026
 ==================
 

@@ -148,6 +148,75 @@ describe('parseSheetDataWithPerRowErrors', () => {
 		})
 	})
 
+	it('should support schema entries that\'re just strings', () => {
+		const results = parseSheetDataWithPerRowErrors([
+			[
+				'DATE',
+				'NUMBER',
+				'BOOLEAN',
+				'STRING',
+				'PROPERTY'
+			], [
+				new Date(Date.parse('03/24/2018') - new Date().getTimezoneOffset() * 60 * 1000), // '43183', // '03/24/2018',
+				123,
+				true,
+				'abc',
+				'prop'
+			]
+		], {
+			date: 'DATE',
+			number: 'NUMBER',
+			boolean: {
+				type: Boolean,
+				column: 'BOOLEAN'
+			},
+			object: {
+				boolean1: 'BOOLEAN',
+				boolean2: {
+					type: Boolean,
+					column: 'BOOLEAN'
+				},
+				object2: {
+					string: 'STRING'
+				},
+				object3: {
+					required: false,
+					schema: {
+						property: 'PROPERTY',
+						boolean3: 'BOOLEAN',
+						boolean4: {
+							type: Boolean,
+							column: 'BOOLEAN'
+						},
+					}
+				}
+			}
+		})
+
+		expect(results.length).to.equal(1)
+
+		expect(results[0].object).to.exist
+		expect(results[0].errors).to.be.undefined
+
+		expect(results[0].object).to.deep.equal({
+			date: new Date(Date.UTC(2018, 3 - 1, 24)),
+			number: 123,
+			boolean: true,
+			object: {
+				boolean1: true,
+				boolean2: true,
+				object2: {
+					string: 'abc'
+				},
+				object3: {
+					property: 'prop',
+					boolean3: true,
+					boolean4: true,
+				}
+			}
+		})
+	})
+
 	it('should support schema entries with no `type`s', () => {
 		const results = parseSheetDataWithPerRowErrors([
 			[

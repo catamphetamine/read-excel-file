@@ -6,15 +6,14 @@ import isObject from '../utility/isObject.js'
  * @returns {object} Normalized schema entry
  */
 export default function normalizeSchemaEntry(schemaEntry) {
-  return schemaEntry
-  // if (typeof schemaEntry === 'string') {
-  //   return { column: schemaEntry }
-  // }
-  // if (typeof schemaEntry.column === 'string') {
-  //   return schemaEntry
-  // }
-  // if (isObject(schemaEntry.schema)) {
-  //   return schemaEntry
-  // }
-  // return { schema: schemaEntry }
+  if (typeof schemaEntry === 'string') {
+    return { column: schemaEntry }
+  }
+  if (typeof schemaEntry.column === 'string') {
+    return schemaEntry
+  }
+  if (isObject(schemaEntry.schema)) {
+    return schemaEntry
+  }
+  return { schema: schemaEntry }
 }

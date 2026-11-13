@@ -44,7 +44,7 @@ type ParseSheetDataAdditionalType =
 export type ParseSheetDataCustomType<ParsedValue> = (value: CellValue) => ParsedValue | undefined;
 
 // Schema entry `type`: foundational ones, additional ones, custom ones.
-export type ParseSheetDataValueType<ParseSheetDataCustomType> =
+export type ParseSheetDataSchemaPropertyType<ParseSheetDataCustomType> =
 	| ParseSheetDataBaseType
 	| ParseSheetDataAdditionalType
 	| ParseSheetDataCustomType;

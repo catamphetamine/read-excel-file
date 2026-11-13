@@ -1,3 +1,5 @@
+import unescapeXlsxString from './unescapeXlsxString.js'
+
 /**
  * Parses spreadsheet info.
  * @param {string} content
@@ -70,7 +72,8 @@ export default function parseSpreadsheetInfo(content, parseXml) {
           //  Deleting and adding new sheets might cause the sheetId values to become non-sequential.
           // For example, `sheetId`s could be `1`, `2`, `4`, if sheet `3` was deleted.
           id: Number(attributes.sheetId),
-          name: attributes.name,
+          // A sheet name could potentially include _xHHHH_ escaped characters.
+          name: unescapeXlsxString(attributes.name),
           relationId: attributes.id
         })
       }

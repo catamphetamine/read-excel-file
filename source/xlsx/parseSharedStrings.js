@@ -1,4 +1,4 @@
-import unescapeXstring from './unescapeXstring.js'
+import unescapeXlsxString from './unescapeXlsxString.js'
 
 /**
  * Parses `sharedStrings.xml` file.
@@ -40,8 +40,9 @@ export default function parseSharedStrings(content, parseXml) {
 
   function onCloseTag(tagName, state) {
     if (tagName === 'si') {
-      // Decode `_xHHHH_` escapes after all the `<t/>` chunks of the string have been concatenated.
-      state.strings.push(unescapeXstring(state.si.string))
+      // Decode any potential `_xHHHH_`-encoded characters in a shared string.
+      // Do it after all the `<t/>` chunks of the string have been concatenated.
+      state.strings.push(unescapeXlsxString(state.si.string))
       state.si = undefined
     } else if (state.si) {
       onCloseTagInSharedString(tagName, state.si)
