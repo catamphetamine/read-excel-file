@@ -1,1 +1,1 @@
-export type Input = Blob | ArrayBuffer;
+export type Input = Blob | ArrayBuffer | ArrayBufferView;
