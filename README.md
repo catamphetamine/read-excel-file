@@ -327,7 +327,9 @@ const data = await readSheet(fs.createReadStream('/path/to/file'))
 
 ### `read-excel-file/universal`
 
-Reads an `.xlsx` file in any supported environment, such as a browser or Node.js, but comes with a limitation: it can only read from a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) or an [`ArrayBuffer`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer), which could be a bit less convenient for general use.
+Reads an `.xlsx` file in any supported environment, such as a browser or Node.js, from a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob), an [`ArrayBuffer`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) or an `ArrayBufferView`, such as a `Uint8Array`, a Node.js `Buffer` or a `DataView`.
+
+For byte input, prefer passing a `Uint8Array` or `Buffer` directly. Views are read as raw bytes within their `byteOffset` and `byteLength`, without copying the input bytes. Passing a view's `.buffer` alone loses those bounds and can include unrelated bytes from the backing allocation. Keep the input memory unchanged and attached until the returned promise settles.
 
 ```js
 import { readSheet } from 'read-excel-file/universal'

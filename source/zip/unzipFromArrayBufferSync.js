@@ -19,7 +19,7 @@ import { unzipFromArrayBufferUsingFunction } from './unzipFromArrayBuffer.js'
 
 /**
  * Reads `*.zip` file contents. Ignores anything besides `.xml` or `.xml.rels` files.
- * @param  {ArrayBuffer} input
+ * @param  {(ArrayBuffer|ArrayBufferView)} input
  * @return {Record<string,Uint8Array>} An object holding `*.zip` file entries.
  */
 export default function unzipFromArrayBufferSync(input, options) {

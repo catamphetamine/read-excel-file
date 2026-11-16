@@ -17,7 +17,7 @@ const createWorkerFunction = undefined
 
 /**
  * Reads a single sheet from an `.xlsx` file.
- * @param  {(Blob|ArrayBuffer)} input
+ * @param  {(Blob|ArrayBuffer|ArrayBufferView)} input
  * @param  {(number|string)} [sheet] — Sheet number or sheet name
  * @param  {object} [options]
  * @return {Promise<SheetData>}

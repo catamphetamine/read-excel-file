@@ -7,10 +7,11 @@
 import { unzip } from 'fflate'
 
 import { createUnzipError } from './UnzipError.js'
+import toUint8Array from '../utility/toUint8Array.js'
 
 /**
  * Reads `*.zip` file contents. Ignores anything besides `.xml` or `.xml.rels` files.
- * @param  {ArrayBuffer} input
+ * @param  {(ArrayBuffer|ArrayBufferView)} input
  * @return {Promise<Record<string,Uint8Array>>} Resolves to an object holding `*.zip` file entries.
  */
 export default function unzipFromArrayBuffer(input, options) {
@@ -19,15 +20,15 @@ export default function unzipFromArrayBuffer(input, options) {
 
 /**
  * Reads `*.zip` file contents. Ignores anything besides `.xml` or `.xml.rels` files.
- * @param  {ArrayBuffer} input
- * @param  {(ArrayBuffer) => Record<string, Uint8Array> | Promise<Record<string, Uint8Array>>} unzip
+ * @param  {(ArrayBuffer|ArrayBufferView)} input
+ * @param  {(Uint8Array) => Record<string, Uint8Array> | Promise<Record<string, Uint8Array>>} unzip
  * @param  {boolean} isAsync — Should be `true` when `unzip()` returns a `Promise`, `false` otherwise.
  * @return {Promise<Record<string,Uint8Array>> | Record<string,Uint8Array>} Resolves to an object holding `*.zip` file entries.
  */
 export function unzipFromArrayBufferUsingFunction(input, { filter } = {}, unzip, isAsync) {
 	// Read the `.zip` archive.
 	// `result` is either `object` or `Promise<object>`
-	return unzip(new Uint8Array(input), {
+	return unzip(toUint8Array(input), {
 		// Ignore certain types of files.
 		filter: (file) => {
 			if (filter) {
