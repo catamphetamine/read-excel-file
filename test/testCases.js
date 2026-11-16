@@ -96,6 +96,10 @@ export default [
 		description: 'should read a sheet that has gaps in rows and columns'
 	},
 	{
+		name: 'cell-address-absent',
+		description: 'should read a sheet whose `<row/>` and `<c/>` elements have no `r` attribute'
+	},
+	{
 		name: 'xml-namespace',
 		description: 'should correctly parse XML namespaces'
 	},

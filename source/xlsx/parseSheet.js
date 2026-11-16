@@ -234,18 +234,18 @@ export default function parseSheet(content, parseXml, { sharedStrings, styles, e
 
   function onCloseTagInSheetData(tagName, state) {
     if (tagName === 'row') {
-      // If the row number is known, check for any inter-row gaps that it might introduce.
-      if (state.rowNumber) {
-        // Google AI says that `<row>` elements must be ordered by row number ascending,
-        // so the code assumes that there can't be an out-of-order `<row>`.
-        const previousRowNumber = state.rowIndexShift + state.rows.length
-        if (state.rowNumber <= previousRowNumber) {
-          throw new InvalidSpreadsheetError(`Out-of-place <row/> number ${state.rowNumber} follows <row/> number ${previousRowNumber}`)
-        }
-        // Insert empty rows where there're gaps between the rows.
-        while (state.rowNumber > state.rowIndexShift + state.rows.length + 1) {
-          state.rows.push([])
-        }
+      if (!state.rowNumber) {
+        state.rowNumber = state.rowIndexShift + state.rows.length + 1
+      }
+      // Google AI says that `<row>` elements must be ordered by row number ascending,
+      // so the code assumes that there can't be an out-of-order `<row>`.
+      const previousRowNumber = state.rowIndexShift + state.rows.length
+      if (state.rowNumber <= previousRowNumber) {
+        throw new InvalidSpreadsheetError(`Out-of-place <row/> number ${state.rowNumber} follows <row/> number ${previousRowNumber}`)
+      }
+      // Insert empty rows where there're gaps between the rows.
+      while (state.rowNumber > state.rowIndexShift + state.rows.length + 1) {
+        state.rows.push([])
       }
       // Add the parsed row to the list of rows.
       state.rows.push(state.row)
@@ -261,7 +261,16 @@ export default function parseSheet(content, parseXml, { sharedStrings, styles, e
       state.row = undefined
       state.rowNumber = undefined
     } else if (tagName === 'c') {
-      const cell = parseCellFromXmlData(state.c)
+      let address
+      if (state.c.attributes.r) {
+        address = parseCellAddress(state.c.attributes.r)
+      } else {
+        // `r` is optional, so a `<c/>` without it follows the previous `<c/>` in its row.
+        const row = state.rowNumber || state.rowIndexShift + state.rows.length + 1
+        const column = state.cursor[0] === row ? state.cursor[1] + 1 : 1
+        address = [row, column]
+      }
+      const cell = parseCellFromXmlData(state.c, address)
       // Google AI says that the Open XML specification (ISO/IEC 29500) strictly dictates
       // that `<c>` elements within `sheet.xml` (or specifically `<sheetData>`)
       // must be written in ascending order of their `r` attributes (e.g., "A1", "B1", "C1").
@@ -316,14 +325,15 @@ export default function parseSheet(content, parseXml, { sharedStrings, styles, e
   /**
    * Parses the XML values of a `<c/>` element into an object representing a cell value.
    * @param {object} — `{ attributes: Record<string,string>, inlineString?: string, vText?: string }`. If `<v/>` element is present but is empty, `vText` will be an empty string. If `<v/>` element is absent, `vText` will be `undefined`.
+   * @param {number[]} address — `[rowNumber, columnNumber]`
    * @returns {object} Either `{ row: number, column: number, error: string }` or `{ row: number, column: number, value: string|number|boolean|null }`
    */
   function parseCellFromXmlData({
     attributes,
     inlineString,
     vText
-  }) {
-    const [row, column] = parseCellAddress(attributes.r)
+  }, address) {
+    const [row, column] = address
     const errorOrTypeAndValue = parseCellAndTrimValue(
       attributes.t,
       attributes.s,
