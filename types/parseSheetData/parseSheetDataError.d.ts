@@ -92,7 +92,7 @@ interface ParseSheetDataErrorNotADate<ColumnTitle extends string = string> exten
 	'not_a_date',
 	undefined
 > {
-	value: Exclude<CellValue, typeof Date | number>;
+	value: Exclude<CellValue, Date | number>;
 }
 
 interface ParseSheetDataErrorDateOutOfBounds<ColumnTitle extends string = string> extends ParseSheetDataError_<
@@ -101,7 +101,7 @@ interface ParseSheetDataErrorDateOutOfBounds<ColumnTitle extends string = string
 	'out_of_bounds',
 	undefined
 > {
-	value: typeof Date;
+	value: Date;
 }
 
 interface ParseSheetDataErrorNotAString<ColumnTitle extends string = string> extends ParseSheetDataError_<

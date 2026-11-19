@@ -1,31 +1,16 @@
 import type { CellValue } from '../SheetData.d.js';
 
-// A way to define a `type = String` or `type = Number` variable in TypeScript
-// is by defining it as `type: StringConstructor` or `type: NumberConstructor`.
-// https://gitlab.com/catamphetamine/write-excel-file/-/issues/4#note_715204034
-// https://www.typescriptlang.org/docs/handbook/2/conditional-types.html
-export type Constructor<Type> =
-	Type extends String
-		? StringConstructor
-		: Type extends Date
-			? DateConstructor
-			: Type extends Number
-				? NumberConstructor
-				: Type extends Boolean
-					? BooleanConstructor
-					: never;
-
-export type StringType = Constructor<String>;
-export type DateType = Constructor<Date>;
-export type NumberType = Constructor<Number>;
-export type BooleanType = Constructor<Boolean>;
+export type StringType = StringConstructor;
+export type DateType = DateConstructor;
+export type NumberType = NumberConstructor;
+export type BooleanType = BooleanConstructor;
 
 // Parsed value `type` (foundational ones).
 type ParseSheetDataBaseType =
-	Constructor<String> |
-	Constructor<Date> |
-	Constructor<Number> |
-	Constructor<Boolean>;
+	| StringType
+	| DateType
+	| NumberType
+	| BooleanType
 
 // Parsed value `type` (additional built-in ones).
 export function Integer(value: CellValue): number;

@@ -2,7 +2,7 @@ export type CellValue<ParsedNumber = number> =
 	| string
 	| ParsedNumber
 	| boolean
-	| typeof Date
+	| Date
 
 export type Row<ParsedNumber = number> = (CellValue<ParsedNumber> | null)[]
 
