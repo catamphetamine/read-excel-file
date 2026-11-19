@@ -267,7 +267,7 @@ This package provides a separate `import` path for each different environment, a
 
 ### `read-excel-file/browser`
 
-Reads an `.xlsx` file in a browser from a [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File), a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) or an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer).
+Reads an `.xlsx` file in a browser from a [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File), a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob), an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) or an `ArrayBufferView` ([`TypedArray`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) or [`DataView`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView)).
 
 Example 1: Read from a selected file.
 
@@ -307,7 +307,7 @@ const data = await readSheet(blob)
 
 ### `read-excel-file/node`
 
-Reads an `.xlsx` file in Node.js from a file path, a [`Stream`](https://nodejs.org/api/stream.html), a [`Buffer`](https://nodejs.org/api/buffer.html) or a [`Blob`](https://developer.mozilla.org/docs/Web/API/Blob).
+Reads an `.xlsx` file in Node.js from a file path, a [`Stream`](https://nodejs.org/api/stream.html), a [`Buffer`](https://nodejs.org/api/buffer.html), a [`Blob`](https://developer.mozilla.org/docs/Web/API/Blob), an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) or an `ArrayBufferView` ([`TypedArray`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) or [`DataView`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView)).
 
 Example 1: Read from a file path.
 
@@ -327,9 +327,7 @@ const data = await readSheet(fs.createReadStream('/path/to/file'))
 
 ### `read-excel-file/universal`
 
-Reads an `.xlsx` file in any supported environment, such as a browser or Node.js, from a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob), an [`ArrayBuffer`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) or an `ArrayBufferView`, such as a `Uint8Array`, a Node.js `Buffer` or a `DataView`.
-
-For byte input, prefer passing a `Uint8Array` or `Buffer` directly. Views are read as raw bytes within their `byteOffset` and `byteLength`, without copying the input bytes. Passing a view's `.buffer` alone loses those bounds and can include unrelated bytes from the backing allocation. Keep the input memory unchanged and attached until the returned promise settles.
+Reads an `.xlsx` file in any supported environment, such as a browser or Node.js, but comes with a limitation: it can only read from a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob), an [`ArrayBuffer`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer), or an `ArrayBufferView` ([`TypedArray`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) or [`DataView`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView)), which could be a bit less convenient for general use.
 
 ```js
 import { readSheet } from 'read-excel-file/universal'
@@ -1000,6 +998,7 @@ Finally, one could go even further with the "streaming" approach and output not 
 * [Stian Jensen](https://github.com/stianjensen) — Use `fflate` unzipper on server side ([1](https://github.com/catamphetamine/read-excel-file/pull/122), [2](https://github.com/catamphetamine/read-excel-file/pull/123))
 * [Etienne Prothon](https://github.com/EtienneProthon) — Reject non `.xlsx` files, including the legacy binary `.xls` files ([1](https://gitlab.com/catamphetamine/read-excel-file/-/merge_requests/11)). Fix parsing of "encoded" characters ([1](https://gitlab.com/catamphetamine/read-excel-file/-/merge_requests/10)).
 * [Osama Ansar](https://github.com/OsamaAnsar) — Decode `_x`-encoded strings ([1](https://github.com/catamphetamine/read-excel-file/pull/126))
+* [Jakub Stasiak](https://github.com/jstasiak) — Support `ArrayBufferView` input ([1](https://github.com/catamphetamine/read-excel-file/pull/130))
 
 ## GitHub
 

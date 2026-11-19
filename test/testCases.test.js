@@ -15,8 +15,9 @@ import readXlsxFileWebWorker from '../source/export/readXlsxFileWebWorker.js'
 import readSheetUniversal from '../source/export/readSheetUniversal.js'
 import readXlsxFileUniversal from '../source/export/readXlsxFileUniversal.js'
 
-import TEST_CASES from './testCases.js'
-import TEST_CASES_IN_NODE from './testCases.node.js'
+import TEST_CASES_BROWSER from './testCases.browser.js'
+import TEST_CASES_UNIVERSAL from './testCases.universal.js'
+import TEST_CASES_NODE from './testCases.node.js'
 
 import runTestCases from './runTestCases.js'
 
@@ -25,8 +26,9 @@ describe('readXlsxFile', function() {
 		// Increase the default timeout of `2000` ms.
 		this.timeout(10000)
     // Run test cases.
-    await runTestCases(TEST_CASES_IN_NODE, {
+    await runTestCases(TEST_CASES_NODE, {
 			getInputArgumentFromFilePath: filePath => filePath,
+			getArrayBufferFromInputArgument: filePath => fs.readFileSync(filePath),
 			readSheet: readSheetNode,
 			readXlsxFile: readXlsxFileNode
 		})
@@ -36,8 +38,9 @@ describe('readXlsxFile', function() {
 		// Increase the default timeout of `2000` ms.
 		this.timeout(10000)
     // Run test cases.
-    await runTestCases(TEST_CASES, {
+    await runTestCases(TEST_CASES_UNIVERSAL, {
 			getInputArgumentFromFilePath: readFileSyncAsArrayBuffer,
+			getArrayBufferFromInputArgument: _ => _,
 			readSheet: readSheetUniversal,
 			readXlsxFile: readXlsxFileUniversal
 		})
@@ -47,8 +50,9 @@ describe('readXlsxFile', function() {
 		// Increase the default timeout of `2000` ms.
 		this.timeout(10000)
     // Run test cases.
-    await runTestCases(TEST_CASES, {
+    await runTestCases(TEST_CASES_BROWSER, {
 			getInputArgumentFromFilePath: readFileSyncAsArrayBuffer,
+			getArrayBufferFromInputArgument: _ => _,
 			readSheet: readSheetBrowser,
 			readXlsxFile: readXlsxFileBrowser
 		})
@@ -58,8 +62,9 @@ describe('readXlsxFile', function() {
 		// Increase the default timeout of `2000` ms.
 		this.timeout(10000)
     // Run test cases.
-    await runTestCases(TEST_CASES, {
+    await runTestCases(TEST_CASES_BROWSER, {
 			getInputArgumentFromFilePath: readFileSyncAsArrayBuffer,
+			getArrayBufferFromInputArgument: _ => _,
 			readSheet: readSheetWebWorker,
 			readXlsxFile: readXlsxFileWebWorker
 		})

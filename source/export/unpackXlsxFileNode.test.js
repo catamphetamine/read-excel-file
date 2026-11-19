@@ -11,6 +11,17 @@ import InvalidInputError from '../xlsx/file/InvalidInputError.js'
 import unpackXlsxFileNode from './unpackXlsxFileNode.js'
 
 describe('unpackXlsxFileNode', () => {
+	it('should reject on invalid input type', async () => {
+		let thrown
+		try {
+			await unpackXlsxFileNode(123)
+		} catch (caught) {
+			thrown = caught
+		}
+		expect(thrown).to.be.an.instanceof(InvalidInputError)
+		expect(thrown.code).to.equal('INPUT_TYPE_NOT_SUPPORTED')
+	})
+
 	it('should reject on invalid (non-zip) data', async () => {
 		const garbage = Buffer.from('this is definitely not a zip archive')
 

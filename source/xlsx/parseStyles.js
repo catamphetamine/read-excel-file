@@ -1,3 +1,5 @@
+import unescapeXlsxString from './unescapeXlsxString.js'
+
 /**
  * Parses `.xlsx` file styles.
  * http://officeopenxml.com/SSstyles.php
@@ -69,7 +71,7 @@ export default function parseStyles(content, parseXml) {
       // number formats with ID >= 100, this package mimicks such "non-strict" approach.
       //
       if (numFmtId >= 100) {
-        numberFormat.template = attributes.formatCode
+        numberFormat.template = unescapeXlsxString(attributes.formatCode)
       }
       state.numberFormats[numFmtId] = numberFormat
     } else if (tagName === 'cellStyleXfs') {

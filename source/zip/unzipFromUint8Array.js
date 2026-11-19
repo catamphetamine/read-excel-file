@@ -7,28 +7,27 @@
 import { unzip } from 'fflate'
 
 import { createUnzipError } from './UnzipError.js'
-import toUint8Array from '../utility/toUint8Array.js'
 
 /**
  * Reads `*.zip` file contents. Ignores anything besides `.xml` or `.xml.rels` files.
- * @param  {(ArrayBuffer|ArrayBufferView)} input
+ * @param  {Uint8Array} input
  * @return {Promise<Record<string,Uint8Array>>} Resolves to an object holding `*.zip` file entries.
  */
-export default function unzipFromArrayBuffer(input, options) {
-	return unzipFromArrayBufferUsingFunction(input, options, unzipAsync, true)
+export default function unzipFromUint8Array(input, options) {
+	return unzipFromUint8ArrayUsingFunction(input, options, unzipAsync, true)
 }
 
 /**
  * Reads `*.zip` file contents. Ignores anything besides `.xml` or `.xml.rels` files.
- * @param  {(ArrayBuffer|ArrayBufferView)} input
+ * @param  {Uint8Array} input
  * @param  {(Uint8Array) => Record<string, Uint8Array> | Promise<Record<string, Uint8Array>>} unzip
  * @param  {boolean} isAsync — Should be `true` when `unzip()` returns a `Promise`, `false` otherwise.
  * @return {Promise<Record<string,Uint8Array>> | Record<string,Uint8Array>} Resolves to an object holding `*.zip` file entries.
  */
-export function unzipFromArrayBufferUsingFunction(input, { filter } = {}, unzip, isAsync) {
+export function unzipFromUint8ArrayUsingFunction(input, { filter } = {}, unzip, isAsync) {
 	// Read the `.zip` archive.
 	// `result` is either `object` or `Promise<object>`
-	return unzip(toUint8Array(input), {
+	return unzip(input, {
 		// Ignore certain types of files.
 		filter: (file) => {
 			if (filter) {
@@ -51,12 +50,12 @@ export function unzipFromArrayBufferUsingFunction(input, { filter } = {}, unzip,
 	)
 }
 
-function unzipAsync(archive) {
+function unzipAsync(input) {
   return new Promise((resolve, reject) => {
 		// `unzip()` will resort to "synchronous" decompression in two edge cases:
     // * When the archive size is less than `512KB`.
     // * When the data is barely compressed, i.e. the compression ratio is less than 20% reduction in size.
-    unzip(archive, (error, files) => {
+    unzip(input, (error, files) => {
       if (error) {
         reject(error)
       } else {

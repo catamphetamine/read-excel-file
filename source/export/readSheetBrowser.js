@@ -7,7 +7,7 @@ import parseSheet from './parseSheet.js'
 
 /**
  * Reads a single sheet from an `.xlsx` file.
- * @param  {(Blob|ArrayBuffer)} input
+ * @param  {(File|Blob|ArrayBuffer|ArrayBufferView)} input
  * @param  {(number|string)} [sheet] — Sheet number or sheet name
  * @param  {object} [options]
  * @return {Promise<SheetData>}

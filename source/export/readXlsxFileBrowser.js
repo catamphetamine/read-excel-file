@@ -7,7 +7,7 @@ import parseSpreadsheetContents from '../xlsx/parseSpreadsheetContents.js'
 
 /**
  * Reads an `.xlsx` file.
- * @param  {(File|Blob|ArrayBuffer)} input
+ * @param  {(File|Blob|ArrayBuffer|ArrayBufferView)} input
  * @param  {object} [options]
  * @return {Promise<Sheet[]>}
  */

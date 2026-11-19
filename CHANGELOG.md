@@ -1,3 +1,8 @@
+9.3.18 / 17.11.2026
+==================
+
+* Merged a [pull request](https://github.com/catamphetamine/read-excel-file/pull/130) by [Jakub Stasiak](https://github.com/jstasiak) that adds support `ArrayBufferView` input.
+
 9.3.16 / 13.11.2026
 ==================
 

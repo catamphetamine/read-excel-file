@@ -22,12 +22,36 @@ describe('unpackXlsxFileBrowser', () => {
 		expect(thrown.code).to.equal('FILE_NOT_SUPPORTED')
 	})
 
-	it('should not reject on valid (zip) data', async () => {
+	it('should not reject on valid (zip) data (ArrayBuffer)', async () => {
 		const fileData = Buffer.from([0x50, 0x4B, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 
 		let thrown
 		try {
 			await unpackXlsxFileBrowser(getArrayBuffer(fileData))
+		} catch (caught) {
+			thrown = caught
+		}
+		expect(thrown).to.be.undefined
+	})
+
+	it('should not reject on valid (zip) data (Uint16Array)', async () => {
+		const fileData = Buffer.from([0x50, 0x4B, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+
+		let thrown
+		try {
+			await unpackXlsxFileBrowser(new Uint16Array(getArrayBuffer(fileData)))
+		} catch (caught) {
+			thrown = caught
+		}
+		expect(thrown).to.be.undefined
+	})
+
+	it('should not reject on valid (zip) data (`Blob`)', async () => {
+		const fileData = Buffer.from([0x50, 0x4B, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+
+		let thrown
+		try {
+			await unpackXlsxFileBrowser(new Blob([fileData]))
 		} catch (caught) {
 			thrown = caught
 		}

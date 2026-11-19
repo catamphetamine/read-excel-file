@@ -1,5 +1,5 @@
-export default async function({ readFile, readSheet, expect }) {
-	const contentsBuffer = await readFile()
+export default async function({ getInputArgument, getArrayBufferFromInputArgument, readSheet, expect }) {
+	const contentsBuffer = getArrayBufferFromInputArgument(getInputArgument())
 
 	const data = await readSheet(contentsBuffer)
 

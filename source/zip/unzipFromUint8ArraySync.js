@@ -15,13 +15,13 @@
 //
 import { unzipSync } from 'fflate'
 
-import { unzipFromArrayBufferUsingFunction } from './unzipFromArrayBuffer.js'
+import { unzipFromUint8ArrayUsingFunction } from './unzipFromUint8Array.js'
 
 /**
  * Reads `*.zip` file contents. Ignores anything besides `.xml` or `.xml.rels` files.
- * @param  {(ArrayBuffer|ArrayBufferView)} input
+ * @param  {Uint8Array} input
  * @return {Record<string,Uint8Array>} An object holding `*.zip` file entries.
  */
-export default function unzipFromArrayBufferSync(input, options) {
-	return unzipFromArrayBufferUsingFunction(input, options, unzipSync, true)
+export default function unzipFromUint8ArraySync(input, options) {
+	return unzipFromUint8ArrayUsingFunction(input, options, unzipSync, true)
 }

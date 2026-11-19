@@ -1,6 +1,9 @@
 import fs from 'node:fs'
 import { Blob } from 'node:buffer'
+import { types } from 'node:util'
 import Stream, { Readable } from 'node:stream'
+
+import InvalidInputError from '../xlsx/file/InvalidInputError.js'
 
 /**
  * Converts Node.js input argument to a stream.
@@ -11,23 +14,24 @@ export default function convertInputToNodeStream(input) {
   return input instanceof Stream
     ? input
     : (
-      input instanceof Buffer
-        ? createReadableStreamFromBuffer(input)
+      types.isArrayBuffer(input)
+        ? Readable.from(Buffer(input))
         : (
-          input instanceof Blob
-            ? createReadableStreamFromBlob(input)
-            : fs.createReadStream(input)
+          ArrayBuffer.isView(input)
+            ? Readable.from([input])
+            : (
+              input instanceof Buffer
+                ? Readable.from(input)
+                : (
+                  input instanceof Blob
+                    ? Readable.fromWeb(input.stream())
+                    : (
+                      typeof input === 'string'
+                        ? fs.createReadStream(input)
+                        : (() => { throw new InvalidInputError('INPUT_TYPE_NOT_SUPPORTED') })()
+                    )
+                )
+            )
         )
     )
-}
-
-// Creates a readable stream from a `Buffer`.
-function createReadableStreamFromBuffer(buffer) {
-  return Readable.from(buffer)
-}
-
-// Creates a readable stream from a `Blob`.
-function createReadableStreamFromBlob(blob) {
-  // Convert a web `ReadableStream` to a Node.js `Readable` `Stream`.
-  return Readable.fromWeb(blob.stream())
 }

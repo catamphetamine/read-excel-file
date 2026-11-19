@@ -4,6 +4,7 @@ import { expect } from 'chai'
 // Runs test cases
 export default async function runTestCases(TEST_CASES, {
 	getInputArgumentFromFilePath,
+	getArrayBufferFromInputArgument,
 	readSheet,
 	readXlsxFile
 }) {
@@ -15,7 +16,8 @@ export default async function runTestCases(TEST_CASES, {
 		try {
 			const testCaseFunction = await import(jsFilePath)
 			await testCaseFunction.default({
-				readFile: async () => fs.readFileSync(xlsxFilePath),
+				getInputArgument: () => getInputArgumentFromFilePath(xlsxFilePath),
+				getArrayBufferFromInputArgument,
 				readSheet,
 				readSheetFromFile: (...args) => readSheet(getInputArgumentFromFilePath(xlsxFilePath), ...args),
 				readSheetsFromFile: (...args) => readXlsxFile(getInputArgumentFromFilePath(xlsxFilePath), ...args),
