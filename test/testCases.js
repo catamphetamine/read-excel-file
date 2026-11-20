@@ -8,6 +8,10 @@ export default [
 		description: 'should parse 1904-based macOS dates'
 	},
 	{
+		name: '1904-based-dates-boolean-true',
+		description: 'should parse 1904-based dates when `date1904` is "true" rather than "1"'
+	},
+	{
 		name: 'boolean',
 		description: 'should parse booleans'
 	},
