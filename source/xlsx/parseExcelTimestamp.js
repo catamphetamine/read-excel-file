@@ -130,5 +130,5 @@ export default function parseExcelTimestamp(excelSerialDate, epoch1904) {
 
   const daysBeforeUnixEpoch = JANUARY_0TH_1900_DAY + ERRONEOUS_FEBRUARY_29_1990_DAY + (1970 - 1900) * DAYS_IN_YEAR + NUMBER_OF_LEAP_YEARS_BETWEEN_1900_AND_1970
 
-  return Math.floor((excelSerialDate - daysBeforeUnixEpoch) * DAY)
+  return Math.round((excelSerialDate - daysBeforeUnixEpoch) * DAY)
 }
