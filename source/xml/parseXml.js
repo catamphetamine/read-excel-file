@@ -50,6 +50,10 @@ export default function parseXml(xml, state, onOpenTag, onCloseTag, onText, onPr
 	function parseXmlInChunks(parser, xml, onProgress, nonBlocking) {
 		const MAX_CHUNK_PROCESSING_TIME = 7 // 16 ms — 60 fps, 7 ms — 144 fps
 		const INITIAL_CHUNK_SIZE = 64 * 1024 // 64 KB
+		// Without a lower bound, consistently slow chunks (e.g. on a busy server CPU)
+		// would keep halving the chunk size until it's less than one character,
+		// at which point `xml.slice(0, chunkSize)` returns an empty string and parsing makes no progress.
+		const MIN_CHUNK_SIZE = 16 * 1024 // 16 KB
 
 		let chunksCount = 0
 		let chunkSize = INITIAL_CHUNK_SIZE
@@ -71,7 +75,7 @@ export default function parseXml(xml, state, onOpenTag, onCloseTag, onText, onPr
 				if (chunkProcessingTime < MAX_CHUNK_PROCESSING_TIME * 0.5) {
 					chunkSize *= 2
 				} else if (chunkProcessingTime > MAX_CHUNK_PROCESSING_TIME) {
-					chunkSize /= 2
+					chunkSize = Math.max(MIN_CHUNK_SIZE, chunkSize / 2)
 				}
 				return true
 			} else {
@@ -86,23 +90,24 @@ export default function parseXml(xml, state, onOpenTag, onCloseTag, onText, onPr
 
 		/**
 		 * Parses next chunk of XML and then repeats.
+		 * In blocking mode, it iterates rather than calls itself recursively
+		 * because a recursive call per chunk would exceed the maximum call stack size
+		 * when a large XML file is split into many chunks.
 		 */
 		const loop = () => {
-			if (parseNextChunk()) {
+			while (parseNextChunk()) {
 				if (nonBlocking) {
 					if (typeof setImmediate !== 'undefined') {
 						setImmediate(loop)
 					} else {
 						setTimeout(loop, 0)
 					}
-				} else {
-					loop()
+					return
 				}
-			} else {
-				// Finished
-				// console.log('* chunk size', chunkSize)
-				// console.log('* chunks count', chunksCount)
 			}
+			// Finished
+			// console.log('* chunk size', chunkSize)
+			// console.log('* chunks count', chunksCount)
 		}
 
 		loop()
